@@ -1,6 +1,6 @@
 # readAloud-valence-beta Analysis Preparation
 # Authors: Luc Sahar and Jessica M. Alexander -- NDCLab, Florida International University
-# Last updated: 2023-06-14
+# Last updated: 2023-06-30
 
 # INPUTS
 # data/df: behavioral (error-related) data, for each participant on each passage
@@ -48,7 +48,7 @@ main_analyses <- '/Users/jalexand/github/readAloud-valence-beta/'
 out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
 
 #load input files
-data <- paste(main_dataset, 'derivatives/preprocessed/disfluencies_subject-x-passage_20230613_0450pm.csv', sep="", collapse=NULL)
+data <- paste(main_dataset, 'derivatives/preprocessed/disfluencies_subject-x-passage_20230616_1229pm.csv', sep="", collapse=NULL)
 accDat_path <- paste(main_dataset,'derivatives/preprocessed/readAloud_passage-level_summary_20220812.csv', sep="", collapse=NULL)
 readDat_path <- paste(main_dataset, 'derivatives/analysisStimuli_readDat_20230614.csv', sep="", collapse=NULL)
 redcap_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019.csv', sep="", collapse=NULL)
@@ -63,6 +63,9 @@ accDat$passage <- c("dams", "flying", "bats", "broccoli", "realty", "bees", "dog
                     "cars", "vegas", "sun", "caramel", "congo", "antarctica", "depression", "skunkowl", "grizzly",
                     "mantis", "dentist")        #rename passages with short-name
 
+#organize data types
+df[,3:30] <- sapply(df[,3:30],as.numeric)
+
 #add missing passages for 150086 so that nrow is divisible by 20
 passages_read <- df$passage[which(df$id=="150086")]
 all_passages <- unique(df$passage)
@@ -70,7 +73,7 @@ tempdf <- data.frame(matrix(nrow=0, ncol=ncol(df)))
 colnames(tempdf) <- colnames(df)
 for(passage in 1:length(all_passages)){
   if(all_passages[passage] %in% passages_read){next}else{
-    tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 41))
+    tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 28))
   }
 }
 df <- rbind(df, tempdf)
@@ -156,7 +159,16 @@ for(h in 1:nrow(demoDat)){
 for(i in 1:nrow(df)){
   subject <- df$id[i] #extract subject number for matching
   passage <- df$passage[i] #extract passage name for matching
-  errors <- df$errors[i] #extract total errors
+  
+  #production errors of interest
+  # misprod = raw misproduction errors
+  # hesitation = raw hesitations
+  # words_with_misprod = distinct words with misproduction errors
+  # words_with_hes = distinct words with pre-word or word-internal hesitation
+  # misprod_rate = rate of raw misproduction errors
+  # hesitation_rate = rate of raw hesitations
+  # words_with_misprod_rate = rate of word-level misproduction errors
+  # words_with_hes_rate = rate of word-level hesitations
   
   #extract passage characteristics from readDat
   df$lenSyll[i] <- sum(readDat$lengthSyll[which(readDat$passage==passage)]) #length of passage in syllables
