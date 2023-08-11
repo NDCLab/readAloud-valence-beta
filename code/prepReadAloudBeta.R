@@ -33,7 +33,7 @@ library(readr) # write_csv
 # ext_default = 'csv'
 # tz_default = "America/New_York"
 # date_format_default = "%Y%m%d_%I%M%P"
-# 
+#
 # build_output_filename <- function(label, ext = ext_default, timezone = tz_default, date_format = date_format_default) {
 #   # `label` may include the destination directory, if different from the working directory when the script is run
 #   current_datetime <- now(timezone) %>% format(date_format)
@@ -43,16 +43,25 @@ today <- Sys.Date()
 today <- format(today, "%Y%m%d")
 
 #set up directories for input/output
-main_dataset <- '/Users/jalexand/github/readAloud-valence-dataset/'
-main_analyses <- '/Users/jalexand/github/readAloud-valence-beta/'
-out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
+# main_dataset <- '/Users/jalexand/github/readAloud-valence-dataset/'
+# main_analyses <- '/Users/jalexand/github/readAloud-valence-beta/'
+# out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
+main_dataset <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-dataset/'
+main_analyses <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/'
+out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
+
 
 #load input files
-data <- paste(main_dataset, 'derivatives/preprocessed/disfluencies_subject-x-passage_20230616_1229pm.csv', sep="", collapse=NULL)
+# data <- paste(main_dataset, 'derivatives/preprocessed/disfluencies_subject-x-passage_20230616_1229pm.csv', sep="", collapse=NULL)
+data <- "/home/luc/Documents/ndclab/analysis-sandbox/output-csvs/disfluencies_subject-x-passage_20230616_1229pm.csv"
 accDat_path <- paste(main_dataset,'derivatives/preprocessed/readAloud_passage-level_summary_20220812.csv', sep="", collapse=NULL)
 readDat_path <- paste(main_dataset, 'derivatives/analysisStimuli_readDat_20230614.csv', sep="", collapse=NULL)
 redcap_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019.csv', sep="", collapse=NULL)
 agedat_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019_ageonly.csv', sep="", collapse=NULL)
+
+# c(data, accDat_path, readDat_path, redcap_path, agedat_path) %>% fs::as_fs_path() %>% fs::is_file()
+# ✅: all TRUE
+
 
 df <- read.csv(data)
 redcap <- read.csv(redcap_path, na.strings='NA') #participant questionnaire responses
@@ -159,7 +168,7 @@ for(h in 1:nrow(demoDat)){
 for(i in 1:nrow(df)){
   subject <- df$id[i] #extract subject number for matching
   passage <- df$passage[i] #extract passage name for matching
-  
+
   #production errors of interest
   # misprod = raw misproduction errors
   # hesitation = raw hesitations
@@ -169,15 +178,15 @@ for(i in 1:nrow(df)){
   # hesitation_rate = rate of raw hesitations
   # words_with_misprod_rate = rate of word-level misproduction errors
   # words_with_hes_rate = rate of word-level hesitations
-  
+
   #extract passage characteristics from readDat
   df$lenSyll[i] <- sum(readDat$lengthSyll[which(readDat$passage==passage)]) #length of passage in syllables
   df$lenWord[i] <- sum(readDat$lengthWord[which(readDat$passage==passage)]) #length of passage in words
   df$avgSyllPerWord[i] <- df$lenSyll[i]/df$lenWord[i]
-  
+
   #extract participant accuracy from accDat
   df$challengeACC[i] <- accDat[match(passage, accDat$passage), as.character(subject)] #passage-specific challenge question accuracy for subject
-  
+
   #extract participant demographics from demoDat
   df$sex[i] <- demoDat$sex[match(df$id[i], demoDat$record_id)]   #participant biological sex
   df$pronouns[i] <- demoDat$pron[match(df$id[i], demoDat$record_id)]   #participant preferred pronouns
@@ -211,6 +220,9 @@ df$socclass <- as.factor(df$socclass)
 #sum(df$profen>3, na.rm=TRUE)/20 #one remaining subject (150060) rates own English proficiency as not "elementary" or "not proficient", but reads fluidly and achieved 80% accuracy on challenge questions, so not excluded
 
 #extract age and sex stats
+
+# all these values are just in case they're useful - not needed per se for later
+# steps of the logic in this script
 summary(df$age) #age range and mean
 sd(df$age) #age standard deviation
 summary(df$sex)/20 #number of participants by sex
@@ -229,22 +241,22 @@ dfTrim <- subset(dfTrim, !(dfTrim$passage=='sun')) #remove sun passage due to er
 
 
 ### SECTION 5: OUTPUT DATAFRAME
-write.csv(dfTrim, paste(out_path, "readAloudBetaData_", today, ".csv", sep="", collapse=NULL))
+write.csv(dfTrim, paste(out_path, "readAloudBetaData_", today, ".csv", sep="", collapse=NULL), row.names = FALSE)
 
 # collapse_by_participant <- function(filename_in, filename_out) {
 #   by_participant <- read_csv(filename_in) %>%
 #     unique %>% # dedup
 #     group_by(id) %>% summarize(across(misprod:total_uncorrected_errors, sum)) # summarize by participant, across all passages
 #     # TODO change the columns selected, once more have been added to the output of the preproc script
-# 
+#
 #   write_csv(by_participant, filename_out)
 #   return(filename_out)
 # }
-# 
-# 
+#
+#
 # # base = "~/Documents/ndclab/analysis-sandbox/github-structure-mirror/readAloud-valence-dataset/derivatives/preprocessed"
 # base = "/home/data/NDClab/datasets/readAloud-valence-dataset/derivatives/preprocessed"
 # preprocessed_summary_filename = "TODO"
 # collapsed_filename = build_output_filename(label = paste(base, "disfluencies_subject", sep='/'))
-# 
+#
 # collapse_by_participant(preprocessed_summary_file, collapsed_filename)

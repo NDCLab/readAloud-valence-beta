@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-06-30
+# Last Updated: 2023-08-10
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -25,16 +25,29 @@ library(cowplot)
 library(colorspace)
 library(colorblindr)
 
+# ```
+# Warning in install.packages :
+# package ‘colorblindr’ is not available for this version of R
+#
+# A version of this package for your version of R might be available elsewhere,
+# see the ideas at
+# https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages
+# ```
+
 #set up date for output file naming
 today <- Sys.Date()
 today <- format(today, "%Y%m%d")
 
 #set up directories for input/output data
-data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
-out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
+# data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
+data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
+to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
+# out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
+out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
 
 #read in data
-df <- read.csv(data)
+df <- read.csv(data, row.names = NULL)
+passage_omissions_df <- read.csv(to_omit, row.names = NULL)
 
 #organize participant demographic variables
 df$sex <- as.factor(df$sex)
@@ -43,6 +56,9 @@ df$ethnic <- as.factor(df$ethnic)
 df$socclass <- as.factor(df$socclass)
 
 #extract demo stats
+
+# all these values are just in case they're useful - not needed per se for later
+# steps of the logic in this script
 summary(df$age)
 sd(df$age)
 summary(df$sex)/18
@@ -55,10 +71,17 @@ summary(df$socclass)/18
 summary(df$socclass)/18 / (nrow(df)/18)
 
 #remove participants who were not engaged in the task
-#TBD, ex. 150222
+dfTrim <- df
+# wait, are my removals supposed to be in dfTrim or df? dfTrim, right?
+
+# removal based on coder notes of audible distractions, others in the room, etc.:
+
+# 150015
+# 150208
+
+dfTrim <- subset(dfTrim, !(id %in% c(150015, 150208)))
 
 #remove participants whose challenge question accuracy was below 50% (chance = 25%)
-dfTrim <- df
 dfTrim <- dfTrim %>%
   group_by(id) %>%
   mutate(challengeAvgSub = mean(challengeACC)) %>%
@@ -77,6 +100,12 @@ passage_no_before_trimming <- nrow(dfTrim)
 
 #remove passages with high omissions (participant did not complete reading)
 ##vegas 150013
+# TODO
+# my attempt/idea, idk yet if it works
+dfTrim <- anti_join(dfTrim,
+                    passage_omissions_df,
+                    by = join_by(id == participant, passage == passage))
+
 
 passage_no_after_trim1 <- nrow(dfTrim)
 passage_no_before_trimming - passage_no_after_trim1 #number of passages trimmed
