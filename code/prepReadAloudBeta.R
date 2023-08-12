@@ -223,6 +223,7 @@ df$socclass <- as.factor(df$socclass)
 
 # all these values are just in case they're useful - not needed per se for later
 # steps of the logic in this script
+
 summary(df$age) #age range and mean
 sd(df$age) #age standard deviation
 summary(df$sex)/20 #number of participants by sex
