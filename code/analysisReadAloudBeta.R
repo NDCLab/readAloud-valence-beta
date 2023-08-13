@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-08-11
+# Last Updated: 2023-08-12
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -46,8 +46,8 @@ to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passa
 out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
 
 #read in data
-df <- read.csv(data, row.names = NULL)
-passage_omissions_df <- read.csv(to_omit, row.names = NULL)
+df <- read.csv(data, row.names = NULL) # output of prep script
+passage_omissions_df <- read.csv(to_omit, row.names = NULL) # hand-crafted list of participant x passage entries to exclude, based on coder comments
 
 #organize participant demographic variables
 df$sex <- as.factor(df$sex)
@@ -72,16 +72,13 @@ summary(df$socclass)/18 / (nrow(df)/18)
 
 #remove participants who were not engaged in the task
 dfTrim <- df
-# wait, are my removals supposed to be in dfTrim or df? dfTrim, right?
 
 # removal based on coder notes of audible distractions, others in the room, etc.:
-
 # 150015
 # 150208
 # 150245 had many passages that were entirely or near-entirely inaudible; the
 # rest were dropped too under the assumption that the audible ones too
 # would be too faint to identify errors in
-
 dfTrim <- subset(dfTrim, !(id %in% c(150015, 150208, 150245)))
 
 #remove participants whose challenge question accuracy was below 50% (chance = 25%)
@@ -91,7 +88,7 @@ dfTrim <- dfTrim %>%
   ungroup
 
 dfTrim <- subset(dfTrim, challengeAvgSub>0.5)
-length(unique(df$id)) - length(unique(dfTrim$id)) #number of participants removed
+length(unique(df$id)) - length(unique(dfTrim$id)) #number of participants removed due to distraction or low accuracy
 
 #calculate average accuracy
 mean(dfTrim$challengeAvgSub)
@@ -101,7 +98,7 @@ sd(dfTrim$challengeAvgSub)
 ### SECTION 2: PASSAGE-LEVEL TRIMMING
 passage_no_before_trimming <- nrow(dfTrim)
 
-#remove passages with high omissions (participant did not complete reading)
+#remove passages with high omissions (participant did not complete reading) or other problems (someone else is in the room, etc.)
 # e.g. vegas 150013
 dfTrim <- anti_join(dfTrim,
                     passage_omissions_df,
@@ -132,8 +129,10 @@ errorDat$lenWord_gmc <- errorDat$lenWord - mean(errorDat$lenWord)
 errorDat$avgSyllPerWord_gmc <- errorDat$avgSyllPerWord - mean(errorDat$avgSyllPerWord)
 
 # LS additions 8/11/23
-errorDat$corrections <- errorDat$corrections - mean(errorDat$corrections)
-errorDat$errors <- errorDat$errors - mean(errorDat$errors)
+# errorDat$errors <- errorDat$errors - mean(errorDat$errors)
+# errorDat$correction <- errorDat$corrections - mean(errorDat$corrections)
+errorDat$error_rate <- errorDat$errors / errorDat$lenSyll
+errorDat$correction_rate <- errorDat$corrections / errorDat$lenSyll
 
 
 #extract demo stats
@@ -292,18 +291,18 @@ f_model12 <- glmer(challengeACC ~ hesitation_rate * bfne_gmc + (1|id) + (1|passa
                   data=errorDat, family = "binomial")
 summary(f_model12)
 
-# Accuracy/comprehension as explained by disfluencies: hesitations per word with bfne
+# Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per word with bfne
 f_model13 <- glmer(challengeACC ~ words_with_hes_rate * bfne_gmc + (1|id) + (1|passage),
                   data=errorDat, family = "binomial")
 summary(f_model13)
 
 
-# Accuracy/comprehension as explained by errors: misproductions per syllable with bfne
+# Accuracy/comprehension as explained by errors *and* SA: misproductions per syllable with bfne
 f_model14 <- glmer(challengeACC ~ misprod_rate * bfne_gmc + (1|id) + (1|passage),
                    data=errorDat, family = "binomial")
 summary(f_model14)
 
-# Accuracy/comprehension as explained by errors: misproductions per word with bfne
+# Accuracy/comprehension as explained by errors *and* SA: misproductions per word with bfne
 f_model15 <- glmer(challengeACC ~ words_with_misprod_rate * bfne_gmc + (1|id) + (1|passage),
                    data=errorDat, family = "binomial")
 summary(f_model15)
@@ -315,41 +314,41 @@ f_model16 <- glmer(challengeACC ~ hesitation_rate * sps_gmc + (1|id) + (1|passag
                    data=errorDat, family = "binomial")
 summary(f_model16)
 
-# Accuracy/comprehension as explained by disfluencies: hesitations per word with sps
+# Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per word with sps
 f_model17 <- glmer(challengeACC ~ words_with_hes_rate * sps_gmc + (1|id) + (1|passage),
                    data=errorDat, family = "binomial")
 summary(f_model17)
 
 
-# Accuracy/comprehension as explained by errors: misproductions per syllable with sps
+# Accuracy/comprehension as explained by errors *and* SA: misproductions per syllable with sps
 f_model18 <- glmer(challengeACC ~ misprod_rate * sps_gmc + (1|id) + (1|passage),
                    data=errorDat, family = "binomial")
 summary(f_model18)
 
-# Accuracy/comprehension as explained by errors: misproductions per word with sps
+# Accuracy/comprehension as explained by errors *and* SA: misproductions per word with sps
 f_model19 <- glmer(challengeACC ~ words_with_misprod_rate * sps_gmc + (1|id) + (1|passage),
                    data=errorDat, family = "binomial")
 summary(f_model19)
 
 
 
-# Now, misproduction-hesitation interactions
+# Now, misproduction-hesitation relationships
 
 # Errors as explained by disfluency: rate of misproduced syllables from rate of hesitated syllables
 f_model20 <- lmerTest::lmer(misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
-summary(f_model20)
+summary(f_model20) # ***
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated words
 f_model21 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
-summary(f_model21)
+summary(f_model21) # ***
 
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated syllables
 f_model22 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
-summary(f_model22)
+summary(f_model22) # ***
 
 
 
@@ -406,7 +405,94 @@ f_model31 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * sps_gmc 
 summary(f_model31)
 
 
+# LS ideas:
+# error rate ~ SA
+# correction rate ~ error rate * SA
+
+# comprehension ~ correction rate
+# comprehension ~ SA * correction rate
+# comprehension ~ error rate
+# comprehension ~ SA * error rate
+# comprehension ~ error rate * correction rate
+# comprehension ~ error rate * correction rate * SA
+
+# comprehension ~ hes rate * error rate
+# comprehension ~ hes rate * correction rate
+
+# comprehension ~ hes rate * error rate * SA
+# comprehension ~ hes rate * correction rate * SA
+# comprehension ~ hes rate * error rate * correction rate * SA
+
+# error rate      ~ hes rate * SA
+# correction rate ~ hes rate * SA, control for error rate
+
+# corr_ : corrections rate
+# err_  : errors rate
 
 
+# error rate as explained by social anxiety
+fls_model_err_scaared <- lmer(error_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(fls_model_err_scaared)
+
+# correction rate as explained by social anxiety
+fls_model_corr_scaared <- lmer(correction_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                              data=errorDat, REML=TRUE)
+summary(fls_model_corr_scaared)
+
+# correction rate as explained by social anxiety and errors
+fls_model_corr_scaared_err <- lmer(correction_rate ~ scaaredSoc_gmc * error_rate + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(fls_model_corr_scaared_err)
+
+# comprehension ~ correction rate
+fls_model_comp_corr <- glmer(challengeACC ~ correction_rate + (1|id) + (1|passage),
+                             data=errorDat, family = "binomial")
+summary(fls_model_comp_corr)
+
+# comprehension ~ SA * correction rate
+fls_model_comp_scaared_corr <- glmer(challengeACC ~ scaaredSoc_gmc * correction_rate + (1|id) + (1|passage),
+                                     data=errorDat, family = "binomial")
+summary(fls_model_comp_scaared_corr) # *
+
+# comprehension ~ error rate
+fls_model_comp_err <- glmer(challengeACC ~ error_rate + (1|id) + (1|passage),
+                             data=errorDat, family = "binomial")
+summary(fls_model_comp_err)
+
+# comprehension ~ SA * error rate
+fls_model_comp_scaared_err <- glmer(challengeACC ~ scaaredSoc_gmc * error_rate + (1|id) + (1|passage),
+                                    data=errorDat, family = "binomial")
+summary(fls_model_comp_scaared_err)
+
+# comprehension ~ error rate * correction rate
+fls_model_comp_err_corr <- glmer(challengeACC ~ error_rate * correction_rate + (1|id) + (1|passage),
+                                 data=errorDat, family = "binomial")
+summary(fls_model_comp_err_corr)
+
+# comprehension ~ hes rate * error rate
+fls_model_comp_hes_err <- glmer(challengeACC ~ hesitation_rate * error_rate + (1|id) + (1|passage),
+                                data=errorDat, family = "binomial")
+summary(fls_model_comp_hes_err)
+
+# comprehension ~ hes rate * correction rate
+fls_model_comp_hes_corr <- glmer(challengeACC ~ hesitation_rate * correction_rate + (1|id) + (1|passage),
+                                 data=errorDat, family = "binomial")
+summary(fls_model_comp_hes_corr) # ***
+
+
+# Check the main one of interest, comprehension as explained by SA and
+# corrections (see fls_model_comp_scaared_corr above), with all three tests
+f_model_comp_scaared_corr <- glmer(challengeACC ~ scaaredSoc_gmc * correction_rate + (1|id) + (1|passage),
+                                   data=errorDat, family = "binomial")
+summary(f_model_comp_scaared_corr) # *
+
+f_model_comp_bfne_corr <- glmer(challengeACC ~ bfne_gmc * correction_rate + (1|id) + (1|passage),
+                                data=errorDat, family = "binomial")
+summary(f_model_comp_bfne_corr) # N.S.
+
+f_model_comp_sps_corr <- glmer(challengeACC ~ sps_gmc * correction_rate + (1|id) + (1|passage),
+                               data=errorDat, family = "binomial")
+summary(f_model_comp_sps_corr) # N.S., but p for interaction is at 0.0698
 
 
