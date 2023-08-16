@@ -1,6 +1,6 @@
 # readAloud-valence-beta Analysis Preparation
 # Authors: Luc Sahar and Jessica M. Alexander -- NDCLab, Florida International University
-# Last updated: 2023-06-30
+# Last updated: 2023-08-15
 
 # INPUTS
 # data/df: behavioral (error-related) data, for each participant on each passage
@@ -58,12 +58,13 @@ accDat_path <- paste(main_dataset,'derivatives/preprocessed/readAloud_passage-le
 readDat_path <- paste(main_dataset, 'derivatives/analysisStimuli_readDat_20230614.csv', sep="", collapse=NULL)
 redcap_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019.csv', sep="", collapse=NULL)
 agedat_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019_ageonly.csv', sep="", collapse=NULL)
+speedDat_path <- paste(main_dataset, "derivatives/preprocessed/valence-timing/timingpitch_subject-by-passage_2022-09-09.csv", sep="", collapse=NULL)
 
-# c(data, accDat_path, readDat_path, redcap_path, agedat_path) %>% fs::as_fs_path() %>% fs::is_file()
+# c(data, accDat_path, readDat_path, redcap_path, agedat_path, speedDat_path) %>% fs::as_fs_path() %>% fs::is_file()
 # ✅: all TRUE
 
 
-df <- read.csv(data)
+df <- read.csv(data, na.strings='NA')
 redcap <- read.csv(redcap_path, na.strings='NA') #participant questionnaire responses
 agedat <- read.csv(agedat_path, na.strings='NA') #participant age information
 readDat <- read.csv(readDat_path, na.strings='N') #passage-level characteristics from analysisStimuli.R
@@ -71,6 +72,7 @@ accDat <- read.csv(accDat_path, na.strings='NA', check.names=FALSE) #passage lev
 accDat$passage <- c("dams", "flying", "bats", "broccoli", "realty", "bees", "dogshow", "dolphins", "icefishing",
                     "cars", "vegas", "sun", "caramel", "congo", "antarctica", "depression", "skunkowl", "grizzly",
                     "mantis", "dentist")        #rename passages with short-name
+speedDat <- read.csv(speedDat_path, na.strings='NA')
 
 #organize data types
 df[,3:30] <- sapply(df[,3:30],as.numeric)
@@ -164,7 +166,13 @@ for(h in 1:nrow(demoDat)){
 }
 
 
-### SECTION 3: BUILD TRIAL-LEVEL DF (ADD DEMODAT, READDAT, and ACCDAT to DF)
+### SECTION 3: SET UP DERIVED FIELDS FOR SPEED ANALYSES
+speedDat$readingTime <- speedDat$readEnd - speedDat$readStart
+speedDat$id <- as.character(speedDat$id) # so we can join and it doesn't complain about type comparison
+df <- left_join(df, speedDat, by = c("id", "passage")) # now reading timestamps and duration are looped into df
+
+
+### SECTION 4: BUILD TRIAL-LEVEL DF (ADD DEMODAT, READDAT, and ACCDAT to DF)
 for(i in 1:nrow(df)){
   subject <- df$id[i] #extract subject number for matching
   passage <- df$passage[i] #extract passage name for matching
@@ -212,8 +220,12 @@ df$pronouns <- as.factor(df$pronouns)
 df$ethnic <- as.factor(df$ethnic)
 df$socclass <- as.factor(df$socclass)
 
+# compute speed
+df$timePerSyllable <- df$readingTime / df$lenSyll
+df$timePerWord     <- df$readingTime / df$lenWord
 
-### SECTION 3: CROSS-CHECK ALL PARTICIPANTS MET INCLUSION CRITERIA
+
+### SECTION 5: CROSS-CHECK ALL PARTICIPANTS MET INCLUSION CRITERIA
 #note: given the time required to annotated errors, only participants who met inclusion criteria were annotated
 #sum(df$eng==1 & df$langhis %in% c(2,4) & df$ageen>6) #confirm all subjects monolingual English OR natively bilingual OR learned English before age 6
 #sum(df$commdis>0) #confirm no subject diagnosed with any communication disorder
@@ -236,12 +248,12 @@ summary(df$socclass)/20 #number of participants by social class affiliation
 summary(df$socclass)/20 / (nrow(df)/20) #percentage of participants by social class affiliation
 
 
-### SECTION 4: TRIM PASSAGES DUE TO EXPERIMENTER ERROR
+### SECTION 6: TRIM PASSAGES DUE TO EXPERIMENTER ERROR
 dfTrim <- subset(df, !(df$passage=='broccoli')) #remove broccoli passage due to typo in the last sentence as presented on-screen to participants
 dfTrim <- subset(dfTrim, !(dfTrim$passage=='sun')) #remove sun passage due to error in coding Excel
 
 
-### SECTION 5: OUTPUT DATAFRAME
+### SECTION 7: OUTPUT DATAFRAME
 write.csv(dfTrim, paste(out_path, "readAloudBetaData_", today, ".csv", sep="", collapse=NULL), row.names = FALSE)
 
 # collapse_by_participant <- function(filename_in, filename_out) {

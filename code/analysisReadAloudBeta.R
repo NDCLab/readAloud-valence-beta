@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-08-12
+# Last Updated: 2023-08-16
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -40,7 +40,9 @@ today <- format(today, "%Y%m%d")
 
 #set up directories for input/output data
 # data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
-data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
+# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
+# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230815.csv'
+data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
 to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
 out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
@@ -54,6 +56,9 @@ df$sex <- as.factor(df$sex)
 df$pronouns <- as.factor(df$pronouns)
 df$ethnic <- as.factor(df$ethnic)
 df$socclass <- as.factor(df$socclass)
+
+
+# FIXME: stats on df and dfTrim for reading speed are NA
 
 #extract demo stats
 
@@ -77,8 +82,8 @@ dfTrim <- df
 # 150015
 # 150208
 # 150245 had many passages that were entirely or near-entirely inaudible; the
-# rest were dropped too under the assumption that the audible ones too
-# would be too faint to identify errors in
+# rest were dropped too under the assumption that the audible ones too would be
+# too faint to identify errors in
 dfTrim <- subset(dfTrim, !(id %in% c(150015, 150208, 150245)))
 
 #remove participants whose challenge question accuracy was below 50% (chance = 25%)
@@ -94,6 +99,12 @@ length(unique(df$id)) - length(unique(dfTrim$id)) #number of participants remove
 mean(dfTrim$challengeAvgSub)
 sd(dfTrim$challengeAvgSub)
 
+# calculate average speed
+mean(dfTrim$timePerSyllable, na.rm=TRUE)
+sd(dfTrim$timePerSyllable, na.rm=TRUE)
+mean(dfTrim$timePerWord, na.rm=TRUE)
+sd(dfTrim$timePerWord, na.rm=TRUE)
+
 
 ### SECTION 2: PASSAGE-LEVEL TRIMMING
 passage_no_before_trimming <- nrow(dfTrim)
@@ -108,6 +119,34 @@ dfTrim <- anti_join(dfTrim,
 passage_no_after_trim1 <- nrow(dfTrim)
 passage_no_before_trimming - passage_no_after_trim1 #number of passages trimmed
 (passage_no_before_trimming - passage_no_after_trim1) / passage_no_before_trimming #percentage of passages trimmed
+
+
+# band-aid fix: remove passages without reading speed data so that we can run
+# our analyses on them nonetheless
+# todo
+
+# these are the only four passages without reading time data...
+# and incidentally? well, see their comments here...
+c(150013, "vegas")      # N.B.: 161 omitted syllables of 318 total in passage
+c(150022, "depression") # N.B.: 160 omitted syllables of 362 total in passage
+c(150083, "caramel")    # N.B.: only one of four passages to have >= 5% of syllables omitted
+c(150083, "cars")       # N.B.: only one of four passages to have >= 5% of syllables omitted
+
+
+dfTrim <- filter(dfTrim, !is.na(timePerSyllable))
+# itself, but without ones for which we have no reading data
+
+
+
+"TODO"
+
+passage_no_after_trim2 <- nrow(dfTrim)
+passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
+(passage_no_after_trim1 - passage_no_after_trim2) / passage_no_after_trim1 #percentage of passages trimmed of last bunch
+(passage_no_after_trim1 - passage_no_after_trim2) / passage_no_before_trimming #percentage of passages trimmed of whole
+
+
+
 
 
 ### SECTION 3: ORGANIZE DATA FOR MODELING
@@ -134,6 +173,11 @@ errorDat$avgSyllPerWord_gmc <- errorDat$avgSyllPerWord - mean(errorDat$avgSyllPe
 errorDat$error_rate <- errorDat$errors / errorDat$lenSyll
 errorDat$correction_rate <- errorDat$corrections / errorDat$lenSyll
 
+errorDat$timePerSyllable_gmc <- errorDat$timePerSyllable - mean(errorDat$timePerSyllable)
+errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
+
+# todo center avg reading speed, probably
+
 
 #extract demo stats
 errorDatStats <- subset(errorDat, !duplicated(errorDat$id))
@@ -148,6 +192,12 @@ summary(errorDatStats$ethnic) / length(unique(errorDatStats$id))
 summary(errorDatStats$socclass)
 summary(errorDatStats$socclass) / length(unique(errorDatStats$id))
 
+# Reading speed stats (ls additions 8/16/23)
+summary(errorDatStats$timePerSyllable)
+summary(errorDatStats$timePerWord)
+
+summary(errorDatStats$timePerSyllable_gmc)
+summary(errorDatStats$timePerWord_gmc)
 
 ### SECTION 4: MODEL RESULTS
 #misprod_rate x bfne
@@ -403,6 +453,57 @@ summary(f_model30)
 f_model31 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
 summary(f_model31)
+
+
+
+# Now: see if reading speed plays into it
+
+# Does scaaredSoc predict reading speed?
+# syllable level
+rs_model_1 <- lmerTest::lmer(timePerSyllable_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_1)
+
+# word level
+rs_model_2 <- lmerTest::lmer(timePerWord_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_2)
+
+
+rs_model_1_bfne <- lmerTest::lmer(timePerSyllable_gmc ~ bfne_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_1_bfne)
+
+# word level
+rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ bfne_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_2_bfne)
+
+rs_model_1_sps <- lmerTest::lmer(timePerSyllable_gmc ~ sps_gmc + (1|id) + (1|passage),
+                                  data=errorDat, REML=TRUE)
+summary(rs_model_1_sps)
+
+# word level
+rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ sps_gmc + (1|id) + (1|passage),
+                                  data=errorDat, REML=TRUE)
+summary(rs_model_2_sps)
+
+
+
+# And now ->> check out work
+# Does our hesitation ~ scaaredSoc finding hold with reading speed controlled for?
+# syllable level
+rs_model_3 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + timePerSyllable_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_3)
+
+# word level
+rs_model_4 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + timePerWord_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_4)
+
+
+# todo: check models 1 and 2 when hesitation rate is held still
 
 
 # LS ideas:
