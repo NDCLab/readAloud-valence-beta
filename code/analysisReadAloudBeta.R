@@ -135,6 +135,8 @@ c(150083, "cars")       # N.B.: only one of four passages to have >= 5% of sylla
 
 dfTrim <- filter(dfTrim, !is.na(timePerSyllable))
 # itself, but without ones for which we have no reading data
+# this ends up only dropping 0083, caramel - the other three already end up
+# getting dropped based on other criteria
 
 
 
@@ -487,6 +489,22 @@ summary(rs_model_1_sps)
 rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ sps_gmc + (1|id) + (1|passage),
                                   data=errorDat, REML=TRUE)
 summary(rs_model_2_sps)
+
+
+
+# Does scaaredSoc predict reading speed?
+# syllable level
+rs_model_3 <- lmerTest::lmer(timePerSyllable ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_3)
+
+# word level
+rs_model_4 <- lmerTest::lmer(timePerWord ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                             data=errorDat, REML=TRUE)
+summary(rs_model_4)
+
+
+
 
 
 
