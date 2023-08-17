@@ -490,6 +490,18 @@ summary(rs_model_2_sps)
 
 
 
+# What happens when we control for age?
+#hesitation_rate x scaaredSoc
+age_model1 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
+                         data=errorDat, REML=TRUE)
+summary(age_model1)
+
+#words_with_hes_rate x scaaredSoc
+age_model2 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
+                          data=errorDat, REML=TRUE)
+summary(age_model2)
+
+
 # And now ->> check out work
 # Does our hesitation ~ scaaredSoc finding hold with reading speed controlled for?
 # syllable level
@@ -504,6 +516,9 @@ summary(rs_model_4)
 
 
 # todo: check models 1 and 2 when hesitation rate is held still
+
+
+
 
 
 # LS ideas:
