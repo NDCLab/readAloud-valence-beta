@@ -53,7 +53,8 @@ out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivative
 
 #load input files
 # data <- paste(main_dataset, 'derivatives/preprocessed/disfluencies_subject-x-passage_20230616_1229pm.csv', sep="", collapse=NULL)
-data <- "/home/luc/Documents/ndclab/analysis-sandbox/output-csvs/disfluencies_subject-x-passage_20230616_1229pm.csv"
+# data <- "/home/luc/Documents/ndclab/analysis-sandbox/output-csvs/disfluencies_subject-x-passage_20230616_1229pm.csv"
+data <- "/home/luc/Documents/ndclab/analysis-sandbox/output-csvs/disfluencies_subject-x-passage_20230818_1042pm.csv"
 accDat_path <- paste(main_dataset,'derivatives/preprocessed/readAloud_passage-level_summary_20220812.csv', sep="", collapse=NULL)
 readDat_path <- paste(main_dataset, 'derivatives/analysisStimuli_readDat_20230614.csv', sep="", collapse=NULL)
 redcap_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019.csv', sep="", collapse=NULL)
@@ -84,7 +85,7 @@ tempdf <- data.frame(matrix(nrow=0, ncol=ncol(df)))
 colnames(tempdf) <- colnames(df)
 for(passage in 1:length(all_passages)){
   if(all_passages[passage] %in% passages_read){next}else{
-    tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 28))
+    tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 30))
   }
 }
 df <- rbind(df, tempdf)
@@ -254,7 +255,9 @@ dfTrim <- subset(dfTrim, !(dfTrim$passage=='sun')) #remove sun passage due to er
 
 
 ### SECTION 7: OUTPUT DATAFRAME
-write.csv(dfTrim, paste(out_path, "readAloudBetaData_", today, ".csv", sep="", collapse=NULL), row.names = FALSE)
+out_filename <- paste(out_path, "readAloudBetaData_", today, ".csv", sep="", collapse=NULL)
+write.csv(dfTrim, out_filename, row.names = FALSE)
+out_filename
 
 # collapse_by_participant <- function(filename_in, filename_out) {
 #   by_participant <- read_csv(filename_in) %>%

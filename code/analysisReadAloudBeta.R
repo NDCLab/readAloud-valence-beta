@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-08-16
+# Last Updated: 2023-08-24
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -42,7 +42,8 @@ today <- format(today, "%Y%m%d")
 # data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230815.csv'
-data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
+# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
+data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230821.csv'
 to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
 out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
@@ -56,9 +57,6 @@ df$sex <- as.factor(df$sex)
 df$pronouns <- as.factor(df$pronouns)
 df$ethnic <- as.factor(df$ethnic)
 df$socclass <- as.factor(df$socclass)
-
-
-# FIXME: stats on df and dfTrim for reading speed are NA
 
 #extract demo stats
 
@@ -123,7 +121,6 @@ passage_no_before_trimming - passage_no_after_trim1 #number of passages trimmed
 
 # band-aid fix: remove passages without reading speed data so that we can run
 # our analyses on them nonetheless
-# todo
 
 # these are the only four passages without reading time data...
 # and incidentally? well, see their comments here...
@@ -137,10 +134,6 @@ dfTrim <- filter(dfTrim, !is.na(timePerSyllable))
 # itself, but without ones for which we have no reading data
 # this ends up only dropping 0083, caramel - the other three already end up
 # getting dropped based on other criteria
-
-
-
-"TODO"
 
 passage_no_after_trim2 <- nrow(dfTrim)
 passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
@@ -178,7 +171,7 @@ errorDat$correction_rate <- errorDat$corrections / errorDat$lenSyll
 errorDat$timePerSyllable_gmc <- errorDat$timePerSyllable - mean(errorDat$timePerSyllable)
 errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
 
-# todo center avg reading speed, probably
+
 
 
 #extract demo stats
@@ -200,6 +193,45 @@ summary(errorDatStats$timePerWord)
 
 summary(errorDatStats$timePerSyllable_gmc)
 summary(errorDatStats$timePerWord_gmc)
+
+
+### SECTION 3.5: preparing for misprod-hes sequential analyses
+
+# ignore the misprod-hes columns for now
+errorDatMisprodHes <- select(errorDat, !contains("_syllables"))
+
+# First: look at a given misproduction and check for nearby hesitations
+justMisprodWithHesBefore <- cbind(errorDatMisprodHes,
+                                  hes_position = 0, # "before",
+                                  misprod_tally = errorDat$misprod_with_hes_in_previous_syllables)
+
+justMisprodWithHesAfter <- cbind(errorDatMisprodHes,
+                                 hes_position = 1, # "after",
+                                 misprod_tally = errorDat$misprod_with_hes_in_next_syllables)
+
+
+# stack the ones before and the ones after as rows of a single df (my attempt at long form)
+errorDatLongMisprodWithRelHes <- rbind(justMisprodWithHesBefore, justMisprodWithHesAfter)
+
+# track the binary relative position as a factor
+errorDatLongMisprodWithRelHes$hes_position <- as.factor(errorDatLongMisprodWithRelHes$hes_position)
+
+# Then: look at a given hesitation and check for nearby misproductions
+justHesWithMisprodBefore <- cbind(errorDatMisprodHes,
+                                  misprod_position = 0, # "before",
+                                  hes_tally = errorDat$hes_with_misprod_in_previous_syllables)
+
+justHesWithMisprodAfter <- cbind(errorDatMisprodHes,
+                                 misprod_position = 1, # "after",
+                                 hes_tally = errorDat$hes_with_misprod_in_next_syllables)
+
+# stack the ones before and the ones after as rows of a single df (my attempt at long form)
+errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisprodAfter)
+
+# track the binary relative position as a factor
+errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
+
+
 
 ### SECTION 4: MODEL RESULTS
 #misprod_rate x bfne
@@ -506,8 +538,6 @@ summary(rs_model_4)
 
 
 
-
-
 # What happens when we control for age?
 #hesitation_rate x scaaredSoc
 age_model1 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
@@ -520,7 +550,7 @@ age_model2 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + age_gmc + (1
 summary(age_model2)
 
 
-# And now ->> check out work
+# And now ->> check our work
 # Does our hesitation ~ scaaredSoc finding hold with reading speed controlled for?
 # syllable level
 rs_model_3 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + timePerSyllable_gmc + (1|id) + (1|passage),
@@ -533,100 +563,25 @@ rs_model_4 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + timePerWord_
 summary(rs_model_4)
 
 
-# todo: check models 1 and 2 when hesitation rate is held still
+# misprod-hes ordering
+
+# Is the number of hesitations adjacent to misproductions in a particular
+# reading predicted by the
+
+# Does the position of misproductions relative to hesitations
 
 
+# we have a number of occurrences of a misproduction in a particular position
+# relative to a passage's hesitations. does knowing the position (before/after)
+# predict the number of these sequences we have?
 
+# does misproduction location relative to a hesitation predict how many
+# instances we get in a particular reading?
 
+hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_tally ~ misprod_position + (1|id) + (1|passage),
+                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
+summary(hes_with_rel_misprod_model_1)
 
-# LS ideas:
-# error rate ~ SA
-# correction rate ~ error rate * SA
-
-# comprehension ~ correction rate
-# comprehension ~ SA * correction rate
-# comprehension ~ error rate
-# comprehension ~ SA * error rate
-# comprehension ~ error rate * correction rate
-# comprehension ~ error rate * correction rate * SA
-
-# comprehension ~ hes rate * error rate
-# comprehension ~ hes rate * correction rate
-
-# comprehension ~ hes rate * error rate * SA
-# comprehension ~ hes rate * correction rate * SA
-# comprehension ~ hes rate * error rate * correction rate * SA
-
-# error rate      ~ hes rate * SA
-# correction rate ~ hes rate * SA, control for error rate
-
-# corr_ : corrections rate
-# err_  : errors rate
-
-
-# error rate as explained by social anxiety
-fls_model_err_scaared <- lmer(error_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                                   data=errorDat, REML=TRUE)
-summary(fls_model_err_scaared)
-
-# correction rate as explained by social anxiety
-fls_model_corr_scaared <- lmer(correction_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                              data=errorDat, REML=TRUE)
-summary(fls_model_corr_scaared)
-
-# correction rate as explained by social anxiety and errors
-fls_model_corr_scaared_err <- lmer(correction_rate ~ scaaredSoc_gmc * error_rate + (1|id) + (1|passage),
-                                   data=errorDat, REML=TRUE)
-summary(fls_model_corr_scaared_err)
-
-# comprehension ~ correction rate
-fls_model_comp_corr <- glmer(challengeACC ~ correction_rate + (1|id) + (1|passage),
-                             data=errorDat, family = "binomial")
-summary(fls_model_comp_corr)
-
-# comprehension ~ SA * correction rate
-fls_model_comp_scaared_corr <- glmer(challengeACC ~ scaaredSoc_gmc * correction_rate + (1|id) + (1|passage),
-                                     data=errorDat, family = "binomial")
-summary(fls_model_comp_scaared_corr) # *
-
-# comprehension ~ error rate
-fls_model_comp_err <- glmer(challengeACC ~ error_rate + (1|id) + (1|passage),
-                             data=errorDat, family = "binomial")
-summary(fls_model_comp_err)
-
-# comprehension ~ SA * error rate
-fls_model_comp_scaared_err <- glmer(challengeACC ~ scaaredSoc_gmc * error_rate + (1|id) + (1|passage),
-                                    data=errorDat, family = "binomial")
-summary(fls_model_comp_scaared_err)
-
-# comprehension ~ error rate * correction rate
-fls_model_comp_err_corr <- glmer(challengeACC ~ error_rate * correction_rate + (1|id) + (1|passage),
-                                 data=errorDat, family = "binomial")
-summary(fls_model_comp_err_corr)
-
-# comprehension ~ hes rate * error rate
-fls_model_comp_hes_err <- glmer(challengeACC ~ hesitation_rate * error_rate + (1|id) + (1|passage),
-                                data=errorDat, family = "binomial")
-summary(fls_model_comp_hes_err)
-
-# comprehension ~ hes rate * correction rate
-fls_model_comp_hes_corr <- glmer(challengeACC ~ hesitation_rate * correction_rate + (1|id) + (1|passage),
-                                 data=errorDat, family = "binomial")
-summary(fls_model_comp_hes_corr) # ***
-
-
-# Check the main one of interest, comprehension as explained by SA and
-# corrections (see fls_model_comp_scaared_corr above), with all three tests
-f_model_comp_scaared_corr <- glmer(challengeACC ~ scaaredSoc_gmc * correction_rate + (1|id) + (1|passage),
-                                   data=errorDat, family = "binomial")
-summary(f_model_comp_scaared_corr) # *
-
-f_model_comp_bfne_corr <- glmer(challengeACC ~ bfne_gmc * correction_rate + (1|id) + (1|passage),
-                                data=errorDat, family = "binomial")
-summary(f_model_comp_bfne_corr) # N.S.
-
-f_model_comp_sps_corr <- glmer(challengeACC ~ sps_gmc * correction_rate + (1|id) + (1|passage),
-                               data=errorDat, family = "binomial")
-summary(f_model_comp_sps_corr) # N.S., but p for interaction is at 0.0698
-
-
+misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_tally ~ hes_position + (1|id) + (1|passage),
+                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
+summary(misprod_with_rel_hes_model_1)
