@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-08-24
+# Last Updated: 2023-08-25
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -43,7 +43,7 @@ today <- format(today, "%Y%m%d")
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230815.csv'
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
-data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230821.csv'
+data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
 to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
 out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
@@ -585,3 +585,23 @@ summary(hes_with_rel_misprod_model_1)
 misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_tally ~ hes_position + (1|id) + (1|passage),
                                                data=errorDatLongMisprodWithRelHes, REML=TRUE)
 summary(misprod_with_rel_hes_model_1)
+
+
+
+# Word frequency analysis
+# Does a passage's average word frequency predict participants' hesitation rate or misproduction rate?
+wordfreq_model_1 <- lmerTest::lmer(hesitation_rate ~ avgWordFreq + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(wordfreq_model_1)
+wordfreq_model_2 <- lmerTest::lmer(misprod_rate ~ avgWordFreq + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(wordfreq_model_2)
+
+# Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
+wordfreq_model_3 <- lmerTest::lmer(hesitation_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(wordfreq_model_3)
+
+wordfreq_model_4 <- lmerTest::lmer(misprod_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(wordfreq_model_4)

@@ -60,7 +60,7 @@ readDat_path <- paste(main_dataset, 'derivatives/analysisStimuli_readDat_2023061
 redcap_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019.csv', sep="", collapse=NULL)
 agedat_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019_ageonly.csv', sep="", collapse=NULL)
 speedDat_path <- paste(main_dataset, "derivatives/preprocessed/valence-timing/timingpitch_subject-by-passage_2022-09-09.csv", sep="", collapse=NULL)
-
+freqDat_path <- paste(main_analyses, "derivatives/prepWordFreq_readDat20230825.csv", sep="")
 # c(data, accDat_path, readDat_path, redcap_path, agedat_path, speedDat_path) %>% fs::as_fs_path() %>% fs::is_file()
 # ✅: all TRUE
 
@@ -74,6 +74,7 @@ accDat$passage <- c("dams", "flying", "bats", "broccoli", "realty", "bees", "dog
                     "cars", "vegas", "sun", "caramel", "congo", "antarctica", "depression", "skunkowl", "grizzly",
                     "mantis", "dentist")        #rename passages with short-name
 speedDat <- read.csv(speedDat_path, na.strings='NA')
+freqDat <- read.csv(freqDat_path, na.strings = 'NA')
 
 #organize data types
 df[,3:30] <- sapply(df[,3:30],as.numeric)
@@ -173,7 +174,7 @@ speedDat$id <- as.character(speedDat$id) # so we can join and it doesn't complai
 df <- left_join(df, speedDat, by = c("id", "passage")) # now reading timestamps and duration are looped into df
 
 
-### SECTION 4: BUILD TRIAL-LEVEL DF (ADD DEMODAT, READDAT, and ACCDAT to DF)
+### SECTION 4: BUILD TRIAL-LEVEL DF (ADD DEMODAT, READDAT, ACCDAT, AND FREQDAT to DF)
 for(i in 1:nrow(df)){
   subject <- df$id[i] #extract subject number for matching
   passage <- df$passage[i] #extract passage name for matching
@@ -192,6 +193,9 @@ for(i in 1:nrow(df)){
   df$lenSyll[i] <- sum(readDat$lengthSyll[which(readDat$passage==passage)]) #length of passage in syllables
   df$lenWord[i] <- sum(readDat$lengthWord[which(readDat$passage==passage)]) #length of passage in words
   df$avgSyllPerWord[i] <- df$lenSyll[i]/df$lenWord[i]
+
+  #extract passage characteristics from freqDat
+  df$avgWordFreq[i] <- freqDat$avgFreq[which(freqDat$passage==passage)]
 
   #extract participant accuracy from accDat
   df$challengeACC[i] <- accDat[match(passage, accDat$passage), as.character(subject)] #passage-specific challenge question accuracy for subject
