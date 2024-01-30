@@ -1,11 +1,13 @@
 # readAloud-valence-beta Analysis Preparation
 # Authors: Luc Sahar and Jessica M. Alexander -- NDCLab, Florida International University
-# Last updated: 2023-08-15
+# Last updated: 2024-01-30
 
 # INPUTS
-# data/df: behavioral (error-related) data, for each participant on each passage
+# data/df: behavioral (error-related) data, for each participant for each word
 # accDat: comprehension question accuracy (0/1) for each participant for each passage
-# readDat: stimuli characteristics (by passage half)
+#         as of 1/30/24 this is alphabetical by *passage* now (more easily
+#         automated, less stateful, less hard coding)
+# readDat: stimuli characteristics (by passage half) - 2024-01-30 - now NA?
 # redcap: participant data, incl. demographics and responses + scored factors for questionnaires:
   # bfne (brief fear of negative evaluation): bfne_b_scrdTotal (fear of negative evaluation total)
   # phq8 (patient health questionnaire): phq8_scrdTotal (depression scale total)
@@ -39,29 +41,28 @@ library(readr) # write_csv
 #   current_datetime <- now(timezone) %>% format(date_format)
 #   paste(label, '_', current_datetime, '.', ext, sep = "")
 # }
-today <- Sys.Date()
-today <- format(today, "%Y%m%d")
+today <- Sys.Date() %>% format("%Y%m%d")
 
 #set up directories for input/output
 # main_dataset <- '/Users/jalexand/github/readAloud-valence-dataset/'
 # main_analyses <- '/Users/jalexand/github/readAloud-valence-beta/'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
-main_dataset <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-dataset/'
-main_analyses <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/'
-out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
+main_dataset <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-dataset/'
+main_analyses <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/'
+out_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
 
 
 #load input files
 # data <- paste(main_dataset, 'derivatives/preprocessed/disfluencies_subject-x-passage_20230616_1229pm.csv', sep="", collapse=NULL)
-# data <- "/home/luc/Documents/ndclab/analysis-sandbox/output-csvs/disfluencies_subject-x-passage_20230616_1229pm.csv"
-data <- "/home/luc/Documents/ndclab/analysis-sandbox/output-csvs/disfluencies_subject-x-passage_20230818_1042pm.csv"
+data <- "~/Documents/ndclab/rwe-analysis-sandbox/rwe-dataset/derivatives/disfluencies_subject-x-passage-x-word_20240126_0253pm.csv"
 accDat_path <- paste(main_dataset,'derivatives/preprocessed/readAloud_passage-level_summary_20220812.csv', sep="", collapse=NULL)
 readDat_path <- paste(main_dataset, 'derivatives/analysisStimuli_readDat_20230614.csv', sep="", collapse=NULL)
 redcap_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019.csv', sep="", collapse=NULL)
 agedat_path <- paste(main_dataset,'derivatives/preprocessed/202201v0readAloudval_SCRD_2022-06-20_1019_ageonly.csv', sep="", collapse=NULL)
 speedDat_path <- paste(main_dataset, "derivatives/preprocessed/valence-timing/timingpitch_subject-by-passage_2022-09-09.csv", sep="", collapse=NULL)
 freqDat_path <- paste(main_analyses, "derivatives/prepWordFreq_readDat20230825.csv", sep="")
-# c(data, accDat_path, readDat_path, redcap_path, agedat_path, speedDat_path) %>% fs::as_fs_path() %>% fs::is_file()
+scaffolds_path <- paste(main_dataset, 'code/scaffolds.xlsx', sep="", collapse=NULL)
+# c(data, accDat_path, readDat_path, redcap_path, agedat_path, speedDat_path, scaffolds_path) %>% fs::as_fs_path() %>% fs::is_file()
 # ✅: all TRUE
 
 
@@ -73,6 +74,7 @@ accDat <- read.csv(accDat_path, na.strings='NA', check.names=FALSE) #passage lev
 accDat$passage <- c("dams", "flying", "bats", "broccoli", "realty", "bees", "dogshow", "dolphins", "icefishing",
                     "cars", "vegas", "sun", "caramel", "congo", "antarctica", "depression", "skunkowl", "grizzly",
                     "mantis", "dentist")        #rename passages with short-name
+                                                # can't we use scaffolds for this?
 speedDat <- read.csv(speedDat_path, na.strings='NA')
 freqDat <- read.csv(freqDat_path, na.strings = 'NA')
 
