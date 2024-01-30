@@ -41,15 +41,6 @@ library(lubridate) # now
 library(readr) # write_csv
 
 #set up defaults for output file naming
-# ext_default = 'csv'
-# tz_default = "America/New_York"
-# date_format_default = "%Y%m%d_%I%M%P"
-#
-# build_output_filename <- function(label, ext = ext_default, timezone = tz_default, date_format = date_format_default) {
-#   # `label` may include the destination directory, if different from the working directory when the script is run
-#   current_datetime <- now(timezone) %>% format(date_format)
-#   paste(label, '_', current_datetime, '.', ext, sep = "")
-# }
 today <- Sys.Date() %>% format("%Y%m%d")
 
 #set up directories for input/output
@@ -80,10 +71,7 @@ redcap <- read.csv(redcap_path, na.strings='NA') #participant questionnaire resp
 agedat <- read.csv(agedat_path, na.strings='NA') #participant age information
 readDat <- read.csv(readDat_path, na.strings='N') #passage-level characteristics from analysisStimuli.R
 accDat <- read.csv(accDat_path, na.strings='NA', check.names=FALSE) #passage level accuracy for each subject
-accDat$passage <- c("dams", "flying", "bats", "broccoli", "realty", "bees", "dogshow", "dolphins", "icefishing",
-                    "cars", "vegas", "sun", "caramel", "congo", "antarctica", "depression", "skunkowl", "grizzly",
-                    "mantis", "dentist")        #rename passages with short-name
-                                                # can't we use scaffolds for this?
+accDat$passage <- excel_sheets(scaffolds_path)  #rename passages with short-name
 speedDat <- read.csv(speedDat_path, na.strings='NA')
 freqDat <- read.csv(freqDat_path, na.strings = 'NA')
 
@@ -289,6 +277,6 @@ out_filename
 # # base = "~/Documents/ndclab/analysis-sandbox/github-structure-mirror/readAloud-valence-dataset/derivatives/preprocessed"
 # base = "/home/data/NDClab/datasets/readAloud-valence-dataset/derivatives/preprocessed"
 # preprocessed_summary_filename = "TODO"
-# collapsed_filename = build_output_filename(label = paste(base, "disfluencies_subject", sep='/'))
+# collapsed_filename = "TODO"
 #
 # collapse_by_participant(preprocessed_summary_file, collapsed_filename)
