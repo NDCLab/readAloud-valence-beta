@@ -1,26 +1,35 @@
 # readAloud-valence-beta Analysis Preparation
-# Authors: Luc Sahar and Jessica M. Alexander -- NDCLab, Florida International University
+# Authors: Luc Sahar and Jessica M. Alexander
+# NDCLab, Florida International University
 # Last updated: 2024-01-30
 
 # INPUTS
 # data/df: behavioral (error-related) data, for each participant for each word
-# accDat: comprehension question accuracy (0/1) for each participant for each passage
-#         as of 1/30/24 this is alphabetical by *passage* now (more easily
-#         automated, less stateful, less hard coding)
+# accDat:  comprehension question accuracy (0/1) for each participant for each
+#          passage
+#            as of 1/30/24 this is alphabetical by *passage* now (more easily
+#            automated, less stateful, less hard coding)
 # readDat: stimuli characteristics (by passage half) - 2024-01-30 - now NA?
-# redcap: participant data, incl. demographics and responses + scored factors for questionnaires:
-  # bfne (brief fear of negative evaluation): bfne_b_scrdTotal (fear of negative evaluation total)
-  # phq8 (patient health questionnaire): phq8_scrdTotal (depression scale total)
-  # scaared, total (screen for adult anxiety disorders): scaared_b_scrdTotal (total anxiety)
-  # scaared, social (screen for adult anxiety disorders): scaared_b_scrdSoc (social phobias)
-  # scaared, general (screen for adult anxiety disorders): scaared_b_scrdGA (general anxiety)
-  # sps (social phobia scale): sias6sps6_b_scrdSPS
+# redcap:  participant data, incl. demographics and responses + scored factors
+#          for questionnaires:
+#   bfne (brief fear of negative evaluation): bfne_b_scrdTotal (fear of negative
+#         evaluation total)
+#   phq8 (patient health questionnaire): phq8_scrdTotal (depression scale total)
+#   scaared, total (screen for adult anxiety disorders): scaared_b_scrdTotal
+#        (total anxiety)
+#   scaared, social (screen for adult anxiety disorders): scaared_b_scrdSoc
+#        (social phobias)
+#   scaared, general (screen for adult anxiety disorders): scaared_b_scrdGA
+#        (general anxiety)
+#   sps (social phobia scale): sias6sps6_b_scrdSPS
 
 # OUTPUTS
 # dfTrim: for each passage, for each participant, details on:
-  # participant behavior: reading errors made, comprehension question accuracy
-  # passage characteristics: length (syllable and word), average syllables per word
-  # participant data: demographics, language history, mood and mood disorder scores
+#   participant behavior: reading errors made, comprehension question accuracy
+#   passage characteristics: length (syllable and word), average syllables per
+#                            word
+#   participant data: demographics, language history, mood and mood disorder
+#                     scores
 
 
 ### SECTION 1: SETTING UP
@@ -233,7 +242,8 @@ df$timePerWord     <- df$readingTime / df$lenWord
 
 
 ### SECTION 5: CROSS-CHECK ALL PARTICIPANTS MET INCLUSION CRITERIA
-#note: given the time required to annotated errors, only participants who met inclusion criteria were annotated
+# note: given the time required to annotated errors, only participants who met
+#       inclusion criteria were annotated
 #sum(df$eng==1 & df$langhis %in% c(2,4) & df$ageen>6) #confirm all subjects monolingual English OR natively bilingual OR learned English before age 6
 #sum(df$commdis>0) #confirm no subject diagnosed with any communication disorder
 #sum(df$profen>3, na.rm=TRUE)/20 #one remaining subject (150060) rates own English proficiency as not "elementary" or "not proficient", but reads fluidly and achieved 80% accuracy on challenge questions, so not excluded
