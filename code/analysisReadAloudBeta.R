@@ -11,6 +11,103 @@
 # NOTES TO DO
 # drop 150086 as only completed 12 of 20 passages and low accuracy
 
+# Data dict
+
+# errorDatMisprodHes:
+#
+#   our errorDat dataframe, just without the misprod-sequencing columns (which
+#   we'll add in piecemeal by different names later)
+
+# First, look at a given misproduction and check for nearby hesitations
+#
+# hes_position:
+#
+#   for long-form dataframes counting misproductions, this indicates whether the
+#   relevant count is the number of hesitations before (0) or after (1) those
+#   misproductions being counted in that row
+#
+#
+# misprod_tally:
+#
+#   conversely, in long-form dataframes counting misproductions, this column
+#   actually tracks how many misproductions there are in that reading
+#   (participant x passage) that have a hesitation in the relevant relative
+#   position
+
+
+# justMisprodWithHesBefore:
+#
+#   this is the dataframe with every (participant x passage) reading, counting
+#   the number of misproductions with a nearby preceding hesitation
+#
+#   i.e., for each reading, it counts the number of times (misprod_tally) that a
+#   hesitation comes before a misproduction -- so for every entry, hes_position = 0
+#
+#
+# justMisprodWithHesAfter
+#
+#   similarly, this is the dataframe with every (participant x passage) reading,
+#   counting the number of misproductions with a nearby following hesitation
+#
+#   i.e., for each reading, it counts the number of times (misprod_tally) that a
+#   hesitation comes after a misproduction -- so for every entry, hes_position = 1
+#
+#
+# errorDatLongMisprodWithRelHes:
+#
+#   this is the long-form dataframe, with two rows per reading (participant x
+#   passage): one for each position for a relative hesitation. i.e. this stacks
+#   the two dataframes that respectively have (1) every passage, with a count of
+#   misproductions for hes_position = 0, and (2) every passage, with a count of
+#   misproductions for hes_position = 1
+
+
+
+# Then, look at a given hesitation and check for nearby misproductions
+
+# misprod_position:
+#
+#   for long-form dataframes counting hesitations, this indicates whether the
+#   relevant count is the number of misproductions before (0) or after (1) those
+#   hesitations being counted in that row
+#
+#
+# hes_tally:
+#
+#   conversely, in long-form dataframes counting hesitations, this column
+#   actually tracks how many hesitations there are in that reading (participant
+#   x passage) that have a misproduction in the relevant relative position
+
+
+# justHesWithMisprodBefore:
+#
+#   this is the dataframe with every (participant x passage) reading, counting
+#   the number of hesitations with a nearby preceding misproduction
+#
+#   i.e., for each reading, it counts the number of times (hes_tally) that a
+#   misproduction comes before a hesitation -- so for every entry,
+#   misprod_position = 0
+#
+#
+# justHesWithMisprodAfter
+#
+#   similarly, this is the dataframe with every (participant x passage) reading,
+#   counting the number of hesitations with a nearby following misproduction
+#
+#   i.e., for each reading, it counts the number of times (hes_tally) that a
+#   misproduction comes after a hesitation -- so for every entry,
+#   misprod_position = 1
+#
+#
+# errorDatLongHesWithRelMisprod:
+#
+#   this is the long-form dataframe, with two rows per reading (participant x
+#   passage): one for each position for a relative misproduction, i.e. this
+#   stacks the two dataframes that respectively have (1) every passage, with a
+#   count of hesitations for misprod_position = 0, and (2) every passage, with a
+#   count of hesitations for misprod_position = 1
+
+
 ### SECTION 1: SETTING UP
 library(dplyr)
 library(lme4)
@@ -118,9 +215,6 @@ passage_no_after_trim1 <- nrow(dfTrim)
 passage_no_before_trimming - passage_no_after_trim1 #number of passages trimmed
 (passage_no_before_trimming - passage_no_after_trim1) / passage_no_before_trimming #percentage of passages trimmed
 
-
-# band-aid fix: remove passages without reading speed data so that we can run
-# our analyses on them nonetheless
 
 # these are the only four passages without reading time data...
 # and incidentally? well, see their comments here...
@@ -297,9 +391,6 @@ summary(model12)
 
 #### supplemental analyses
 # see notes
-
-
-
 
 
 
@@ -585,6 +676,15 @@ summary(hes_with_rel_misprod_model_1)
 misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_tally ~ hes_position + (1|id) + (1|passage),
                                                data=errorDatLongMisprodWithRelHes, REML=TRUE)
 summary(misprod_with_rel_hes_model_1)
+
+## does it interact with SA?
+hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_tally ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
+                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
+# summary(hes_with_rel_misprod_model_3)
+
+misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_tally ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
+                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
+# summary(misprod_with_rel_hes_model_4)
 
 
 
