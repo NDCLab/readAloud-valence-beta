@@ -65,111 +65,99 @@ scaffolds_path <- paste(main_dataset, 'code/scaffolds.xlsx', sep="", collapse=NU
 # c(data, accDat_path, readDat_path, redcap_path, agedat_path, speedDat_path, scaffolds_path) %>% fs::as_fs_path() %>% fs::is_file()
 # ✅: all TRUE
 
-
+all_passages <- excel_sheets(scaffolds_path)
 df <- read.csv(data, na.strings='NA')
 redcap <- read.csv(redcap_path, na.strings='NA') #participant questionnaire responses
 agedat <- read.csv(agedat_path, na.strings='NA') #participant age information
 readDat <- read.csv(readDat_path, na.strings='N') #passage-level characteristics from analysisStimuli.R
 accDat <- read.csv(accDat_path, na.strings='NA', check.names=FALSE) #passage level accuracy for each subject
-accDat$passage <- excel_sheets(scaffolds_path)  #rename passages with short-name
+accDat$passage <- all_passages  #rename passages with short-name
 speedDat <- read.csv(speedDat_path, na.strings='NA')
 freqDat <- read.csv(freqDat_path, na.strings = 'NA')
 
 #organize data types
-df[,3:30] <- sapply(df[,3:30],as.numeric)
+# df[,3:30] <- sapply(df[,3:30],as.numeric)
+# not applicable for now, we'll see
 
 #add missing passages for 150086 so that nrow is divisible by 20
-passages_read <- df$passage[which(df$id=="150086")]
-all_passages <- unique(df$passage)
-tempdf <- data.frame(matrix(nrow=0, ncol=ncol(df)))
-colnames(tempdf) <- colnames(df)
-for(passage in 1:length(all_passages)){
-  if(all_passages[passage] %in% passages_read){next}else{
-    tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 30))
-  }
-}
-df <- rbind(df, tempdf)
+# passages_read <- df$passage[which(df$id=="150086")]
+# tempdf <- data.frame(matrix(nrow=0, ncol=ncol(df)))
+# colnames(tempdf) <- colnames(df)
+# for(passage in 1:length(all_passages)){
+#   if(all_passages[passage] %in% passages_read){next}else{
+#     tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 30))
+#   }
+# }
+# df <- rbind(df, tempdf)
 
 ### SECTION 2: BUILD DEMOGRAPHIC DATA DF
 demoDat <- redcap[,c(1,5)]
+# demoDat_imperative <- redcap[,c(1,5)]; demoDat_dplyr <- demoDat_imperative
+# as we refactor, our test case is: all.equal(demoDat_imperative, demoDat_dplyr)
+# this has been confirmed to work for with every new column added
+
 #biological sex: replace numerical values with text description
-for(a in 1:nrow(redcap)){
-  if(is.na(redcap$demo_b_sex_s1_r1_e1[a])){demoDat$sex[a] <- 'undisclosed'}
-  else if(redcap$demo_b_sex_s1_r1_e1[a]==1){demoDat$sex[a] <- 'male'}
-  else if(redcap$demo_b_sex_s1_r1_e1[a]==2){demoDat$sex[a] <- 'female'}
-  else if(redcap$demo_b_sex_s1_r1_e1[a]==3){demoDat$sex[a] <- 'intersex'}
-  else if(redcap$demo_b_sex_s1_r1_e1[a]==4){demoDat$sex[a] <- 'other'}
-  else if(redcap$demo_b_sex_s1_r1_e1[a]==5){demoDat$sex[a] <- 'unknown'}
-  else{demoDat$sex[a] <- 'undisclosed'}
-}
+demoDat$sex <- case_match(redcap$demo_b_sex_s1_r1_e1,
+                          1 ~ 'male', 2 ~ 'female', 3 ~ 'intersex',
+                          4 ~ 'other', 5 ~ 'unknown', .default = 'undisclosed')
 
 #preferred pronouns: replace numerical values with text description
-for(b in 1:nrow(redcap)){
-  if(is.na(redcap$demo_b_pronouns_s1_r1_e1[b])){demoDat$pron[b] <- 'undisclosed'}
-  else if(redcap$demo_b_pronouns_s1_r1_e1[b]==1){demoDat$pron[b] <- 'she/her'}
-  else if(redcap$demo_b_pronouns_s1_r1_e1[b]==2){demoDat$pron[b] <- 'he/him'}
-  else if(redcap$demo_b_pronouns_s1_r1_e1[b]==3){demoDat$pron[b] <- 'they/them'}
-  else if(redcap$demo_b_pronouns_s1_r1_e1[b]==5){demoDat$pron[b] <- 'other'}
-  else{demoDat$pron[b] <- 'undisclosed'}
-}
+# for(b in 1:nrow(redcap)){ ... }
+# 8 lines, 466 chars; boilerplatey
+
+# try rewriting as case_when
+demoDat$pron <- case_match (redcap$demo_b_pronouns_s1_r1_e1,
+                            1 ~ "she/her", 2 ~ "he/him", 3 ~ "they/them",
+                            5 ~ "other", .default = "undisclosed")
+# `.default` catches both NA and everything else
+
 
 #ethnicity affiliation: map to text description
-for(c in 1:nrow(redcap)){
-  if(redcap$demo_b_ethnic_s1_r1_e1___1[c]==1){demoDat$ethnic[c] <- 'AI'} #american indian/alaska native
-  else if(redcap$demo_b_ethnic_s1_r1_e1___2[c]==1){demoDat$ethnic[c] <- 'A'} #asian
-  else if(redcap$demo_b_ethnic_s1_r1_e1___3[c]==1){demoDat$ethnic[c] <- 'AA'} #african american
-  else if(redcap$demo_b_ethnic_s1_r1_e1___4[c]==1){demoDat$ethnic[c] <- 'LX'} #hispanic/latinx
-  else if(redcap$demo_b_ethnic_s1_r1_e1___5[c]==1){demoDat$ethnic[c] <- 'ME'} #middle eastern
-  else if(redcap$demo_b_ethnic_s1_r1_e1___6[c]==1){demoDat$ethnic[c] <- 'PI'} #pacific islander
-  else if(redcap$demo_b_ethnic_s1_r1_e1___7[c]==1){demoDat$ethnic[c] <- 'W'} #white
-  else if(redcap$demo_b_ethnic_s1_r1_e1___8[c]==1){demoDat$ethnic[c] <- 'O'} #other
-  else{demoDat$ethnic[c] <- 'UND'} #undisclosed
-}
+# wait, I don't think this lets people be multiple races
+demoDat$ethnic <- case_when(
+  redcap$demo_b_ethnic_s1_r1_e1___1 == 1 ~ 'AI', #american indian/alaska native
+  redcap$demo_b_ethnic_s1_r1_e1___2 == 1 ~ 'A', #asian
+  redcap$demo_b_ethnic_s1_r1_e1___3 == 1 ~ 'AA', #african american
+  redcap$demo_b_ethnic_s1_r1_e1___4 == 1 ~ 'LX', #hispanic/latinx
+  redcap$demo_b_ethnic_s1_r1_e1___5 == 1 ~ 'ME', #middle eastern
+  redcap$demo_b_ethnic_s1_r1_e1___6 == 1 ~ 'PI', #pacific islander
+  redcap$demo_b_ethnic_s1_r1_e1___7 == 1 ~ 'W', #white
+  redcap$demo_b_ethnic_s1_r1_e1___8 == 1 ~ 'O', #other
+  .default = 'UND' #undisclosed
+)
 
 #social class affiliation: replace numerical values with text description
-for(d in 1:nrow(redcap)){
-  if(is.na(redcap$demo_b_socclass_s1_r1_e1[d])){demoDat$socclass[d] <- 'undisclosed'}
-  else if(redcap$demo_b_socclass_s1_r1_e1[d]==1){demoDat$socclass[d] <- 'poor'}
-  else if(redcap$demo_b_socclass_s1_r1_e1[d]==2){demoDat$socclass[d] <- 'working'}
-  else if(redcap$demo_b_socclass_s1_r1_e1[d]==3){demoDat$socclass[d] <- 'middle'}
-  else if(redcap$demo_b_socclass_s1_r1_e1[d]==4){demoDat$socclass[d] <- 'affluent'}
-  else{demoDat$socclass[d] <- 'undisclosed'}
-}
+demoDat$socclass <- case_match(redcap$demo_b_socclass_s1_r1_e1,
+                                     1 ~ "poor", 2 ~ "working", 3 ~ "middle",
+                                     4 ~ "affluent", .default = "undisclosed")
 
 #communication disorders diagnoses: sum across childhood, adolescence, and adulthood
-for(e in 1:nrow(redcap)){
-  demoDat$commdis[e] <- sum(redcap$demo_b_comdiskid_s1_r1_e1[e],
-                            redcap$demo_b_comdisteen_s1_r1_e1[e],
-                            redcap$demo_b_comdisad_s1_r1_e[e])
-}
+# nb. there was a typo in the old version: no adult diagnoses were being checked
+# because the column name did not exist and `sum` with the df$col syntax did not
+# catch that
+demoDat$commdis <- select(redcap, matches("demo_b_comdis.*e1")) %>% rowSums
 
 #language history: transfer directly
-for(f in 1:nrow(redcap)){
-  demoDat$eng[f] <- redcap$demo_b_eng_s1_r1_e1[match(demoDat$record_id[f], redcap$record_id)] #participant monolingualism
-  demoDat$langhis[f] <- redcap$demo_b_langhis_s1_r1_e1[match(demoDat$record_id[f], redcap$record_id)] #participant language history
-  demoDat$ageen[f] <- redcap$demo_b_ageen_s1_r1_e1[match(demoDat$record_id[f], redcap$record_id)] #participant age of English acquisition
-  demoDat$profen[f] <- redcap$demo_b_profen_s1_r1_e1[match(demoDat$record_id[f], redcap$record_id)] #participant English proficiency
-}
+demoDat$eng <- redcap$demo_b_eng_s1_r1_e1 #participant monolingualism
+demoDat$langhis <- redcap$demo_b_langhis_s1_r1_e1 #participant language history
+demoDat$ageen <- redcap$demo_b_ageen_s1_r1_e1 #participant age of English acquisition
+demoDat$profen <- redcap$demo_b_profen_s1_r1_e1 #participant English proficiency
 
 #mood and mood disorders: transfer directly
-for(g in 1:nrow(redcap)){
-  demoDat$bfne[g] <- redcap$bfne_b_scrdTotal[match(demoDat$record_id[g], redcap$record_id)] #bfne total score
-  demoDat$phq8[g] <- redcap$phq8_scrdTotal[match(demoDat$record_id[g], redcap$record_id)] #phq8 depression scale
-  demoDat$scaaredTotal[g] <- redcap$scaared_b_scrdTotal[match(demoDat$record_id[g], redcap$record_id)] #scaared total anxiety
-  demoDat$scaaredGA[g] <- redcap$scaared_b_scrdGA[match(demoDat$record_id[g], redcap$record_id)] #scaared general anxiety
-  demoDat$scaaredSoc[g] <- redcap$scaared_b_scrdSoc[match(demoDat$record_id[g], redcap$record_id)] #scaared social phobias
-  demoDat$sps[g] <- redcap$sias6sps6_b_scrdSPS[match(demoDat$record_id[g], redcap$record_id)] #sps social phobia scale
-}
+demoDat$bfne <- redcap$bfne_b_scrdTotal
+demoDat$phq8 <- redcap$phq8_scrdTotal #phq8 depression scale
+demoDat$scaaredTotal <- redcap$scaared_b_scrdTotal #scaared total anxiety
+demoDat$scaaredGA <- redcap$scaared_b_scrdGA #scaared general anxiety
+demoDat$scaaredSoc <- redcap$scaared_b_scrdSoc #scaared social phobias
+demoDat$sps <- redcap$sias6sps6_b_scrdSPS #sps social phobia scale
 
 #age: pull from separate file
-for(h in 1:nrow(demoDat)){
-  demoDat$age[h] <- agedat$info_age_s1_r1_e1[match(demoDat$record_id[h], agedat$record_id)]
-}
+demoDat <- left_join(demoDat, # can't just assign: matching matters given new df
+                     select(agedat, record_id, age = info_age_s1_r1_e1))
 
 
 ### SECTION 3: SET UP DERIVED FIELDS FOR SPEED ANALYSES
 speedDat$readingTime <- speedDat$readEnd - speedDat$readStart
-speedDat$id <- as.character(speedDat$id) # so we can join and it doesn't complain about type comparison
 df <- left_join(df, speedDat, by = c("id", "passage")) # now reading timestamps and duration are looped into df
 
 
@@ -217,6 +205,8 @@ for(i in 1:nrow(df)){
   df$scaaredSoc[i] <- demoDat$scaaredSoc[match(df$id[i], demoDat$record_id)] #participant social phobias (scaared)
   df$sps[i] <- demoDat$sps[match(df$id[i], demoDat$record_id)] #participant social phobias (sias6sps6)
 }
+# first, test it- then we can delete the old versions
+# expect it to fail tho
 
 #organize participant demographic variables
 df$sex <- as.factor(df$sex)
