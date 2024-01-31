@@ -113,8 +113,8 @@ demoDat$pron <- case_match (redcap$demo_b_pronouns_s1_r1_e1,
 
 
 #ethnicity affiliation: map to text description
-# wait, I don't think this lets people be multiple races
-demoDat$ethnic <- case_when(
+demoDat$ethnic <- case_when( # first, check for self-identifying 2+ ethnicities
+  redcap %>% select(matches("demo_b_ethnic_*")) %>% rowSums >= 2 ~ 'M', # multi
   redcap$demo_b_ethnic_s1_r1_e1___1 == 1 ~ 'AI', #american indian/alaska native
   redcap$demo_b_ethnic_s1_r1_e1___2 == 1 ~ 'A', #asian
   redcap$demo_b_ethnic_s1_r1_e1___3 == 1 ~ 'AA', #african american
@@ -162,6 +162,8 @@ df <- left_join(df, speedDat, by = c("id", "passage")) # now reading timestamps 
 
 
 ### SECTION 4: BUILD TRIAL-LEVEL DF (ADD DEMODAT, READDAT, ACCDAT, AND FREQDAT to DF)
+# this takes over an hour and a half to run - todo: reimplement for efficiency
+# (worthwhile given it's 200,000 rows to loop over)
 for(i in 1:nrow(df)){
   subject <- df$id[i] #extract subject number for matching
   passage <- df$passage[i] #extract passage name for matching
@@ -205,8 +207,7 @@ for(i in 1:nrow(df)){
   df$scaaredSoc[i] <- demoDat$scaaredSoc[match(df$id[i], demoDat$record_id)] #participant social phobias (scaared)
   df$sps[i] <- demoDat$sps[match(df$id[i], demoDat$record_id)] #participant social phobias (sias6sps6)
 }
-# first, test it- then we can delete the old versions
-# expect it to fail tho
+# succeeded given changes above it; to be revised
 
 #organize participant demographic variables
 df$sex <- as.factor(df$sex)
@@ -215,6 +216,7 @@ df$ethnic <- as.factor(df$ethnic)
 df$socclass <- as.factor(df$socclass)
 
 # compute speed
+# nb these are passage level data but are tracked by word
 df$timePerSyllable <- df$readingTime / df$lenSyll
 df$timePerWord     <- df$readingTime / df$lenWord
 
@@ -222,25 +224,21 @@ df$timePerWord     <- df$readingTime / df$lenWord
 ### SECTION 5: CROSS-CHECK ALL PARTICIPANTS MET INCLUSION CRITERIA
 # note: given the time required to annotated errors, only participants who met
 #       inclusion criteria were annotated
-#sum(df$eng==1 & df$langhis %in% c(2,4) & df$ageen>6) #confirm all subjects monolingual English OR natively bilingual OR learned English before age 6
-#sum(df$commdis>0) #confirm no subject diagnosed with any communication disorder
-#sum(df$profen>3, na.rm=TRUE)/20 #one remaining subject (150060) rates own English proficiency as not "elementary" or "not proficient", but reads fluidly and achieved 80% accuracy on challenge questions, so not excluded
+sum(df$eng==1 & df$langhis %in% c(2,4) & df$ageen>6) #confirm all subjects monolingual English OR natively bilingual OR learned English before age 6
+sum(df$commdis>0) #confirm no subject diagnosed with any communication disorder
+filter(df, profen > 3) %>% select(id) %>% unique %>% nrow #one remaining subject (150060) rates own English proficiency as not "elementary" or "not proficient", but reads fluidly and achieved 80% accuracy on challenge questions, so not excluded
 
 #extract age and sex stats
-
 # all these values are just in case they're useful - not needed per se for later
 # steps of the logic in this script
+summary_unique <- function(df, key, column, f = summary) {
+  unique(select(df, column, key))[[column]] %>% f
+}
 
-summary(df$age) #age range and mean
-sd(df$age) #age standard deviation
-summary(df$sex)/20 #number of participants by sex
-summary(df$sex)/20 / (nrow(df)/20) #percentage of participants by sex
-summary(df$pronouns)/20 #number of participants by preferred pronoun
-summary(df$pronouns)/20 / (nrow(df)/20) #percentage of participants by preferred pronoun
-summary(df$ethnic)/20 #number of participants by ethnic affiliation
-summary(df$ethnic)/20 / (nrow(df)/20) #percentage of participants by ethnic affiliation
-summary(df$socclass)/20 #number of participants by social class affiliation
-summary(df$socclass)/20 / (nrow(df)/20) #percentage of participants by social class affiliation
+c("age", "sex", "pronouns", "ethnic", "socclass") %>%
+  map(\(col) summary_unique(df, "id", col)) # `map` not `for`: return, not print
+
+summary_unique(df, "id", "age", f = sd) # also do stdev for age
 
 
 ### SECTION 6: TRIM PASSAGES DUE TO EXPERIMENTER ERROR
@@ -249,7 +247,7 @@ dfTrim <- subset(dfTrim, !(dfTrim$passage=='sun')) #remove sun passage due to er
 
 
 ### SECTION 7: OUTPUT DATAFRAME
-out_filename <- paste(out_path, "readAloudBetaData_", today, ".csv", sep="", collapse=NULL)
+out_filename <- paste(out_path, "readAloudBetaData-wordLevel_", today, ".csv", sep="", collapse=NULL)
 write.csv(dfTrim, out_filename, row.names = FALSE)
 out_filename
 
