@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-08-25
+# Last Updated: 2024-02-01
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -140,10 +140,11 @@ today <- format(today, "%Y%m%d")
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230815.csv'
 # data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
-data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
-to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
+# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
+data <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData-wordLevel_20240130.csv'
+to_omit <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
-out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
+out_path <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
 
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
@@ -159,16 +160,23 @@ df$socclass <- as.factor(df$socclass)
 
 # all these values are just in case they're useful - not needed per se for later
 # steps of the logic in this script
-summary(df$age)
-sd(df$age)
-summary(df$sex)/18
-summary(df$sex)/18 / (nrow(df)/18)
-summary(df$pronouns)/18
-summary(df$pronouns)/18 / (nrow(df)/18)
-summary(df$ethnic)/18
-summary(df$ethnic)/18 / (nrow(df)/18)
-summary(df$socclass)/18
-summary(df$socclass)/18 / (nrow(df)/18)
+# from prep script:
+demo_cols <- c("age", "sex", "pronouns", "ethnic", "socclass")
+sample_size <- select(df, "id") %>% unique %>% nrow
+
+
+summary_unique <- function(df, key, column, f = summary) {
+  unique(select(df, column, key))[[column]] %>% f
+}
+
+demo_cols %>% # as totals, for each of our demographic columns
+  map(\(col) summary_unique(df, "id", col)) # `map` not `for`: return, not print
+
+demo_cols %>% # as a percent
+  map(\(col) summary_unique(df, "id", col) / sample_size)
+
+summary_unique(df, "id", "age", f = sd) # also do stdev for age
+
 
 #remove participants who were not engaged in the task
 dfTrim <- df
@@ -191,18 +199,17 @@ dfTrim <- subset(dfTrim, challengeAvgSub>0.5)
 length(unique(df$id)) - length(unique(dfTrim$id)) #number of participants removed due to distraction or low accuracy
 
 #calculate average accuracy
-mean(dfTrim$challengeAvgSub)
-sd(dfTrim$challengeAvgSub)
+summary_unique(dfTrim, "id", "challengeAvgSub")
+summary_unique(dfTrim, "id", "challengeAvgSub", f = sd)
 
-# calculate average speed
-mean(dfTrim$timePerSyllable, na.rm=TRUE)
-sd(dfTrim$timePerSyllable, na.rm=TRUE)
-mean(dfTrim$timePerWord, na.rm=TRUE)
-sd(dfTrim$timePerWord, na.rm=TRUE)
-
+# calculate average speed per *person* per *passage*
+unique(select(dfTrim, timePerSyllable, id, passage))$timePerSyllable %>% mean(na.rm = TRUE)
+unique(select(dfTrim, timePerSyllable, id, passage))$timePerSyllable %>% sd(na.rm = TRUE)
+unique(select(dfTrim, timePerWord, id, passage))$timePerWord %>% mean(na.rm = TRUE)
+unique(select(dfTrim, timePerWord, id, passage))$timePerWord %>% sd(na.rm = TRUE)
 
 ### SECTION 2: PASSAGE-LEVEL TRIMMING
-passage_no_before_trimming <- nrow(dfTrim)
+passage_no_before_trimming <- summary_unique(dfTrim, "id", "passage", f = length)
 
 #remove passages with high omissions (participant did not complete reading) or other problems (someone else is in the room, etc.)
 # e.g. vegas 150013
@@ -211,7 +218,7 @@ dfTrim <- anti_join(dfTrim,
                     by = join_by(id == participant, passage == passage))
 
 
-passage_no_after_trim1 <- nrow(dfTrim)
+passage_no_after_trim1 <- summary_unique(dfTrim, "id", "passage", f = length)
 passage_no_before_trimming - passage_no_after_trim1 #number of passages trimmed
 (passage_no_before_trimming - passage_no_after_trim1) / passage_no_before_trimming #percentage of passages trimmed
 
@@ -229,7 +236,7 @@ dfTrim <- filter(dfTrim, !is.na(timePerSyllable))
 # this ends up only dropping 0083, caramel - the other three already end up
 # getting dropped based on other criteria
 
-passage_no_after_trim2 <- nrow(dfTrim)
+passage_no_after_trim2 <- summary_unique(dfTrim, "id", "passage", f = length)
 passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
 (passage_no_after_trim1 - passage_no_after_trim2) / passage_no_after_trim1 #percentage of passages trimmed of last bunch
 (passage_no_after_trim1 - passage_no_after_trim2) / passage_no_before_trimming #percentage of passages trimmed of whole
@@ -259,8 +266,8 @@ errorDat$avgSyllPerWord_gmc <- errorDat$avgSyllPerWord - mean(errorDat$avgSyllPe
 # LS additions 8/11/23
 # errorDat$errors <- errorDat$errors - mean(errorDat$errors)
 # errorDat$correction <- errorDat$corrections - mean(errorDat$corrections)
-errorDat$error_rate <- errorDat$errors / errorDat$lenSyll
-errorDat$correction_rate <- errorDat$corrections / errorDat$lenSyll
+# errorDat$error_rate <- errorDat$errors / errorDat$lenSyll
+# errorDat$correction_rate <- errorDat$corrections / errorDat$lenSyll
 
 errorDat$timePerSyllable_gmc <- errorDat$timePerSyllable - mean(errorDat$timePerSyllable)
 errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
@@ -269,24 +276,27 @@ errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
 
 
 #extract demo stats
-errorDatStats <- subset(errorDat, !duplicated(errorDat$id))
-summary(errorDatStats$age)
-sd(errorDatStats$age)
-summary(errorDatStats$sex)
-summary(errorDatStats$sex) / length(unique(errorDatStats$id))
-summary(errorDatStats$pronouns)
-summary(errorDatStats$pronouns) / length(unique(errorDatStats$id))
-summary(errorDatStats$ethnic)
-summary(errorDatStats$ethnic) / length(unique(errorDatStats$id))
-summary(errorDatStats$socclass)
-summary(errorDatStats$socclass) / length(unique(errorDatStats$id))
-
-# Reading speed stats (ls additions 8/16/23)
-summary(errorDatStats$timePerSyllable)
-summary(errorDatStats$timePerWord)
-
-summary(errorDatStats$timePerSyllable_gmc)
-summary(errorDatStats$timePerWord_gmc)
+# fixme: these are at passage level, we need to `(summary_)unique`
+# actually, nvm: we already have all these from prep
+# errorDatStats <- subset(errorDat, !duplicated(errorDat$id))
+# errorDatStats <-
+# summary(errorDatStats$age)
+# sd(errorDatStats$age)
+# summary(errorDatStats$sex)
+# summary(errorDatStats$sex) / length(unique(errorDatStats$id))
+# summary(errorDatStats$pronouns)
+# summary(errorDatStats$pronouns) / length(unique(errorDatStats$id))
+# summary(errorDatStats$ethnic)
+# summary(errorDatStats$ethnic) / length(unique(errorDatStats$id))
+# summary(errorDatStats$socclass)
+# summary(errorDatStats$socclass) / length(unique(errorDatStats$id))
+#
+# # Reading speed stats (ls additions 8/16/23)
+# summary(errorDatStats$timePerSyllable)
+# summary(errorDatStats$timePerWord)
+#
+# summary(errorDatStats$timePerSyllable_gmc)
+# summary(errorDatStats$timePerWord_gmc)
 
 
 ### SECTION 3.5: preparing for misprod-hes sequential analyses
@@ -329,24 +339,24 @@ errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithR
 
 ### SECTION 4: MODEL RESULTS
 #misprod_rate x bfne
-model1 <- lmerTest::lmer(misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model1)
+# model1 <- lmerTest::lmer(misprod ~ bfne_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model1)
 
 #misprod_rate x scaaredSoc
-model2 <- lmerTest::lmer(misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+model2 <- lmerTest::lmer(misprod ~ scaaredSoc_gmc + (1|id) + (1|passage),
                          data=errorDat, REML=TRUE)
 summary(model2)
 
 #misprod_rate x sps
-model3 <- lmerTest::lmer(misprod_rate ~ sps_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model3)
+# model3 <- lmerTest::lmer(misprod_rate ~ sps_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model3)
 
 #hesitation_rate x bfne
-model4 <- lmerTest::lmer(hesitation_rate ~ bfne_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model4)
+# model4 <- lmerTest::lmer(hesitation_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model4)
 
 #hesitation_rate x scaaredSoc
 model5 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -354,14 +364,14 @@ model5 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + (1|id) + (1|passage)
 summary(model5)
 
 #hesitation_rate x sps
-model6 <- lmerTest::lmer(hesitation_rate ~ sps_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model6)
+# model6 <- lmerTest::lmer(hesitation_rate ~ sps_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model6)
 
 #words_with_misprod_rate x bfne
-model7 <- lmerTest::lmer(words_with_misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model7)
+# model7 <- lmerTest::lmer(words_with_misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model7)
 
 #words_with_misprod_rate x scaaredSoc
 model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -369,14 +379,14 @@ model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|
 summary(model8)
 
 #words_with_misprod_rate x sps
-model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model9)
+# model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model9)
 
 #words_with_hes_rate x bfne
-model10 <- lmerTest::lmer(words_with_hes_rate ~ bfne_gmc + (1|id) + (1|passage),
-                          data=errorDat, REML=TRUE)
-summary(model10)
+# model10 <- lmerTest::lmer(words_with_hes_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                           data=errorDat, REML=TRUE)
+# summary(model10)
 
 #words_with_hes_rate x scaaredSoc
 model11 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -384,9 +394,9 @@ model11 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + (1|id) + (1|pas
 summary(model11)
 
 #words_with_hes_rate x sps
-model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
-                          data=errorDat, REML=TRUE)
-summary(model12)
+# model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
+#                           data=errorDat, REML=TRUE)
+# summary(model12)
 
 
 #### supplemental analyses
