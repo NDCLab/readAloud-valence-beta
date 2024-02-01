@@ -269,38 +269,38 @@ errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
 ### SECTION 3.5: preparing for misprod-hes sequential analyses
 
 # ignore the misprod-hes columns for now
-# errorDatMisprodHes <- select(errorDat, !contains("_syllables"))
-#
-# # First: look at a given misproduction and check for nearby hesitations
-# justMisprodWithHesBefore <- cbind(errorDatMisprodHes,
-#                                   hes_position = 0, # "before",
-#                                   misprod_tally = errorDat$misprod_with_hes_in_previous_syllables)
-#
-# justMisprodWithHesAfter <- cbind(errorDatMisprodHes,
-#                                  hes_position = 1, # "after",
-#                                  misprod_tally = errorDat$misprod_with_hes_in_next_syllables)
+errorDatMisprodHes <- select(errorDat, !contains("any_"))
+
+# First: look at a given misproduction and check for nearby hesitations
+justMisprodWithHesBefore <- cbind(errorDatMisprodHes,
+                                  hes_position = 0, # "before",
+                                  misprod_in_adjacent_window = errorDat$misprod_with_any_prior_hesitation)
+
+justMisprodWithHesAfter <- cbind(errorDatMisprodHes,
+                                 hes_position = 1, # "after",
+                                 misprod_in_adjacent_window = errorDat$misprod_with_any_upcoming_hesitation)
 
 
 # stack the ones before and the ones after as rows of a single df (my attempt at long form)
-# errorDatLongMisprodWithRelHes <- rbind(justMisprodWithHesBefore, justMisprodWithHesAfter)
-#
-# # track the binary relative position as a factor
-# errorDatLongMisprodWithRelHes$hes_position <- as.factor(errorDatLongMisprodWithRelHes$hes_position)
-#
-# # Then: look at a given hesitation and check for nearby misproductions
-# justHesWithMisprodBefore <- cbind(errorDatMisprodHes,
-#                                   misprod_position = 0, # "before",
-#                                   hes_tally = errorDat$hes_with_misprod_in_previous_syllables)
-#
-# justHesWithMisprodAfter <- cbind(errorDatMisprodHes,
-#                                  misprod_position = 1, # "after",
-#                                  hes_tally = errorDat$hes_with_misprod_in_next_syllables)
-#
-# # stack the ones before and the ones after as rows of a single df (my attempt at long form)
-# errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisprodAfter)
-#
-# # track the binary relative position as a factor
-# errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
+errorDatLongMisprodWithRelHes <- rbind(justMisprodWithHesBefore, justMisprodWithHesAfter)
+
+# track the binary relative position as a factor
+errorDatLongMisprodWithRelHes$hes_position <- as.factor(errorDatLongMisprodWithRelHes$hes_position)
+
+# Then: look at a given hesitation and check for nearby misproductions
+justHesWithMisprodBefore <- cbind(errorDatMisprodHes,
+                                  misprod_position = 0, # "before",
+                                  hes_in_adjacent_window = errorDat$hesitation_with_any_prior_misprod)
+
+justHesWithMisprodAfter <- cbind(errorDatMisprodHes,
+                                 misprod_position = 1, # "after",
+                                 hes_in_adjacent_window = errorDat$hesitation_with_any_upcoming_misprod)
+
+# stack the ones before and the ones after as rows of a single df (my attempt at long form)
+errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisprodAfter)
+
+# track the binary relative position as a factor
+errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
 
 
 
@@ -437,71 +437,71 @@ summary(f_model7)
 
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per syllable with scaared
-f_model8 <- glmer(challengeACC ~ hesitation * scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model8)
+# f_model8 <- glmer(challengeACC ~ hesitation * scaaredSoc_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model8)
 
 # Accuracy/comprehension as explained by disfluencies: hesitations per word with scaared
-f_model9 <- glmer(challengeACC ~ words_with_hes * scaaredSoc_gmc + (1|id) + (1|passage),
+f_model9 <- glmer(challengeACC ~ hesitation * scaaredSoc_gmc + (1|id) + (1|passage),
                   data=errorDat, family = "binomial")
 summary(f_model9)
 
 
 # Accuracy/comprehension as explained by errors: misproductions per syllable with scaared
-f_model10 <- glmer(challengeACC ~ misprod * scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model10)
+# f_model10 <- glmer(challengeACC ~ misprod * scaaredSoc_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model10)
 
 # Accuracy/comprehension as explained by errors: misproductions per word with scaared
-f_model11 <- glmer(challengeACC ~ words_with_misprod * scaaredSoc_gmc + (1|id) + (1|passage),
+f_model11 <- glmer(challengeACC ~ misprod * scaaredSoc_gmc + (1|id) + (1|passage),
                   data=errorDat, family = "binomial")
 summary(f_model11)
 
 
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per syllable with bfne
-f_model12 <- glmer(challengeACC ~ hesitation * bfne_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model12)
+# f_model12 <- glmer(challengeACC ~ hesitation * bfne_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model12)
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per word with bfne
-f_model13 <- glmer(challengeACC ~ words_with_hes * bfne_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model13)
+# f_model13 <- glmer(challengeACC ~ words_with_hes * bfne_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model13)
 
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per syllable with bfne
-f_model14 <- glmer(challengeACC ~ misprod * bfne_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model14)
+# f_model14 <- glmer(challengeACC ~ misprod * bfne_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model14)
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per word with bfne
-f_model15 <- glmer(challengeACC ~ words_with_misprod * bfne_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model15)
+# f_model15 <- glmer(challengeACC ~ words_with_misprod * bfne_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model15)
 
 
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per syllable with sps
-f_model16 <- glmer(challengeACC ~ hesitation * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model16)
+# f_model16 <- glmer(challengeACC ~ hesitation * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model16)
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per word with sps
-f_model17 <- glmer(challengeACC ~ words_with_hes * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model17)
+# f_model17 <- glmer(challengeACC ~ words_with_hes * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model17)
 
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per syllable with sps
-f_model18 <- glmer(challengeACC ~ misprod * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model18)
+# f_model18 <- glmer(challengeACC ~ misprod * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model18)
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per word with sps
-f_model19 <- glmer(challengeACC ~ words_with_misprod * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model19)
+# f_model19 <- glmer(challengeACC ~ words_with_misprod * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model19)
 
 
 
@@ -522,7 +522,7 @@ summary(f_model21) # ***
 f_model22 <- lmerTest::lmer(words_with_misprod ~ hesitation + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
 summary(f_model22) # ***
-
+# NB my * comments here (this section of models at least) are out of date
 
 
 # Now, misproduction-hesitation interactions with social anxiety
@@ -593,12 +593,6 @@ summary(age_model2)
 
 # misprod-hes ordering
 
-# Is the number of hesitations adjacent to misproductions in a particular
-# reading predicted by the
-
-# Does the position of misproductions relative to hesitations
-
-
 # we have a number of occurrences of a misproduction in a particular position
 # relative to a passage's hesitations. does knowing the position (before/after)
 # predict the number of these sequences we have?
@@ -606,22 +600,58 @@ summary(age_model2)
 # does misproduction location relative to a hesitation predict how many
 # instances we get in a particular reading?
 
-hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_tally ~ misprod_position + (1|id) + (1|passage),
+hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage),
                                                data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_1)
+summary(hes_with_rel_misprod_model_1) # n.s., 0.271
 
-misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_tally ~ hes_position + (1|id) + (1|passage),
+misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage),
                                                data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_1)
+summary(misprod_with_rel_hes_model_1) # n.s., 0.108
 
 ## does it interact with SA?
-hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_tally ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
+hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
                                                data=errorDatLongHesWithRelMisprod, REML=TRUE)
-# summary(hes_with_rel_misprod_model_3)
+summary(hes_with_rel_misprod_model_3) # n.s.
 
-misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_tally ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
+misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
                                                data=errorDatLongMisprodWithRelHes, REML=TRUE)
-# summary(misprod_with_rel_hes_model_4)
+summary(misprod_with_rel_hes_model_4) # n.s.
+
+# what if we control for word?
+hes_with_rel_misprod_model_1.5 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage) + (1|word),
+                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
+summary(hes_with_rel_misprod_model_1.5) # n.s., sameish
+
+misprod_with_rel_hes_model_1.5 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage) + (1|word),
+                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
+summary(misprod_with_rel_hes_model_1.5) # ., 0.0974
+
+## does it interact with SA?
+hes_with_rel_misprod_model_3.5 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
+summary(hes_with_rel_misprod_model_3.5) # n.s.
+
+misprod_with_rel_hes_model_4.5 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
+summary(misprod_with_rel_hes_model_4.5) # n.s.
+
+# and if we ignore passage?
+hes_with_rel_misprod_model_1.6 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|word),
+                                                 data=errorDatLongHesWithRelMisprod, REML=TRUE)
+summary(hes_with_rel_misprod_model_1.6) # n.s., sameish
+
+misprod_with_rel_hes_model_1.6 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|word),
+                                                 data=errorDatLongMisprodWithRelHes, REML=TRUE)
+summary(misprod_with_rel_hes_model_1.6) # made no difference, as you might expect
+
+## does it interact with SA?
+hes_with_rel_misprod_model_3.6 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|word),
+                                                 data=errorDatLongHesWithRelMisprod, REML=TRUE)
+summary(hes_with_rel_misprod_model_3.6) # ""
+
+misprod_with_rel_hes_model_4.6 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|word),
+                                                 data=errorDatLongMisprodWithRelHes, REML=TRUE)
+summary(misprod_with_rel_hes_model_4.6) # ""
 
 
 
@@ -663,3 +693,9 @@ summary(wordfreq_model_3.5) # still yes, very slightly higher p
 wordfreq_model_4.5 <- lmerTest::lmer(misprod ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_4.5) # still no, slightly lower p = 0.114
+
+
+# hesitation ~ wf x SA
+interact_plot(model = wordfreq_model_3,
+              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+
