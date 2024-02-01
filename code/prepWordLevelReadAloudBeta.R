@@ -1,7 +1,7 @@
 # readAloud-valence-beta Analysis Preparation
 # Authors: Luc Sahar and Jessica M. Alexander
 # NDCLab, Florida International University
-# Last updated: 2024-01-30
+# Last updated: 2024-01-31
 
 # INPUTS
 # data/df: behavioral (error-related) data, for each participant for each word
@@ -235,8 +235,14 @@ summary_unique <- function(df, key, column, f = summary) {
   unique(select(df, column, key))[[column]] %>% f
 }
 
-c("age", "sex", "pronouns", "ethnic", "socclass") %>%
+demo_cols <- c("age", "sex", "pronouns", "ethnic", "socclass")
+sample_size <- select(df, "id") %>% unique %>% nrow
+
+demo_cols %>% # as totals, for each of our demographic columns
   map(\(col) summary_unique(df, "id", col)) # `map` not `for`: return, not print
+
+demo_cols %>% # as a percent
+  map(\(col) summary_unique(df, "id", col) / sample_size)
 
 summary_unique(df, "id", "age", f = sd) # also do stdev for age
 
@@ -250,21 +256,3 @@ dfTrim <- subset(dfTrim, !(dfTrim$passage=='sun')) #remove sun passage due to er
 out_filename <- paste(out_path, "readAloudBetaData-wordLevel_", today, ".csv", sep="", collapse=NULL)
 write.csv(dfTrim, out_filename, row.names = FALSE)
 out_filename
-
-# collapse_by_participant <- function(filename_in, filename_out) {
-#   by_participant <- read_csv(filename_in) %>%
-#     unique %>% # dedup
-#     group_by(id) %>% summarize(across(misprod:total_uncorrected_errors, sum)) # summarize by participant, across all passages
-#     # TODO change the columns selected, once more have been added to the output of the preproc script
-#
-#   write_csv(by_participant, filename_out)
-#   return(filename_out)
-# }
-#
-#
-# # base = "~/Documents/ndclab/analysis-sandbox/github-structure-mirror/readAloud-valence-dataset/derivatives/preprocessed"
-# base = "/home/data/NDClab/datasets/readAloud-valence-dataset/derivatives/preprocessed"
-# preprocessed_summary_filename = "TODO"
-# collapsed_filename = "TODO"
-#
-# collapse_by_participant(preprocessed_summary_file, collapsed_filename)
