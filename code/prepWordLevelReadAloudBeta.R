@@ -76,25 +76,12 @@ speedDat <- read.csv(speedDat_path, na.strings='NA')
 freqDat <- read.csv(freqDat_path, na.strings = 'NA')
 
 #organize data types
-# df[,3:30] <- sapply(df[,3:30],as.numeric)
-# not applicable for now, we'll see
 
-#add missing passages for 150086 so that nrow is divisible by 20
-# passages_read <- df$passage[which(df$id=="150086")]
-# tempdf <- data.frame(matrix(nrow=0, ncol=ncol(df)))
-# colnames(tempdf) <- colnames(df)
-# for(passage in 1:length(all_passages)){
-#   if(all_passages[passage] %in% passages_read){next}else{
-#     tempdf[nrow(tempdf) + 1,] <- c("150086", all_passages[passage], rep(NA, 30))
-#   }
-# }
-# df <- rbind(df, tempdf)
 
 ### SECTION 2: BUILD DEMOGRAPHIC DATA DF
 demoDat <- redcap[,c(1,5)]
-# demoDat_imperative <- redcap[,c(1,5)]; demoDat_dplyr <- demoDat_imperative
-# as we refactor, our test case is: all.equal(demoDat_imperative, demoDat_dplyr)
-# this has been confirmed to work for with every new column added
+# while refactoring, the test case: all.equal(demoDat_imperative, demoDat_dplyr)
+# has been confirmed to work with every new column added
 
 #biological sex: replace numerical values with text description
 demoDat$sex <- case_match(redcap$demo_b_sex_s1_r1_e1,
@@ -102,10 +89,6 @@ demoDat$sex <- case_match(redcap$demo_b_sex_s1_r1_e1,
                           4 ~ 'other', 5 ~ 'unknown', .default = 'undisclosed')
 
 #preferred pronouns: replace numerical values with text description
-# for(b in 1:nrow(redcap)){ ... }
-# 8 lines, 466 chars; boilerplatey
-
-# try rewriting as case_when
 demoDat$pron <- case_match (redcap$demo_b_pronouns_s1_r1_e1,
                             1 ~ "she/her", 2 ~ "he/him", 3 ~ "they/them",
                             5 ~ "other", .default = "undisclosed")
@@ -132,9 +115,6 @@ demoDat$socclass <- case_match(redcap$demo_b_socclass_s1_r1_e1,
                                      4 ~ "affluent", .default = "undisclosed")
 
 #communication disorders diagnoses: sum across childhood, adolescence, and adulthood
-# nb. there was a typo in the old version: no adult diagnoses were being checked
-# because the column name did not exist and `sum` with the df$col syntax did not
-# catch that
 demoDat$commdis <- select(redcap, matches("demo_b_comdis.*e1")) %>% rowSums
 
 #language history: transfer directly
@@ -168,15 +148,10 @@ for(i in 1:nrow(df)){
   subject <- df$id[i] #extract subject number for matching
   passage <- df$passage[i] #extract passage name for matching
 
-  #production errors of interest
+  # production errors of interest are already included
   # misprod = raw misproduction errors
   # hesitation = raw hesitations
-  # words_with_misprod = distinct words with misproduction errors
-  # words_with_hes = distinct words with pre-word or word-internal hesitation
-  # misprod_rate = rate of raw misproduction errors
-  # hesitation_rate = rate of raw hesitations
-  # words_with_misprod_rate = rate of word-level misproduction errors
-  # words_with_hes_rate = rate of word-level hesitations
+  # misprod-hesitation linear sequences and vice versa
 
   #extract passage characteristics from readDat
   df$lenSyll[i] <- sum(readDat$lengthSyll[which(readDat$passage==passage)]) #length of passage in syllables
@@ -216,7 +191,7 @@ df$ethnic <- as.factor(df$ethnic)
 df$socclass <- as.factor(df$socclass)
 
 # compute speed
-# nb these are passage level data but are tracked by word
+# nb these are passage-level data but are tracked in every row, i.e. word level
 df$timePerSyllable <- df$readingTime / df$lenSyll
 df$timePerWord     <- df$readingTime / df$lenWord
 
