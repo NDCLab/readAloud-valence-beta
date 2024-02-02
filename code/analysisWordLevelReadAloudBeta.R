@@ -122,6 +122,7 @@ library(gridExtra)
 library(grid)
 library(cowplot)
 library(colorspace)
+library(effects)
 # library(colorblindr)
 
 #set up date for output file naming
@@ -632,63 +633,22 @@ summary(misprod_with_rel_hes_model_4.6) # ""
 # Word frequency analysis with words absent from corpus dropped
 # Does a word's frequency predict hesitation on that word?
 errorDatAttestedFreqs <- filter(errorDat, log10frequency > 0)
-wordfreq_model_1 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|passage),
+wordfreq_model_1 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_1)
-wordfreq_model_2 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|passage),
+wordfreq_model_2 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_2)
 
 
-# control for word, that must matter right?
-wordfreq_model_1.5 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|passage) + (1|word),
-                                   data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_1.5)
-wordfreq_model_2.5 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|passage) + (1|word),
-                                   data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_2.5)
-
-# control for word w/o passage
-wordfreq_model_1.6 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|word),
-                                     data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_1.6)
-wordfreq_model_2.6 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|word),
-                                     data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_2.6)
-
-
-
 # Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
-wordfreq_model_3 <- lmerTest::lmer(hesitation ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage),
+wordfreq_model_3 <- lmerTest::lmer(hesitation ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_3) # yes!
+summary(wordfreq_model_3) # todo
 
-wordfreq_model_4 <- lmerTest::lmer(misprod ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage),
+wordfreq_model_4 <- lmerTest::lmer(misprod ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_4) # no, not at all - well, p = 0.15
-
-
-# control for word, that must matter right?
-wordfreq_model_3.5 <- lmerTest::lmer(hesitation ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                                   data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_3.5) # still yes, very slightly higher p
-
-wordfreq_model_4.5 <- lmerTest::lmer(misprod ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                                   data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_4.5) # still no, slightly lower p = 0.114
-
-
-# hesitation ~ wf x SA
-interact_plot(model = wordfreq_model_3.5,
-              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
-
-
-
-interact_plot(model = wordfreq_model_4.5,
-              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
-
-
-
+summary(wordfreq_model_4) # todo
 
 
 
@@ -742,29 +702,52 @@ summary(wordfreq_model_with_absents_2)
 
 
 # Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
-
-# control for word, that must matter right?
-wordfreq_model_with_absents_3.5 <- lmerTest::lmer(hesitation ~ log10frequency_with_absents * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_3 <- lmerTest::lmer(hesitation ~ log10frequency_with_absents * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                      data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_3.5) # still yes, very slightly higher p
+summary(wordfreq_model_with_absents_3)
 
-wordfreq_model_with_absents_4.5 <- lmerTest::lmer(misprod ~ log10frequency_with_absents * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_4 <- lmerTest::lmer(misprod ~ log10frequency_with_absents * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                      data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_4.5) # still no, slightly lower p = 0.114
+summary(wordfreq_model_with_absents_4)
+
+# effects
+# eff <- effect("log10frequency_with_absents", wordfreq_model_with_absents_1)
+# plot(eff, se = TRUE, rug = FALSE, xlab = "log10frequency_with_absents", ylab = "hesitation", col.points = "red", col.lines = "blue", lty = 1)
+# eff_noabsents <- effect("log10frequency", wordfreq_model_1)
+# plot(eff_noabsents, se = TRUE, rug = FALSE, xlab = "log10frequency", ylab = "hesitation", col.points = "red", col.lines = "blue", lty = 1)
+
+plot_lmer <- function(model, predictor, outcome) {
+  # NB `outcome` will not catch your mistake; it's just a label
+  eff <- effect(predictor, model)
+  plot(eff, se = TRUE, rug = FALSE, xlab = predictor, ylab = outcome,
+       col.points = "red", col.lines = "blue", lty = 1)
+}
+
+# as in
+plot_lmer(wordfreq_model_1, "log10frequency", "hesitation")
+plot_lmer(wordfreq_model_with_absents_1, "log10frequency_with_absents", "hesitation")
+plot_lmer(wordfreq_model_with_absents_2, "log10frequency_with_absents", "misprod")
+plot_lmer(wordfreq_model_2, "log10frequency", "misprod")
 
 
 # hesitation ~ wf x SA
-interact_plot(model = wordfreq_model_with_absents_3.5,
+interact_plot(model = wordfreq_model_3,
+              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+
+interact_plot(model = wordfreq_model_with_absents_3,
+              pred = log10frequency_with_absents, modx = scaaredSoc_gmc, interval = TRUE)
+
+
+# misprod ~ wf x SA
+interact_plot(model = wordfreq_model_4,
+              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+
+interact_plot(model = wordfreq_model_with_absents_4,
               pred = log10frequency_with_absents, modx = scaaredSoc_gmc, interval = TRUE)
 
 
 
-interact_plot(model = wordfreq_model_with_absents_4.5,
-              pred = log10frequency_with_absents, modx = scaaredSoc_gmc, interval = TRUE)
 
 
-
-
-
-summary(errorDat$log10frequency_with_absents)
+# summary(errorDat$log10frequency_with_absents)
 
