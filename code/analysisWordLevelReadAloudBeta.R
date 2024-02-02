@@ -22,44 +22,45 @@
 #
 # hes_position:
 #
-#   for long-form dataframes counting misproductions, this indicates whether the
-#   relevant count is the number of hesitations before (0) or after (1) those
-#   misproductions being counted in that row
+#   for long-form dataframes looking for misproductions, this indicates whether
+#   the relevant binary value is tracking whether a hesitation comes before (0)
+#   or after (1) the misproduction being counted in that row
 #
 #
-# misprod_tally:
+# misprod_in_adjacent_window:
 #
-#   conversely, in long-form dataframes counting misproductions, this column
-#   actually tracks how many misproductions there are in that reading
-#   (participant x passage) that have a hesitation in the relevant relative
-#   position
+#   conversely, in long-form dataframes looking at misproductions, this column
+#   actually tracks whether or not there is a misproduction in the relevant
+#   relative position (to a hesitation), within the specified window
 
 
 # justMisprodWithHesBefore:
 #
-#   this is the dataframe with every (participant x passage) reading, counting
-#   the number of misproductions with a nearby preceding hesitation
+#   this is the dataframe with every (participant x passage x word) read,
+#   checking for each word whether there is a misproduction with a nearby
+#   preceding hesitation
 #
-#   i.e., for each reading, it counts the number of times (misprod_tally) that a
-#   hesitation comes before a misproduction -- so for every entry, hes_position = 0
+#   i.e., for each reading, it only looks at rows where a hesitation comes
+#   before a misproduction -- so for every entry, hes_position = 0
 #
 #
 # justMisprodWithHesAfter
 #
-#   similarly, this is the dataframe with every (participant x passage) reading,
-#   counting the number of misproductions with a nearby following hesitation
+#   similarly, this is the dataframe with every (participant x passage x word)
+#   read, checking each time whether there is a misproduction with a nearby
+#   following hesitation
 #
-#   i.e., for each reading, it counts the number of times (misprod_tally) that a
-#   hesitation comes after a misproduction -- so for every entry, hes_position = 1
+#   i.e., for each reading, it only looks at rows where a hesitation comes after
+#   a misproduction -- so for every entry, hes_position = 1
 #
 #
 # errorDatLongMisprodWithRelHes:
 #
-#   this is the long-form dataframe, with two rows per reading (participant x
-#   passage): one for each position for a relative hesitation. i.e. this stacks
-#   the two dataframes that respectively have (1) every passage, with a count of
-#   misproductions for hes_position = 0, and (2) every passage, with a count of
-#   misproductions for hes_position = 1
+#   this is the long-form dataframe, with two rows per word read (participant x
+#   passage x word): one for each position for a relative hesitation, i.e. this
+#   stacks the two dataframes that respectively have (1) every word, where
+#   misprod_in_adjacent_window corresponds to hes_position = 0, and (2) every
+#   word, where misprod_in_adjacent_window corresponds to hes_position = 1
 
 
 
@@ -67,45 +68,45 @@
 
 # misprod_position:
 #
-#   for long-form dataframes counting hesitations, this indicates whether the
-#   relevant count is the number of misproductions before (0) or after (1) those
-#   hesitations being counted in that row
+#   for long-form dataframes looking for hesitations, this indicates whether the
+#   relevant binary value is tracking whether a misproduction comes before (0)
+#   or after (1) the hesitation being counted in that row
 #
 #
-# hes_tally:
+# hes_in_adjacent_window:
 #
-#   conversely, in long-form dataframes counting hesitations, this column
-#   actually tracks how many hesitations there are in that reading (participant
-#   x passage) that have a misproduction in the relevant relative position
+#   conversely, in long-form dataframes looking at hesitations, this column
+#   actually tracks whether or not there is a hesitation in the relevant
+#   relative position (to a misproduction), within the specified window
 
 
 # justHesWithMisprodBefore:
 #
-#   this is the dataframe with every (participant x passage) reading, counting
-#   the number of hesitations with a nearby preceding misproduction
+#   this is the dataframe with every (participant x passage x word) read,
+#   checking for each word whether there is a hesitation with a nearby
+#   preceding misproduction
 #
-#   i.e., for each reading, it counts the number of times (hes_tally) that a
-#   misproduction comes before a hesitation -- so for every entry,
-#   misprod_position = 0
+#   i.e., for each reading, it only looks at rows where a misproduction comes
+#   before a hesitation -- so for every entry, misprod_position = 0
 #
 #
 # justHesWithMisprodAfter
 #
-#   similarly, this is the dataframe with every (participant x passage) reading,
-#   counting the number of hesitations with a nearby following misproduction
+#   similarly, this is the dataframe with every (participant x passage x word)
+#   read, checking for each word whether there is a hesitation with a nearby
+#   following misproduction
 #
-#   i.e., for each reading, it counts the number of times (hes_tally) that a
-#   misproduction comes after a hesitation -- so for every entry,
-#   misprod_position = 1
+#   i.e., for each reading, it only looks at rows where a misproduction comes
+#   after a hesitation -- so for every entry, misprod_position = 1
 #
 #
 # errorDatLongHesWithRelMisprod:
 #
-#   this is the long-form dataframe, with two rows per reading (participant x
-#   passage): one for each position for a relative misproduction, i.e. this
-#   stacks the two dataframes that respectively have (1) every passage, with a
-#   count of hesitations for misprod_position = 0, and (2) every passage, with a
-#   count of hesitations for misprod_position = 1
+#   this is the long-form dataframe, with two rows per word read (participant x
+#   passage x word): one for each position for a relative misproduction, i.e.
+#   this stacks the two dataframes that respectively have (1) every word, where
+#   hes_in_adjacent_window corresponds to misprod_position = 0, and (2) every
+#   word, where hes_in_adjacent_window corresponds to misprod_position = 1
 
 
 ### SECTION 1: SETTING UP
