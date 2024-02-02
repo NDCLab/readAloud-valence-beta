@@ -629,7 +629,7 @@ summary(misprod_with_rel_hes_model_4.6) # ""
 
 
 
-# Word frequency analysis
+# Word frequency analysis with words absent from corpus dropped
 # Does a word's frequency predict hesitation on that word?
 errorDatAttestedFreqs <- filter(errorDat, log10frequency > 0)
 wordfreq_model_1 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|passage),
@@ -697,18 +697,74 @@ interact_plot(model = wordfreq_model_4.5,
 summary(errorDatAttestedFreqs$log10frequency)
 
 
-case_when(errorDatAttestedFreqs$log10frequency <= 2.711 ~ 1, errorDatAttestedFreqs$log10frequency <= 4.058 ~ 2, errorDatAttestedFreqs$log10frequency <= 5.609 ~ 3, .default = 4 )
+# case_when(errorDatAttestedFreqs$log10frequency <= 2.711 ~ 1, errorDatAttestedFreqs$log10frequency <= 4.058 ~ 2, errorDatAttestedFreqs$log10frequency <= 5.609 ~ 3, .default = 4 )
+#
+#
+# errorDatAttestedFreqs$freqCat <- case_when(errorDatAttestedFreqs$log10frequency <= 2.711 ~ "low", .default = "high")
+#
+# # errorDatAttestedFreqs$freqCat <- as.factor(errorDatAttestedFreqs$freqCat)
+#
+#
+# wordfreq_model_category_1 <- lmerTest::lmer(misprod ~ freqCat * scaaredSoc_gmc + (1|id) + (1|passage),
+#                                    data=errorDatAttestedFreqs, REML=TRUE)
+# summary(wordfreq_model_category_1)
+#
+# interact_plot(model = wordfreq_model_category_1,
+#               pred = freqCat, modx = scaaredSoc_gmc, points = TRUE, interval = TRUE)
 
 
-errorDatAttestedFreqs$freqCat <- case_when(errorDatAttestedFreqs$log10frequency <= 2.711 ~ "low", .default = "high")
-
-# errorDatAttestedFreqs$freqCat <- as.factor(errorDatAttestedFreqs$freqCat)
 
 
-wordfreq_model_category_1 <- lmerTest::lmer(misprod ~ freqCat * scaaredSoc_gmc + (1|id) + (1|passage),
-                                   data=errorDatAttestedFreqs, REML=TRUE)
-summary(wordfreq_model_category_1)
+# Word frequency analysis with words absent from corpus set to corpus minimum
+subtlexus_minimum = 0.301 # or: # subtlexus %>% select(Lg10WF) %>% min
+errorDat$log10frequency_with_absents <- case_match(
+  errorDat$log10frequency,
+  0 ~ subtlexus_minimum,
+  .default = errorDat$log10frequency)
 
-interact_plot(model = wordfreq_model_category_1,
-              pred = freqCat, modx = scaaredSoc_gmc, points = TRUE, interval = TRUE)
+compare_freq <- data.frame(cbind(old = errorDat$log10frequency,
+                                 new = errorDat$log10frequency_with_absents))
+
+filter(compare_freq, old != new) %>% # confirm it worked as expected
+  filter(old != 0 | new != subtlexus_minimum) %>%
+  nrow == 0 # TRUE
+
+
+# Does a word's frequency predict hesitation on that word?
+wordfreq_model_with_absents_1 <- lmerTest::lmer(hesitation ~ log10frequency_with_absents + (1|id) + (1|passage) + (1|word),
+                                   data=errorDat, REML=TRUE)
+summary(wordfreq_model_with_absents_1)
+
+# "" misprod on that word?
+wordfreq_model_with_absents_2 <- lmerTest::lmer(misprod ~ log10frequency_with_absents + (1|id) + (1|passage) + (1|word),
+                                   data=errorDat, REML=TRUE)
+summary(wordfreq_model_with_absents_2)
+
+
+# Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
+
+# control for word, that must matter right?
+wordfreq_model_with_absents_3.5 <- lmerTest::lmer(hesitation ~ log10frequency_with_absents * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                     data=errorDat, REML=TRUE)
+summary(wordfreq_model_with_absents_3.5) # still yes, very slightly higher p
+
+wordfreq_model_with_absents_4.5 <- lmerTest::lmer(misprod ~ log10frequency_with_absents * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                     data=errorDat, REML=TRUE)
+summary(wordfreq_model_with_absents_4.5) # still no, slightly lower p = 0.114
+
+
+# hesitation ~ wf x SA
+interact_plot(model = wordfreq_model_with_absents_3.5,
+              pred = log10frequency_with_absents, modx = scaaredSoc_gmc, interval = TRUE)
+
+
+
+interact_plot(model = wordfreq_model_with_absents_4.5,
+              pred = log10frequency_with_absents, modx = scaaredSoc_gmc, interval = TRUE)
+
+
+
+
+
+summary(errorDat$log10frequency_with_absents)
 
