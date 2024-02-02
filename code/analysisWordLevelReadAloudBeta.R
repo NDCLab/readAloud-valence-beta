@@ -110,6 +110,7 @@
 
 ### SECTION 1: SETTING UP
 library(dplyr)
+library(purrr)
 library(lme4)
 library(lmerTest)
 library(interactions)
@@ -120,31 +121,17 @@ library(gridExtra)
 library(grid)
 library(cowplot)
 library(colorspace)
-library(colorblindr)
-
-# ```
-# Warning in install.packages :
-# package ‘colorblindr’ is not available for this version of R
-#
-# A version of this package for your version of R might be available elsewhere,
-# see the ideas at
-# https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages
-# ```
+# library(colorblindr)
 
 #set up date for output file naming
 today <- Sys.Date()
 today <- format(today, "%Y%m%d")
 
 #set up directories for input/output data
-# data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230815.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
 data <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData-wordLevel_20240130.csv'
-to_omit <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
+to_omit <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
-out_path <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
+out_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
 
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
@@ -202,11 +189,6 @@ length(unique(df$id)) - length(unique(dfTrim$id)) #number of participants remove
 summary_unique(dfTrim, "id", "challengeAvgSub")
 summary_unique(dfTrim, "id", "challengeAvgSub", f = sd)
 
-# calculate average speed per *person* per *passage*
-unique(select(dfTrim, timePerSyllable, id, passage))$timePerSyllable %>% mean(na.rm = TRUE)
-unique(select(dfTrim, timePerSyllable, id, passage))$timePerSyllable %>% sd(na.rm = TRUE)
-unique(select(dfTrim, timePerWord, id, passage))$timePerWord %>% mean(na.rm = TRUE)
-unique(select(dfTrim, timePerWord, id, passage))$timePerWord %>% sd(na.rm = TRUE)
 
 ### SECTION 2: PASSAGE-LEVEL TRIMMING
 passage_no_before_trimming <- summary_unique(dfTrim, "id", "passage", f = length)
@@ -231,11 +213,6 @@ c(150083, "caramel")    # N.B.: only one of four passages to have >= 5% of sylla
 c(150083, "cars")       # N.B.: only one of four passages to have >= 5% of syllables omitted
 
 
-dfTrim <- filter(dfTrim, !is.na(timePerSyllable))
-# itself, but without ones for which we have no reading data
-# this ends up only dropping 0083, caramel - the other three already end up
-# getting dropped based on other criteria
-
 passage_no_after_trim2 <- summary_unique(dfTrim, "id", "passage", f = length)
 passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
 (passage_no_after_trim1 - passage_no_after_trim2) / passage_no_after_trim1 #percentage of passages trimmed of last bunch
@@ -259,11 +236,7 @@ errorDat$scaaredTotal_gmc <- errorDat$scaaredTotal - mean(errorDat$scaaredTotal)
 errorDat$scaaredGA_gmc <- errorDat$scaaredGA - mean(errorDat$scaaredGA)
 errorDat$scaaredSoc_gmc <- errorDat$scaaredSoc - mean(errorDat$scaaredSoc)
 errorDat$sps_gmc <- errorDat$sps - mean(errorDat$sps)
-errorDat$lenSyll_gmc <- errorDat$lenSyll - mean(errorDat$lenSyll)
-errorDat$lenWord_gmc <- errorDat$lenWord - mean(errorDat$lenWord)
-errorDat$avgSyllPerWord_gmc <- errorDat$avgSyllPerWord - mean(errorDat$avgSyllPerWord)
-errorDat$timePerSyllable_gmc <- errorDat$timePerSyllable - mean(errorDat$timePerSyllable)
-errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
+
 
 
 ### SECTION 3.5: preparing for misprod-hes sequential analyses
@@ -674,6 +647,15 @@ wordfreq_model_2.5 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|pass
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_2.5)
 
+# control for word w/o passage
+wordfreq_model_1.6 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|word),
+                                     data=errorDatAttestedFreqs, REML=TRUE)
+summary(wordfreq_model_1.6)
+wordfreq_model_2.6 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|word),
+                                     data=errorDatAttestedFreqs, REML=TRUE)
+summary(wordfreq_model_2.6)
+
+
 
 # Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
 wordfreq_model_3 <- lmerTest::lmer(hesitation ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage),
@@ -696,6 +678,36 @@ summary(wordfreq_model_4.5) # still no, slightly lower p = 0.114
 
 
 # hesitation ~ wf x SA
-interact_plot(model = wordfreq_model_3,
+interact_plot(model = wordfreq_model_3.5,
               pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+
+
+
+interact_plot(model = wordfreq_model_4.5,
+              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+
+
+
+
+
+
+
+
+summary(errorDatAttestedFreqs$log10frequency)
+
+
+case_when(errorDatAttestedFreqs$log10frequency <= 2.711 ~ 1, errorDatAttestedFreqs$log10frequency <= 4.058 ~ 2, errorDatAttestedFreqs$log10frequency <= 5.609 ~ 3, .default = 4 )
+
+
+errorDatAttestedFreqs$freqCat <- case_when(errorDatAttestedFreqs$log10frequency <= 2.711 ~ "low", .default = "high")
+
+# errorDatAttestedFreqs$freqCat <- as.factor(errorDatAttestedFreqs$freqCat)
+
+
+wordfreq_model_category_1 <- lmerTest::lmer(misprod ~ freqCat * scaaredSoc_gmc + (1|id) + (1|passage),
+                                   data=errorDatAttestedFreqs, REML=TRUE)
+summary(wordfreq_model_category_1)
+
+interact_plot(model = wordfreq_model_category_1,
+              pred = freqCat, modx = scaaredSoc_gmc, points = TRUE, interval = TRUE)
 
