@@ -21,8 +21,8 @@ today <- format(today, "%Y%m%d")
 
 #set up directories for input/output
 # main_dataset <- '/Users/jalexand/github/readAloud-valence-dataset/'
-main_dataset <- '~/Documents/ndclab/analysis-sandbox/rwe-dataset/'
-main_analysis <- '~/Documents/ndclab/analysis-sandbox/rwe-analysis/'
+main_dataset <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-dataset/'
+main_analysis <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/'
 # out_path_readDat <- '/Users/jalexand/github/readAloud-valence-dataset/derivatives/'
 out_path_readDat <- paste(main_analysis, 'derivatives/', sep = '')
 

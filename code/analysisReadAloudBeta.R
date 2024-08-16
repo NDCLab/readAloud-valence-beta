@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2023-08-25
+# Last Updated: 2024-08-16
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -137,13 +137,8 @@ today <- format(today, "%Y%m%d")
 
 #set up directories for input/output data
 # data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230810.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230815.csv'
-# data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230816.csv'
-data <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
-to_omit <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
-# out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
-out_path <- '/home/luc/Documents/ndclab/analysis-sandbox/rwe-analysis/derivatives/'
+data <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
+to_omit <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
@@ -191,7 +186,7 @@ dfTrim <- subset(dfTrim, challengeAvgSub>0.5)
 length(unique(df$id)) - length(unique(dfTrim$id)) #number of participants removed due to distraction or low accuracy
 
 #calculate average accuracy
-mean(dfTrim$challengeAvgSub)
+mean(dfTrim$challengeAvgSub) # bad?: weights participants by the number of passages they read
 sd(dfTrim$challengeAvgSub)
 
 # calculate average speed
@@ -257,11 +252,6 @@ errorDat$lenWord_gmc <- errorDat$lenWord - mean(errorDat$lenWord)
 errorDat$avgSyllPerWord_gmc <- errorDat$avgSyllPerWord - mean(errorDat$avgSyllPerWord)
 
 # LS additions 8/11/23
-# errorDat$errors <- errorDat$errors - mean(errorDat$errors)
-# errorDat$correction <- errorDat$corrections - mean(errorDat$corrections)
-errorDat$error_rate <- errorDat$errors / errorDat$lenSyll
-errorDat$correction_rate <- errorDat$corrections / errorDat$lenSyll
-
 errorDat$timePerSyllable_gmc <- errorDat$timePerSyllable - mean(errorDat$timePerSyllable)
 errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
 
@@ -329,39 +319,39 @@ errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithR
 
 ### SECTION 4: MODEL RESULTS
 #misprod_rate x bfne
-model1 <- lmerTest::lmer(misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model1)
+# model1 <- lmerTest::lmer(misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model1)
 
 #misprod_rate x scaaredSoc
-model2 <- lmerTest::lmer(misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model2)
+# model2 <- lmerTest::lmer(misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model2)
 
 #misprod_rate x sps
-model3 <- lmerTest::lmer(misprod_rate ~ sps_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model3)
+# model3 <- lmerTest::lmer(misprod_rate ~ sps_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model3)
 
 #hesitation_rate x bfne
-model4 <- lmerTest::lmer(hesitation_rate ~ bfne_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model4)
+# model4 <- lmerTest::lmer(hesitation_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model4)
 
 #hesitation_rate x scaaredSoc
-model5 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model5)
+# model5 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model5)
 
 #hesitation_rate x sps
-model6 <- lmerTest::lmer(hesitation_rate ~ sps_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model6)
+# model6 <- lmerTest::lmer(hesitation_rate ~ sps_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model6)
 
 #words_with_misprod_rate x bfne
-model7 <- lmerTest::lmer(words_with_misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model7)
+# model7 <- lmerTest::lmer(words_with_misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model7)
 
 #words_with_misprod_rate x scaaredSoc
 model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -369,30 +359,27 @@ model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|
 summary(model8)
 
 #words_with_misprod_rate x sps
-model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model9)
+# model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model9)
 
 #words_with_hes_rate x bfne
-model10 <- lmerTest::lmer(words_with_hes_rate ~ bfne_gmc + (1|id) + (1|passage),
-                          data=errorDat, REML=TRUE)
-summary(model10)
+# model10 <- lmerTest::lmer(words_with_hes_rate ~ bfne_gmc + (1|id) + (1|passage),
+#                           data=errorDat, REML=TRUE)
+# summary(model10)
 
-#words_with_hes_rate x scaaredSoc
+# ! words_with_hes_rate x scaaredSoc
 model11 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
                           data=errorDat, REML=TRUE)
 summary(model11)
 
 #words_with_hes_rate x sps
-model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
-                          data=errorDat, REML=TRUE)
-summary(model12)
+# model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
+#                           data=errorDat, REML=TRUE)
+# summary(model12)
 
 
 #### supplemental analyses
-# see notes
-
-
 
 # glmer(accuracy ~ scaaredSoc_gmc + (1|id) + (1|passage), data=errorDat, family="binomial")
 # "f_" : follow-up
@@ -403,21 +390,21 @@ f_model1 <- glmer(challengeACC ~ scaaredSoc_gmc + (1|id) + (1|passage),
 summary(f_model1)
 
 # Accuracy/comprehension as explained by social anxiety: bfne
-f_model2 <- glmer(challengeACC ~ bfne_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model2)
+# f_model2 <- glmer(challengeACC ~ bfne_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model2)
 
 
 # Accuracy/comprehension as explained by social anxiety: sps
-f_model3 <- glmer(challengeACC ~ sps_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model3)
+# f_model3 <- glmer(challengeACC ~ sps_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model3)
 
 
 # Accuracy/comprehension as explained by disfluencies: hesitations per syllable
-f_model4 <- glmer(challengeACC ~ hesitation_rate + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model4)
+# f_model4 <- glmer(challengeACC ~ hesitation_rate + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model4)
 
 # Accuracy/comprehension as explained by disfluencies: hesitations per word
 f_model5 <- glmer(challengeACC ~ words_with_hes_rate + (1|id) + (1|passage),
@@ -426,9 +413,9 @@ summary(f_model5)
 
 
 # Accuracy/comprehension as explained by errors: misproductions per syllable
-f_model6 <- glmer(challengeACC ~ misprod_rate + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model6)
+# f_model6 <- glmer(challengeACC ~ misprod_rate + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model6)
 
 # Accuracy/comprehension as explained by errors: misproductions per word
 f_model7 <- glmer(challengeACC ~ words_with_misprod_rate + (1|id) + (1|passage),
@@ -439,9 +426,9 @@ summary(f_model7)
 
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per syllable with scaared
-f_model8 <- glmer(challengeACC ~ hesitation_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model8)
+# f_model8 <- glmer(challengeACC ~ hesitation_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model8)
 
 # Accuracy/comprehension as explained by disfluencies: hesitations per word with scaared
 f_model9 <- glmer(challengeACC ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
@@ -450,9 +437,9 @@ summary(f_model9)
 
 
 # Accuracy/comprehension as explained by errors: misproductions per syllable with scaared
-f_model10 <- glmer(challengeACC ~ misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model10)
+# f_model10 <- glmer(challengeACC ~ misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model10)
 
 # Accuracy/comprehension as explained by errors: misproductions per word with scaared
 f_model11 <- glmer(challengeACC ~ words_with_misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
@@ -462,57 +449,57 @@ summary(f_model11)
 
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per syllable with bfne
-f_model12 <- glmer(challengeACC ~ hesitation_rate * bfne_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model12)
+# f_model12 <- glmer(challengeACC ~ hesitation_rate * bfne_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model12)
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per word with bfne
-f_model13 <- glmer(challengeACC ~ words_with_hes_rate * bfne_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model13)
+# f_model13 <- glmer(challengeACC ~ words_with_hes_rate * bfne_gmc + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model13)
 
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per syllable with bfne
-f_model14 <- glmer(challengeACC ~ misprod_rate * bfne_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model14)
+# f_model14 <- glmer(challengeACC ~ misprod_rate * bfne_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model14)
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per word with bfne
-f_model15 <- glmer(challengeACC ~ words_with_misprod_rate * bfne_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model15)
+# f_model15 <- glmer(challengeACC ~ words_with_misprod_rate * bfne_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model15)
 
 
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per syllable with sps
-f_model16 <- glmer(challengeACC ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model16)
+# f_model16 <- glmer(challengeACC ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model16)
 
 # Accuracy/comprehension as explained by disfluencies *and* SA: hesitations per word with sps
-f_model17 <- glmer(challengeACC ~ words_with_hes_rate * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model17)
+# f_model17 <- glmer(challengeACC ~ words_with_hes_rate * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model17)
 
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per syllable with sps
-f_model18 <- glmer(challengeACC ~ misprod_rate * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model18)
+# f_model18 <- glmer(challengeACC ~ misprod_rate * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model18)
 
 # Accuracy/comprehension as explained by errors *and* SA: misproductions per word with sps
-f_model19 <- glmer(challengeACC ~ words_with_misprod_rate * sps_gmc + (1|id) + (1|passage),
-                   data=errorDat, family = "binomial")
-summary(f_model19)
+# f_model19 <- glmer(challengeACC ~ words_with_misprod_rate * sps_gmc + (1|id) + (1|passage),
+#                    data=errorDat, family = "binomial")
+# summary(f_model19)
 
 
 
 # Now, misproduction-hesitation relationships
 
 # Errors as explained by disfluency: rate of misproduced syllables from rate of hesitated syllables
-f_model20 <- lmerTest::lmer(misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model20) # ***
+# f_model20 <- lmerTest::lmer(misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model20) # ***
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated words
 f_model21 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate + (1|id) + (1|passage),
@@ -521,18 +508,18 @@ summary(f_model21) # ***
 
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated syllables
-f_model22 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model22) # ***
+# f_model22 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model22) # ***
 
 
 
 # Now, misproduction-hesitation interactions with social anxiety
 
 # Errors as explained by disfluency and SA: rate of misproduced syllables from rate of hesitated syllables and scaared
-f_model23 <- lmerTest::lmer(misprod_rate ~ hesitation_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model23)
+# f_model23 <- lmerTest::lmer(misprod_rate ~ hesitation_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model23)
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated words and scaared
 f_model24 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
@@ -541,43 +528,43 @@ summary(f_model24)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared
-f_model25 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model25)
+# f_model25 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model25)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced syllables from rate of hesitated syllables and bfne
-f_model26 <- lmerTest::lmer(misprod_rate ~ hesitation_rate * bfne_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model26)
+# f_model26 <- lmerTest::lmer(misprod_rate ~ hesitation_rate * bfne_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model26)
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated words and bfne
-f_model27 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * bfne_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model27)
+# f_model27 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * bfne_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model27)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and bfne
-f_model28 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * bfne_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model28)
+# f_model28 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * bfne_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model28)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced syllables from rate of hesitated syllables and sps
-f_model29 <- lmerTest::lmer(misprod_rate ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model29)
+# f_model29 <- lmerTest::lmer(misprod_rate ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model29)
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated words and sps
-f_model30 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * sps_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model30)
+# f_model30 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * sps_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model30)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and sps
-f_model31 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model31)
+# f_model31 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate * sps_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model31)
 
 
 
@@ -585,55 +572,40 @@ summary(f_model31)
 
 # Does scaaredSoc predict reading speed?
 # syllable level
-rs_model_1 <- lmerTest::lmer(timePerSyllable_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_1)
+# rs_model_1 <- lmerTest::lmer(timePerSyllable_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                              data=errorDat, REML=TRUE)
+# summary(rs_model_1)
 
 # word level
-rs_model_2 <- lmerTest::lmer(timePerWord_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_2)
+# rs_model_2 <- lmerTest::lmer(timePerWord_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                              data=errorDat, REML=TRUE)
+# summary(rs_model_2)
 
 
-rs_model_1_bfne <- lmerTest::lmer(timePerSyllable_gmc ~ bfne_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_1_bfne)
-
-# word level
-rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ bfne_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_2_bfne)
-
-rs_model_1_sps <- lmerTest::lmer(timePerSyllable_gmc ~ sps_gmc + (1|id) + (1|passage),
-                                  data=errorDat, REML=TRUE)
-summary(rs_model_1_sps)
+# rs_model_1_bfne <- lmerTest::lmer(timePerSyllable_gmc ~ bfne_gmc + (1|id) + (1|passage),
+#                              data=errorDat, REML=TRUE)
+# summary(rs_model_1_bfne)
 
 # word level
-rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ sps_gmc + (1|id) + (1|passage),
-                                  data=errorDat, REML=TRUE)
-summary(rs_model_2_sps)
+# rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ bfne_gmc + (1|id) + (1|passage),
+#                              data=errorDat, REML=TRUE)
+# summary(rs_model_2_bfne)
 
-
-
-# Does scaaredSoc predict reading speed?
-# syllable level
-rs_model_3 <- lmerTest::lmer(timePerSyllable ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_3)
+# rs_model_1_sps <- lmerTest::lmer(timePerSyllable_gmc ~ sps_gmc + (1|id) + (1|passage),
+#                                   data=errorDat, REML=TRUE)
+# summary(rs_model_1_sps)
 
 # word level
-rs_model_4 <- lmerTest::lmer(timePerWord ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_4)
-
-
+# rs_model_2_bfne <- lmerTest::lmer(timePerWord_gmc ~ sps_gmc + (1|id) + (1|passage),
+#                                   data=errorDat, REML=TRUE)
+# summary(rs_model_2_sps)
 
 
 # What happens when we control for age?
 #hesitation_rate x scaaredSoc
-age_model1 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(age_model1)
+# age_model1 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(age_model1)
 
 #words_with_hes_rate x scaaredSoc
 age_model2 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
@@ -644,14 +616,14 @@ summary(age_model2)
 # And now ->> check our work
 # Does our hesitation ~ scaaredSoc finding hold with reading speed controlled for?
 # syllable level
-rs_model_3 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + timePerSyllable_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_3)
+# rs_model_3 <- lmerTest::lmer(hesitation_rate ~ scaaredSoc_gmc + timePerSyllable_gmc + (1|id) + (1|passage),
+#                              data=errorDat, REML=TRUE)
+# summary(rs_model_3)
 
 # word level
-rs_model_4 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + timePerWord_gmc + (1|id) + (1|passage),
-                             data=errorDat, REML=TRUE)
-summary(rs_model_4)
+# rs_model_4 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + timePerWord_gmc + (1|id) + (1|passage),
+#                              data=errorDat, REML=TRUE)
+# summary(rs_model_4)
 
 
 # misprod-hes ordering
@@ -669,39 +641,39 @@ summary(rs_model_4)
 # does misproduction location relative to a hesitation predict how many
 # instances we get in a particular reading?
 
-hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_tally ~ misprod_position + (1|id) + (1|passage),
-                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_1)
-
-misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_tally ~ hes_position + (1|id) + (1|passage),
-                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_1)
+# hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_tally ~ misprod_position + (1|id) + (1|passage),
+#                                                data=errorDatLongHesWithRelMisprod, REML=TRUE)
+# summary(hes_with_rel_misprod_model_1)
+#
+# misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_tally ~ hes_position + (1|id) + (1|passage),
+#                                                data=errorDatLongMisprodWithRelHes, REML=TRUE)
+# summary(misprod_with_rel_hes_model_1)
 
 ## does it interact with SA?
-hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_tally ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
-                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
-# summary(hes_with_rel_misprod_model_3)
-
-misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_tally ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
-                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
+# hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_tally ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
+#                                                data=errorDatLongHesWithRelMisprod, REML=TRUE)
+# # summary(hes_with_rel_misprod_model_3)
+#
+# misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_tally ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
+#                                                data=errorDatLongMisprodWithRelHes, REML=TRUE)
 # summary(misprod_with_rel_hes_model_4)
 
 
 
 # Word frequency analysis
 # Does a passage's average word frequency predict participants' hesitation rate or misproduction rate?
-wordfreq_model_1 <- lmerTest::lmer(hesitation_rate ~ avgWordFreq + (1|id) + (1|passage),
-                                   data=errorDat, REML=TRUE)
-summary(wordfreq_model_1)
-wordfreq_model_2 <- lmerTest::lmer(misprod_rate ~ avgWordFreq + (1|id) + (1|passage),
-                                   data=errorDat, REML=TRUE)
-summary(wordfreq_model_2)
+# wordfreq_model_1 <- lmerTest::lmer(hesitation_rate ~ avgWordFreq + (1|id) + (1|passage),
+#                                    data=errorDat, REML=TRUE)
+# summary(wordfreq_model_1)
+# wordfreq_model_2 <- lmerTest::lmer(misprod_rate ~ avgWordFreq + (1|id) + (1|passage),
+#                                    data=errorDat, REML=TRUE)
+# summary(wordfreq_model_2)
 
 # Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
-wordfreq_model_3 <- lmerTest::lmer(hesitation_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
-                                   data=errorDat, REML=TRUE)
-summary(wordfreq_model_3)
-
-wordfreq_model_4 <- lmerTest::lmer(misprod_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
-                                   data=errorDat, REML=TRUE)
-summary(wordfreq_model_4)
+# wordfreq_model_3 <- lmerTest::lmer(hesitation_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
+#                                    data=errorDat, REML=TRUE)
+# summary(wordfreq_model_3)
+#
+# wordfreq_model_4 <- lmerTest::lmer(misprod_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
+#                                    data=errorDat, REML=TRUE)
+# summary(wordfreq_model_4)

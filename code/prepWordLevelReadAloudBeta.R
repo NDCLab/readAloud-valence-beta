@@ -1,7 +1,7 @@
 # readAloud-valence-beta Analysis Preparation
 # Authors: Luc Sahar and Jessica M. Alexander
 # NDCLab, Florida International University
-# Last updated: 2024-01-31
+# Last updated: 2024-02-16
 
 # INPUTS
 # data/df: behavioral (error-related) data, for each participant for each word
@@ -22,6 +22,7 @@
 #   scaared, general (screen for adult anxiety disorders): scaared_b_scrdGA
 #        (general anxiety)
 #   sps (social phobia scale): sias6sps6_b_scrdSPS
+#   sias: sias6sps6_b_scrdSIAS
 
 # OUTPUTS
 # dfTrim: for each passage, for each participant, details on:
@@ -130,10 +131,74 @@ demoDat$scaaredTotal <- redcap$scaared_b_scrdTotal #scaared total anxiety
 demoDat$scaaredGA <- redcap$scaared_b_scrdGA #scaared general anxiety
 demoDat$scaaredSoc <- redcap$scaared_b_scrdSoc #scaared social phobias
 demoDat$sps <- redcap$sias6sps6_b_scrdSPS #sps social phobia scale
+demoDat$sias <- redcap$sias6sps6_b_scrdSIAS #social interaction anxiety scale
 
 #age: pull from separate file
 demoDat <- left_join(demoDat, # can't just assign: matching matters given new df
                      select(agedat, record_id, age = info_age_s1_r1_e1))
+
+
+### SECTION 2.5: APPEND ANOTHER SOCIAL ANXIETY MEASURE (SIAS6)
+# is there a "total" one?
+redcap %>%
+  select(matches("sias")) %>%
+  colnames
+
+# wip:
+redcap %>%
+  filter(if_any(matches("*sias*"),
+                ~ . >= sias6sps6_b_scrdSPS_s1_r1_e1)) %>%
+  select(matches("*sias*")) %>%
+  colnames
+
+# trying to find which column to use
+max_of_cols <- function(row, colrange) {
+  # first: which columns can we actually check, and what is the value for each?
+  available_subset    <- select(row, colrange)
+  maximum             <- max(available_subset)
+#  cols_with_max_value <- which(available_subset == maximum)
+
+  return(row %>% keep_at(~ .x == maximum))
+}
+
+mycols <- colnames_from_range(redcap, matches(".*sias.*e1$"))
+redcap %>%
+  filter(if_any(matches(".*sias.*e1$"),
+                ~ . >= sias6sps6_b_scrdSPS_s1_r1_e1)) %>%
+  select(matches(".*sias.*e1$")) %>%
+  first %>%
+  max_of_cols(mycols)
+
+# this   leads me to believe it s/b sias6sps6_b_scrdSIAS_s1_r1_e1
+#  |
+#  V
+View(redcap %>%
+       filter(if_any(matches("*sias*"),
+                     ~ . >= sias6sps6_b_scrdSPS_s1_r1_e1)) %>%
+       select(matches(".*sias.*e1")) %>%
+       select(mycols) %>% map_df(max))
+# better yet:
+redcap %>%
+  select(matches(".*sias.*"),
+         sias6sps6_b_scrdSPS_s1_r1_e1) %>%
+  na.omit
+
+# bingo
+redcap %>%
+  select(record_id, matches(".*sias.*"),   # the sias specific ones
+         sias6sps6_b_scrdSPS_s1_r1_e1) %>% # the sps composite
+  na.omit %>%
+  group_by(record_id) %>%
+  mutate(total       = sum(across(matches(".*_i.*"))), # individual items
+         adds_up     = total == sum(sias6sps6_b_scrdSPS_s1_r1_e1,
+                                    sias6sps6_b_scrdSIAS_s1_r1_e1),
+         leftover    = total - sias6sps6_b_scrdSPS_s1_r1_e1, # be extra cautious
+         same        = leftover == sias6sps6_b_scrdSIAS_s1_r1_e1) %>% # check!
+  ungroup() %>%
+  filter(adds_up == FALSE) # -> 0 x 21
+# this confirms
+# that the individual items all together sum up to be the combinations of two subscores
+# and that for SIAS, the column "sias6sps6_b_scrdSIAS_s1_r1_e1" is our subscore
 
 
 ### SECTION 3: SET UP DERIVED FIELDS FOR SPEED ANALYSES
@@ -197,7 +262,7 @@ df$timePerWord     <- df$readingTime / df$lenWord
 
 
 ### SECTION 5: CROSS-CHECK ALL PARTICIPANTS MET INCLUSION CRITERIA
-# note: given the time required to annotated errors, only participants who met
+# note: given the time required to annotate errors, only participants who met
 #       inclusion criteria were annotated
 sum(df$eng==1 & df$langhis %in% c(2,4) & df$ageen>6) #confirm all subjects monolingual English OR natively bilingual OR learned English before age 6
 sum(df$commdis>0) #confirm no subject diagnosed with any communication disorder
@@ -219,7 +284,7 @@ demo_cols %>% # as totals, for each of our demographic columns
 demo_cols %>% # as a percent
   map(\(col) summary_unique(df, "id", col) / sample_size)
 
-summary_unique(df, "id", "age", f = sd) # also do stdev for age
+summary_unique(df, "id", "age", f = sd) # also do stdev for age since numeric
 
 
 ### SECTION 6: TRIM PASSAGES DUE TO EXPERIMENTER ERROR
