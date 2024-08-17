@@ -283,6 +283,17 @@ errorDat <-
   add_gmc(challengeAvgSub)
 
 
+# sanity check
+for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
+  colname <- names(errorDat[col_index])
+  col <- errorDat[[col_index]]
+  print(colname)
+
+  avg <- mean(col)
+  print(paste('  mean:', avg,
+              '  rounded mean:', round(avg, digits = 10)))
+}
+
 
 #extract demo stats
 errorDatStats <- subset(errorDat, !duplicated(errorDat$id))
@@ -458,6 +469,12 @@ f_model5 <- glmer(challengeACC ~ words_with_hes_rate + (1|id) + (1|passage),
                   data=errorDat, family = "binomial")
 summary(f_model5)
 
+# fix: gmc
+f_model5_center <- glmer(challengeACC ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
+                  data=errorDat, family = "binomial")
+summary(f_model5_center)
+
+
 
 # Accuracy/comprehension as explained by errors: misproductions per syllable
 # f_model6 <- glmer(challengeACC ~ misprod_rate + (1|id) + (1|passage),
@@ -481,6 +498,11 @@ summary(f_model7)
 f_model9 <- glmer(challengeACC ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
                   data=errorDat, family = "binomial")
 summary(f_model9)
+
+# fix: gmc
+f_model9_center <- glmer(challengeACC ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
+                         data=errorDat, family = "binomial")
+summary(f_model9_center)
 
 
 # Accuracy/comprehension as explained by errors: misproductions per syllable with scaared
@@ -553,6 +575,10 @@ f_model21 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate + (1|i
                             data=errorDat, REML=TRUE)
 summary(f_model21) # ***
 
+# fix: gmc
+f_model21_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
+                            data=errorDat, REML=TRUE)
+summary(f_model21_center) # ***
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated syllables
 # f_model22 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
@@ -572,6 +598,11 @@ summary(f_model21) # ***
 f_model24 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
 summary(f_model24)
+
+# fix: gmc
+f_model24_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(f_model24_center)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared
