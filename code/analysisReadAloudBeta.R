@@ -6,10 +6,10 @@
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
 
 # OUTPUTS
-# TBD
+# models
 
 # NOTES TO DO
-# drop 150086 as only completed 12 of 20 passages and low accuracy
+# gmc
 
 # Data dict
 
@@ -239,6 +239,14 @@ errorDat <- dfTrim
 #modify contrasts for categorical predictors
 contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
 
+errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
+# confirm:
+class(errorDat$challengeACC) # -> "numeric"
+# behavior was unexpected in the model below so adding these new lines:
+errorDat$challengeACC <- as.factor(errorDat$challengeACC)
+# confirm:
+contrasts(errorDat$challengeACC) # -> -1 (incorrect): 0, 1 (correct): 1
+
 #center continuous predictors
 errorDat$age_gmc <- errorDat$age - mean(errorDat$age)
 errorDat$bfne_gmc <- errorDat$bfne - mean(errorDat$bfne)
@@ -251,10 +259,28 @@ errorDat$lenSyll_gmc <- errorDat$lenSyll - mean(errorDat$lenSyll)
 errorDat$lenWord_gmc <- errorDat$lenWord - mean(errorDat$lenWord)
 errorDat$avgSyllPerWord_gmc <- errorDat$avgSyllPerWord - mean(errorDat$avgSyllPerWord)
 
-# LS additions 8/11/23
 errorDat$timePerSyllable_gmc <- errorDat$timePerSyllable - mean(errorDat$timePerSyllable)
 errorDat$timePerWord_gmc <- errorDat$timePerWord - mean(errorDat$timePerWord)
 
+# likewise, for error rates
+
+# First we'll encapsulate centering so we don't write each column name out
+# manually three times. This way a typo in a column name can't screw it up. (It
+# throws an error instead, rather than allowing in the incorrect data.)
+gmc <- function(vec) { vec - mean(vec) }
+
+add_gmc <- function(df, col) { # makes a new column: centered version of variable
+  vec <- pull(df, {{col}}) # what's the data we're centering?
+
+  df %>%
+    mutate("{{col}}_gmc" := gmc(vec)) # ex. challengeAvgSub->challengeAvgSub_gmc
+}
+
+errorDat <-
+  errorDat %>%
+  add_gmc(words_with_misprod_rate) %>%
+  add_gmc(words_with_hes_rate) %>%
+  add_gmc(challengeAvgSub)
 
 
 
@@ -358,6 +384,11 @@ model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|
                          data=errorDat, REML=TRUE)
 summary(model8)
 
+# fix: gmc
+model8_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                         data=errorDat, REML=TRUE)
+summary(model8_center)
+
 #words_with_misprod_rate x sps
 # model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
 #                          data=errorDat, REML=TRUE)
@@ -372,6 +403,11 @@ summary(model8)
 model11 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
                           data=errorDat, REML=TRUE)
 summary(model11)
+
+# fix: gmc
+model11_center <- lmerTest::lmer(words_with_hes_rate_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                          data=errorDat, REML=TRUE)
+summary(model11_center)
 
 #words_with_hes_rate x sps
 # model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
@@ -388,6 +424,17 @@ summary(model11)
 f_model1 <- glmer(challengeACC ~ scaaredSoc_gmc + (1|id) + (1|passage),
                   data=errorDat, family = "binomial")
 summary(f_model1)
+
+# fix: gmc (same column but with -1 (incorrect) and +1 (correct))
+errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
+# behavior was unexpected in the model below so adding these new lines:
+errorDat$challengeACC <- as.factor(errorDat$challengeACC)
+# confirm:
+contrasts(errorDat$challengeACC) # -> -1 (incorrect): 0, 1 (correct): 1
+f_model1_center <- glmer(challengeACC ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                         data=errorDat, family = "binomial")
+summary(f_model1_center)
+
 
 # Accuracy/comprehension as explained by social anxiety: bfne
 # f_model2 <- glmer(challengeACC ~ bfne_gmc + (1|id) + (1|passage),
