@@ -1,15 +1,15 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-02-01
+# Last Updated: 2024-08-17
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
 
 # OUTPUTS
-# TBD
+# models
 
 # NOTES TO DO
-# drop 150086 as only completed 12 of 20 passages and low accuracy
+# center
 
 # Data dict
 
@@ -154,25 +154,25 @@ demo_cols <- c("age", "sex", "pronouns", "ethnic", "socclass")
 sample_size <- select(df, "id") %>% unique %>% nrow
 
 
-summary_unique2 <- function(df, key, column, f = summary) {
+summary_unique <- function(df, key, column, f = summary) {
   # Consider every value of `column` but without duplicates within any unique
   # identifiers in `key`. Summarize (or `f`) what remains.
   # unique(select(df, column, key))[[column]] %>% f
   df %>%
-    # select({{column}}, {{key}}) %>%
+    select({{column}}, {{key}}) %>%
     unique %>%
     pull({{column}}) %>%
     f
 }
 
 demo_cols %>% # as totals, for each of our demographic columns
-  map(\(col) summary_unique(df, "id", col)) # `map` not `for`: return, not print
+  map(\(col) summary_unique(df, id, col)) # `map` not `for`: return, not print
 
 demo_cols %>% # as a percent (but that doesn't mean anything for min/max/median)
   discard(~. == "age") %>% # (...so drop age, which `summary` formats that way)
-  map(\(col) summary_unique(df, "id", col) / sample_size)
+  map(\(col) summary_unique(df, id, col) / sample_size)
 
-summary_unique(df, "id", "age", f = sd) # also do stdev for age
+summary_unique(df, id, "age", f = sd) # also do stdev for age
 
 
 # now remove participants who were not engaged in the task
@@ -220,6 +220,10 @@ c(150022, "depression") # N.B.: 160 omitted syllables of 362 total in passage
 c(150083, "caramel")    # N.B.: only one of four passages to have >= 5% of syllables omitted
 c(150083, "cars")       # N.B.: only one of four passages to have >= 5% of syllables omitted
 
+dfTrim <- filter(dfTrim, !is.na(timePerSyllable))
+# itself, but without ones for which we have no reading data
+# this ends up only dropping 0083, caramel - the other three already end up
+# getting dropped based on other criteria
 
 passage_no_after_trim2 <- summary_unique(dfTrim, "id", "passage", f = length)
 passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
