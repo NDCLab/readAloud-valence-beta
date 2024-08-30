@@ -235,7 +235,7 @@ passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
 
 ### SECTION 3: ORGANIZE DATA FOR MODELING
 errorDat <- dfTrim
-
+# double check
 #modify contrasts for categorical predictors
 contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
 
@@ -246,6 +246,7 @@ class(errorDat$challengeACC) # -> "numeric"
 errorDat$challengeACC <- as.factor(errorDat$challengeACC)
 # confirm:
 contrasts(errorDat$challengeACC) # -> -1 (incorrect): 0, 1 (correct): 1
+# to fix
 
 #center continuous predictors
 errorDat$age_gmc <- errorDat$age - mean(errorDat$age)

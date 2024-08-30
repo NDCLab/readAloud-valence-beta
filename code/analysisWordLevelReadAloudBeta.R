@@ -250,6 +250,107 @@ errorDat <- dfTrim
 #modify contrasts for categorical predictors
 contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
 
+# changes here!! TODO
+
+binary_to_plus_minus_contrast <- function(vec) {
+  vec2 <- vec %>% replace(which(vec == 0), -1) %>% as.factor()
+
+  contrasts(vec2) <- rev(contr.sum(2))
+
+  return(vec2)
+}
+
+#errorDat <-
+#  mutate(errorDat, across(challengeACC, where(is.logical), binary_to_plus_minus_factor))
+errorDat <-
+  errorDat %>%
+  mutate(across(where(is.logical), binary_to_plus_minus_contrast)) %>%
+  mutate(challengeACC = binary_to_plus_minus_contrast(challengeACC))
+
+
+DEBUG <- FALSE # show examples proving this works
+if (DEBUG) {
+  sandboxDat <- errorDat
+
+  sandboxDat %>% select(where(is.logical)) %>% colnames # see what's there
+  sandboxDat %>% select(where(is.factor)) %>% colnames # see what's there
+
+  sandboxDat <-
+    sandboxDat %>%
+    mutate(across(where(is.logical), binary_to_plus_minus_contrast)) %>%
+    mutate(challengeACC = binary_to_plus_minus_contrast(challengeACC))
+
+
+  sandboxDat %>% select(where(is.logical)) %>% colnames # see what's there
+  sandboxDat %>% select(where(is.factor)) %>% colnames # see what's there
+  # as.factor(sandboxDat$misprod) %>% contrasts()
+
+  # double check:
+  sample_words <- slice_sample(sandboxDat, n = 20) #you can run this until a mix
+  sample_words %>% pull(misprod)
+  sample_words %>% pull(misprod) %>% as.factor
+
+  identical(as.factor(sample_words$misprod), sample_words$misprod) # TRUE
+  class(as.factor(sample_words$misprod))
+  class(sample_words$misprod)
+  contrasts(as.factor(sample_words$misprod))
+  contrasts(sample_words$misprod)
+
+  # confirm contrasts are as you expect
+  sandboxDat %>% select(where(is.factor)) %>% map(contrasts)
+
+  ### this gives the following
+
+  #
+  # $pronouns
+  # other she/her they/them undisclosed
+  # he/him          0       0         0           0
+  # other           1       0         0           0
+  # she/her         0       1         0           0
+  # they/them       0       0         1           0
+  # undisclosed     0       0         0           1
+  #
+  # $ethnic
+  # AA LX M UND W
+  # A    0  0 0   0 0
+  # AA   1  0 0   0 0
+  # LX   0  1 0   0 0
+  # M    0  0 1   0 0
+  # UND  0  0 0   1 0
+  # W    0  0 0   0 1
+  #
+  # $socclass
+  # middle poor working
+  # affluent      0    0       0
+  # middle        1    0       0
+  # poor          0    1       0
+  # working       0    0       1
+  #
+  ###
+
+  # # alternate version
+  # sandboxDat <- errorDat
+  # #sandboxDat$challengeACC <- zero_to_neg_one(sandboxDat$challengeACC)
+  #
+  # sandboxDat$challengeACC <- binary_to_plus_minus_factor(sandboxDat$challengeACC)
+  # # confirm:
+  # class(sandboxDat$challengeACC) # -> "factor"
+  #
+  # # confirm:
+  # contrasts(sandboxDat$challengeACC) # -> -1 (i.e. no error): 0, 1 (i.e. error): 1
+  #
+  # # convert all relevant columns
+  # testDat <-
+  #   mutate(sandboxDat, across(where(is.logical), binary_to_plus_minus_factor))
+  # testDat %>% select(where(is.logical)) # nothing
+  #
+  # # confirm contrasts are as you expect
+  # testDat %>% select(where(is.factor)) %>% map(contrasts)
+
+
+}
+
+
 #center continuous predictors
 errorDat$age_gmc <- errorDat$age - mean(errorDat$age)
 errorDat$bfne_gmc <- errorDat$bfne - mean(errorDat$bfne)
@@ -259,7 +360,36 @@ errorDat$scaaredGA_gmc <- errorDat$scaaredGA - mean(errorDat$scaaredGA)
 errorDat$scaaredSoc_gmc <- errorDat$scaaredSoc - mean(errorDat$scaaredSoc)
 errorDat$sps_gmc <- errorDat$sps - mean(errorDat$sps)
 
+# First we'll encapsulate centering so we don't write each column name out
+# manually three times. This way a typo in a column name can't screw it up. (It
+# throws an error instead, rather than allowing in the incorrect data.)
+gmc <- function(vec) { vec - mean(vec) }
 
+add_gmc <- function(df, col) { # makes a new column: centered version of variable
+  vec <- pull(df, {{col}}) # what's the data we're centering?
+
+  df %>%
+    mutate("{{col}}_gmc" := gmc(vec)) # ex. challengeAvgSub->challengeAvgSub_gmc
+}
+
+sandboxDat %>% add_gmc(log10frequency) %>% slice_sample(n = 50) %>%  as.data.frame()
+
+
+errorDat <-
+  errorDat %>%
+  add_gmc(log10frequency)
+
+
+# sanity check
+for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
+  colname <- names(errorDat[col_index])
+  col <- errorDat[[col_index]]
+  print(colname)
+
+  avg <- mean(col)
+  print(paste('  mean:', avg,
+              '  rounded mean:', round(avg, digits = 10)))
+}
 
 ### SECTION 3.5: preparing for misprod-hes sequential analyses
 
