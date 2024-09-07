@@ -235,18 +235,15 @@ passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
 
 ### SECTION 3: ORGANIZE DATA FOR MODELING
 errorDat <- dfTrim
-# double check
+
+
 #modify contrasts for categorical predictors
 contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
+# now verify:
+contrasts(errorDat$sex)
+# see below for how I've handled challengeACC- a special case as it is used both
+# as a predictor and as an outcome
 
-errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
-# confirm:
-class(errorDat$challengeACC) # -> "numeric"
-# behavior was unexpected in the model below so adding these new lines:
-errorDat$challengeACC <- as.factor(errorDat$challengeACC)
-# confirm:
-contrasts(errorDat$challengeACC) # -> -1 (incorrect): 0, 1 (correct): 1
-# to fix
 
 #center continuous predictors
 errorDat$age_gmc <- errorDat$age - mean(errorDat$age)
@@ -317,7 +314,82 @@ summary(errorDatStats$timePerSyllable_gmc)
 summary(errorDatStats$timePerWord_gmc)
 
 
-### SECTION 3.5: preparing for misprod-hes sequential analyses
+# Questionnaires stats (ls additions 9/6/24)
+print("SCAARED Social")
+summary(errorDatStats$scaaredSoc)
+sd(errorDatStats$scaaredSoc)
+
+print("BFNE")
+summary(errorDatStats$bfne)
+sd(errorDatStats$bfne)
+
+print("SPS")
+summary(errorDatStats$sps)
+sd(errorDatStats$sps)
+
+
+### SECTION 3.1: Correct data for contrasts and numerics according to whether
+#                they are predictors or outcomes in the models to follow
+errorDatPredictorsOutcomes <- errorDat # separate them
+
+# we will use the following columns as predictors:
+# scaaredSoc_gmc
+# interaction: scaaredSoc_gmc and words_with_hes_rate_gmc
+# interaction: scaaredSoc_gmc and words_with_hes_rate
+# interaction: scaaredSoc_gmc and words_with_misprod_rate
+
+# the following as outcomes:
+# challengeACC
+# words_with_misprod_rate_gmc
+
+# and the following as both:
+# words_with_hes_rate
+# words_with_hes_rate_gmc
+# words_with_misprod_rate
+
+#  Note also ~ scaaredSoc_gmc + age_gmc : I am not sure what we call/categorize
+#  age here as
+
+# Among the above, the ONLY binary column is challengeACC. So we just make two
+# versions. So
+
+# make predictor version of challengeACC:
+# s/b -1 +1 factors
+
+# make outcome version of challengeACC:
+# s/b numeric
+
+
+# verify current status:
+class(errorDatPredictorsOutcomes$challengeACC) # -> "integer"
+
+# the following lines are to repair unexpected behavior in the model below
+errorDatPredictorsOutcomes$challengeACC_predictor <- as.numeric(errorDat$challengeACC)
+errorDatPredictorsOutcomes$challengeACC_outcome <- as.numeric(errorDat$challengeACC)
+
+# to be safe:
+errorDatPredictorsOutcomes$challengeACC_predictor <-
+  replace(
+    errorDatPredictorsOutcomes$challengeACC_predictor,
+    which(errorDatPredictorsOutcomes$challengeACC_predictor == 0),
+    -1
+  )
+
+# now make it a factor
+errorDatPredictorsOutcomes$challengeACC_predictor <- as.factor(errorDatPredictorsOutcomes$challengeACC_predictor)
+
+# current status
+contrasts(errorDatPredictorsOutcomes$challengeACC_predictor) # -> -1 (incorrect): 0, 1 (correct): 1
+
+# set it to -1 rather than 0
+contrasts(errorDatPredictorsOutcomes$challengeACC_predictor) <- rev(contr.sum(2)) # fix
+contrasts(errorDatPredictorsOutcomes$challengeACC_predictor) # -> -1 (incorrect): -1, 1 (correct): 1
+
+# prevent accidental use:
+errorDatPredictorsOutcomes$challengeACC <- NULL
+
+
+### SECTION 3.2: preparing for misprod-hes sequential analyses
 
 # ignore the misprod-hes columns for now
 errorDatMisprodHes <- select(errorDat, !contains("_syllables"))
@@ -354,8 +426,11 @@ errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisp
 errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
 
 
-
 ### SECTION 4: MODEL RESULTS
+# for every model involving comprehension accuracy, rather than errorDat we use
+# errorDatPredictorsOutcomes, which differentiates how comprehension accuracy is
+# represented as a predictor versus as an outcome
+
 #misprod_rate x bfne
 # model1 <- lmerTest::lmer(misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
 #                          data=errorDat, REML=TRUE)
@@ -392,9 +467,9 @@ errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithR
 # summary(model7)
 
 #words_with_misprod_rate x scaaredSoc
-model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                         data=errorDat, REML=TRUE)
-summary(model8)
+# model8 <- lmerTest::lmer(words_with_misprod_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                          data=errorDat, REML=TRUE)
+# summary(model8)
 
 # fix: gmc
 model8_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -412,9 +487,9 @@ summary(model8_center)
 # summary(model10)
 
 # ! words_with_hes_rate x scaaredSoc
-model11 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                          data=errorDat, REML=TRUE)
-summary(model11)
+# model11 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                           data=errorDat, REML=TRUE)
+# summary(model11)
 
 # fix: gmc
 model11_center <- lmerTest::lmer(words_with_hes_rate_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -433,19 +508,19 @@ summary(model11_center)
 # "f_" : follow-up
 
 # Accuracy/comprehension as explained by social anxiety: scaaredSoc
-f_model1 <- glmer(challengeACC ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
+
+# outcome is binary 0/1 numeric
+f_model1 <- glmer(challengeACC_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage),
+                  data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model1)
 
 # fix: gmc (same column but with -1 (incorrect) and +1 (correct))
-errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
-# behavior was unexpected in the model below so adding these new lines:
-errorDat$challengeACC <- as.factor(errorDat$challengeACC)
+# errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
 # confirm:
-contrasts(errorDat$challengeACC) # -> -1 (incorrect): 0, 1 (correct): 1
-f_model1_center <- glmer(challengeACC ~ scaaredSoc_gmc + (1|id) + (1|passage),
-                         data=errorDat, family = "binomial")
-summary(f_model1_center)
+# unique(errorDatPredictorsOutcomes$challengeACC_outcome) # -> (incorrect:) 0, (correct:) 1
+# f_model1_center <- glmer(challengeACC ~ scaaredSoc_gmc + (1|id) + (1|passage),
+#                          data=errorDatPredictorsOutcomes, family = "binomial")
+# summary(f_model1_center)
 
 
 # Accuracy/comprehension as explained by social anxiety: bfne
@@ -466,13 +541,15 @@ summary(f_model1_center)
 # summary(f_model4)
 
 # Accuracy/comprehension as explained by disfluencies: hesitations per word
-f_model5 <- glmer(challengeACC ~ words_with_hes_rate + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model5)
+# f_model5 <- glmer(challengeACC ~ words_with_hes_rate + (1|id) + (1|passage),
+#                   data=errorDat, family = "binomial")
+# summary(f_model5)
 
 # fix: gmc
-f_model5_center <- glmer(challengeACC ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
+
+# outcome is binary 0/1 numeric
+f_model5_center <- glmer(challengeACC_outcome ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
+                  data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model5_center)
 
 
@@ -483,8 +560,8 @@ summary(f_model5_center)
 # summary(f_model6)
 
 # Accuracy/comprehension as explained by errors: misproductions per word
-f_model7 <- glmer(challengeACC ~ words_with_misprod_rate + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
+f_model7 <- glmer(challengeACC_outcome ~ words_with_misprod_rate + (1|id) + (1|passage),
+                  data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model7)
 
 
@@ -496,13 +573,13 @@ summary(f_model7)
 # summary(f_model8)
 
 # Accuracy/comprehension as explained by disfluencies: hesitations per word with scaared
-f_model9 <- glmer(challengeACC ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
-summary(f_model9)
+# f_model9 <- glmer(challengeACC_outcome ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+#                   data=errorDatPredictorsOutcomes, family = "binomial")
+# summary(f_model9)
 
 # fix: gmc
-f_model9_center <- glmer(challengeACC ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
-                         data=errorDat, family = "binomial")
+f_model9_center <- glmer(challengeACC_outcome ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
+                         data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model9_center)
 
 
@@ -512,8 +589,8 @@ summary(f_model9_center)
 # summary(f_model10)
 
 # Accuracy/comprehension as explained by errors: misproductions per word with scaared
-f_model11 <- glmer(challengeACC ~ words_with_misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                  data=errorDat, family = "binomial")
+f_model11 <- glmer(challengeACC_outcome ~ words_with_misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+                  data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model11)
 
 
@@ -572,9 +649,9 @@ summary(f_model11)
 # summary(f_model20) # ***
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated words
-f_model21 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model21) # ***
+# f_model21 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model21) # ***
 
 # fix: gmc
 f_model21_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
@@ -596,9 +673,9 @@ summary(f_model21_center) # ***
 # summary(f_model23)
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated words and scaared
-f_model24 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
-                            data=errorDat, REML=TRUE)
-summary(f_model24)
+# f_model24 <- lmerTest::lmer(words_with_misprod_rate ~ words_with_hes_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+#                             data=errorDat, REML=TRUE)
+# summary(f_model24)
 
 # fix: gmc
 f_model24_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
