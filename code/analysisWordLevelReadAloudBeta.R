@@ -245,12 +245,52 @@ summary_unique(dfTrim, "id", "age", f = sd) # also do stdev for age
 
 
 ### SECTION 3: ORGANIZE DATA FOR MODELING
+DEBUG <- FALSE # show examples proving this works
 errorDat <- dfTrim
+
+
+### SECTION 3.1: Correct data for contrasts and numerics according to whether
+#                they are predictors or outcomes in the models to follow
 
 #modify contrasts for categorical predictors
 contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
 
-# changes here!! TODO
+errorDatPredictorsOutcomes <- errorDat # separate them
+
+# given limited testing, it appears to function as intended
+differentiate_predictor_and_outcome <- function(df, colname, keep_col = FALSE) {
+  # Return a copy of df with two new columns.
+  # colname should be binary data
+  # {{colname}}_predictor is colname's data as -1 and 1 -- a factor
+  # {{colname}}_outcome   is colname's data as  0 and 1 -- a numeric
+
+  # Original column is removed by default to prevent accidental use
+
+  vec <- pull(df, {{colname}})
+
+  # Fail if not applicable to the data passed
+  stopifnot(class(vec) %in% c("integer", "logical", "numeric"))
+
+  numeric_data <- as.numeric(vec)
+  # to be safe, we'll set even the predictor's numeric data to +1 and -1 for now
+  factor_data <- replace(as.numeric(vec), which(vec == 0), -1)
+
+  factor_data <- as.factor(factor_data) # actually make it a factor
+  contrasts(factor_data) <- rev(contr.sum(2)) # and set -1, +1 contrasts
+
+  if (DEBUG) {
+    print(vec); print(numeric_data); print(factor_data)
+    print(contrasts(factor_data))
+  } #show it
+
+
+  df <- mutate(df, "{{colname}}_predictor" := factor_data,
+                   "{{colname}}_outcome"   := numeric_data)
+
+  if(!keep_col) df <- select(df, -{{colname}})
+  return(df)
+}
+
 
 binary_to_plus_minus_contrast <- function(vec) {
   vec2 <- vec %>% replace(which(vec == 0), -1) %>% as.factor()
@@ -260,6 +300,13 @@ binary_to_plus_minus_contrast <- function(vec) {
   return(vec2)
 }
 
+# e.g.
+errorDatPredictorsOutcomes <-
+  errorDatPredictorsOutcomes %>%
+  differentiate_predictor_and_outcome(hesitation, keep_col = TRUE)
+
+# tested up to HERE
+
 #errorDat <-
 #  mutate(errorDat, across(challengeACC, where(is.logical), binary_to_plus_minus_factor))
 errorDat <-
@@ -268,7 +315,6 @@ errorDat <-
   mutate(challengeACC = binary_to_plus_minus_contrast(challengeACC))
 
 
-DEBUG <- FALSE # show examples proving this works
 if (DEBUG) {
   sandboxDat <- errorDat
 
@@ -350,6 +396,7 @@ if (DEBUG) {
 
 }
 
+### SECTION 3.2: mean-center continuous predictors
 
 #center continuous predictors
 errorDat$age_gmc <- errorDat$age - mean(errorDat$age)
@@ -391,7 +438,7 @@ for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
               '  rounded mean:', round(avg, digits = 10)))
 }
 
-### SECTION 3.5: preparing for misprod-hes sequential analyses
+### SECTION 3.3: preparing for misprod-hes sequential analyses
 
 # ignore the misprod-hes columns for now
 errorDatMisprodHes <- select(errorDat, !contains("any_"))
