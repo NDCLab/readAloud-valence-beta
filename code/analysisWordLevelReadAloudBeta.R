@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-08-17
+# Last Updated: 2024-09-10
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -9,7 +9,7 @@
 # models
 
 # NOTES TO DO
-# center
+# rerun models of binary data using factorized predictors, numeric outcomes
 
 # Data dict
 
@@ -266,7 +266,7 @@ differentiate_predictor_and_outcome <- function(df, colname, keep_col = FALSE) {
 
   # Original column is removed by default to prevent accidental use
 
-  vec <- pull(df, {{colname}})
+  vec <- pull(df, colname)
 
   # Fail if not applicable to the data passed
   stopifnot(class(vec) %in% c("integer", "logical", "numeric"))
@@ -284,11 +284,21 @@ differentiate_predictor_and_outcome <- function(df, colname, keep_col = FALSE) {
   } #show it
 
 
-  df <- mutate(df, "{{colname}}_predictor" := factor_data,
-                   "{{colname}}_outcome"   := numeric_data)
+  df <- mutate(df, "{colname}_predictor" := factor_data,
+                   "{colname}_outcome"   := numeric_data)
 
-  if(!keep_col) df <- select(df, -{{colname}})
+  if(!keep_col) df <- select(df, -colname)
   return(df)
+}
+
+split_many_predictors_and_outcomes <- function(df, colnames) {
+  acc <- df
+  for(col in colnames) {
+    # print({{col}})
+    # print(class({{col}}))
+    acc <- differentiate_predictor_and_outcome(acc, col)
+  }
+  return(acc)
 }
 
 
@@ -300,53 +310,53 @@ binary_to_plus_minus_contrast <- function(vec) {
   return(vec2)
 }
 
+relevant_columns <-
+  errorDat %>% select(where(is.logical), challengeACC) %>% colnames
+
+
 # e.g.
 errorDatPredictorsOutcomes <-
   errorDatPredictorsOutcomes %>%
-  differentiate_predictor_and_outcome(hesitation, keep_col = TRUE)
+  split_many_predictors_and_outcomes(relevant_columns)
+
 
 # tested up to HERE
 
 #errorDat <-
 #  mutate(errorDat, across(challengeACC, where(is.logical), binary_to_plus_minus_factor))
-errorDat <-
-  errorDat %>%
-  mutate(across(where(is.logical), binary_to_plus_minus_contrast)) %>%
-  mutate(challengeACC = binary_to_plus_minus_contrast(challengeACC))
-
+# errorDat <-
+#   errorDat %>%
+#   mutate(across(where(is.logical), binary_to_plus_minus_contrast)) %>%
+#   mutate(challengeACC = binary_to_plus_minus_contrast(challengeACC))
+#
 
 if (DEBUG) {
-  sandboxDat <- errorDat
+  sandboxDat <- errorDatPredictorsOutcomes
 
   sandboxDat %>% select(where(is.logical)) %>% colnames # see what's there
   sandboxDat %>% select(where(is.factor)) %>% colnames # see what's there
-
-  sandboxDat <-
-    sandboxDat %>%
-    mutate(across(where(is.logical), binary_to_plus_minus_contrast)) %>%
-    mutate(challengeACC = binary_to_plus_minus_contrast(challengeACC))
-
-
-  sandboxDat %>% select(where(is.logical)) %>% colnames # see what's there
-  sandboxDat %>% select(where(is.factor)) %>% colnames # see what's there
-  # as.factor(sandboxDat$misprod) %>% contrasts()
+  sandboxDat %>% select(where(is.numeric)) %>% colnames # see what's there
 
   # double check:
   sample_words <- slice_sample(sandboxDat, n = 20) #you can run this until a mix
-  sample_words %>% pull(misprod)
-  sample_words %>% pull(misprod) %>% as.factor
+  sample_words %>% pull(misprod) # gone!
+  sample_words %>% pull(misprod_predictor)
+  sample_words %>% pull(misprod_outcome)
 
-  identical(as.factor(sample_words$misprod), sample_words$misprod) # TRUE
-  class(as.factor(sample_words$misprod))
-  class(sample_words$misprod)
-  contrasts(as.factor(sample_words$misprod))
-  contrasts(sample_words$misprod)
+  class(sample_words$misprod_predictor)
+  class(sample_words$misprod_outcome)
+  contrasts(sample_words$misprod_predictor)
+  contrasts(sample_words$misprod_outcome) # -> fails
 
   # confirm contrasts are as you expect
   sandboxDat %>% select(where(is.factor)) %>% map(contrasts)
 
   ### this gives the following
-
+  #
+  # $sex
+  # [,1]
+  # female    1
+  # male     -1
   #
   # $pronouns
   # other she/her they/them undisclosed
@@ -372,28 +382,91 @@ if (DEBUG) {
   # poor          0    1       0
   # working       0    0       1
   #
+  # $misprod_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $ins_dup_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $omit_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $word_stress_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $filled_pause_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $hesitation_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $elongation_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $corrected_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $any_upcoming_hesitation_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $misprod_with_any_upcoming_hesitation_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $any_prior_misprod_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $hesitation_with_any_prior_misprod_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $any_upcoming_misprod_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $hesitation_with_any_upcoming_misprod_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $any_prior_hesitation_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $misprod_with_any_prior_hesitation_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
+  #
+  # $challengeACC_predictor
+  # [,1]
+  # -1   -1
+  # 1     1
   ###
-
-  # # alternate version
-  # sandboxDat <- errorDat
-  # #sandboxDat$challengeACC <- zero_to_neg_one(sandboxDat$challengeACC)
-  #
-  # sandboxDat$challengeACC <- binary_to_plus_minus_factor(sandboxDat$challengeACC)
-  # # confirm:
-  # class(sandboxDat$challengeACC) # -> "factor"
-  #
-  # # confirm:
-  # contrasts(sandboxDat$challengeACC) # -> -1 (i.e. no error): 0, 1 (i.e. error): 1
-  #
-  # # convert all relevant columns
-  # testDat <-
-  #   mutate(sandboxDat, across(where(is.logical), binary_to_plus_minus_factor))
-  # testDat %>% select(where(is.logical)) # nothing
-  #
-  # # confirm contrasts are as you expect
-  # testDat %>% select(where(is.factor)) %>% map(contrasts)
-
-
 }
 
 ### SECTION 3.2: mean-center continuous predictors
