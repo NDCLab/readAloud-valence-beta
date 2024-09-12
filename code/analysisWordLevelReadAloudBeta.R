@@ -471,6 +471,13 @@ if (DEBUG) {
 
 ### SECTION 3.2: mean-center continuous predictors
 
+# now prevent ourselves from using data that isn't explicitly set up to be
+# predictor or outcome: use the version that omitted the ambiguous columns
+errorDatBackup <- errorDat
+errorDat <- errorDatPredictorsOutcomes
+
+
+
 #center continuous predictors
 errorDat$age_gmc <- errorDat$age - mean(errorDat$age)
 errorDat$bfne_gmc <- errorDat$bfne - mean(errorDat$bfne)
@@ -492,8 +499,12 @@ add_gmc <- function(df, col) { # makes a new column: centered version of variabl
     mutate("{{col}}_gmc" := gmc(vec)) # ex. challengeAvgSub->challengeAvgSub_gmc
 }
 
-sandboxDat %>% add_gmc(log10frequency) %>% slice_sample(n = 50) %>%  as.data.frame()
-
+if (DEBUG) {
+  sandboxDat %>%
+  add_gmc(log10frequency) %>%
+  slice_sample(n = 50) %>%
+  as.data.frame()
+}
 
 errorDat <-
   errorDat %>%
@@ -501,14 +512,16 @@ errorDat <-
 
 
 # sanity check
-for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
-  colname <- names(errorDat[col_index])
-  col <- errorDat[[col_index]]
-  print(colname)
+if (DEBUG) {
+  for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
+    colname <- names(errorDat[col_index])
+    col <- errorDat[[col_index]]
+    print(colname)
 
-  avg <- mean(col)
-  print(paste('  mean:', avg,
-              '  rounded mean:', round(avg, digits = 10)))
+    avg <- mean(col)
+    print(paste('  mean:', avg,
+                '  rounded mean:', round(avg, digits = 10)))
+  }
 }
 
 ### SECTION 3.3: preparing for misprod-hes sequential analyses
@@ -550,6 +563,10 @@ errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithR
 
 
 ### SECTION 4: MODEL RESULTS
+# again, now prevent ourselves from using data that isn't explicitly set up to
+# be predictor or outcome: use the version that omitted the ambiguous columns
+
+
 #misprod x bfne
 # model1 <- lmerTest::lmer(misprod ~ bfne_gmc + (1|id) + (1|passage),
 #                          data=errorDat, REML=TRUE)
@@ -561,9 +578,25 @@ model2 <- lmerTest::lmer(misprod ~ scaaredSoc_gmc + (1|id) + (1|passage),
 summary(model2)
 
 #misprod x scaaredSoc control for word
-model2.5 <- lmerTest::lmer(misprod ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                         data=errorDat, REML=TRUE)
+# this version fails - as intended: object 'misprod' not found
+if (DEBUG) {
+  old_model2.5 <- lmerTest::lmer(misprod ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                 data=errorDat, REML=TRUE)
+}
+
+model2.5 <- lmerTest::lmer(misprod_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                           data=errorDat, REML=TRUE)
 summary(model2.5)
+
+if(DEBUG) { # compare
+  wrong_model2.5 <- lmerTest::lmer(misprod_predictor ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                   data=errorDat, REML=TRUE)
+  # Error in mkRespMod(fr, REML = REMLpass) : response must be numeric
+}
+
+summary(wrong_model2.5)
+
+
 # tldr 2/28/24 SA indv. do not misproduce more/less
 
 
@@ -578,12 +611,12 @@ summary(model2.5)
 # summary(model4)
 
 #hesitation x scaaredSoc
-model5 <- lmerTest::lmer(hesitation ~ scaaredSoc_gmc + (1|id) + (1|passage),
+model5 <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage),
                          data=errorDat, REML=TRUE)
 summary(model5)
 
 # hesitation x scaaredSoc, control for word
-model5.5 <- lmerTest::lmer(hesitation ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+model5.5 <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                          data=errorDat, REML=TRUE)
 summary(model5.5)
 
@@ -604,7 +637,7 @@ summary(model5.5)
 # Now, misproduction-hesitation relationships
 
 # Errors as explained by disfluency: rate of misproduced syllables from rate of hesitated syllables
-f_model20 <- lmerTest::lmer(misprod ~ hesitation + (1|id) + (1|passage),
+f_model20 <- lmerTest::lmer(misprod_outcome ~ hesitation_predictor + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
 summary(f_model20) # ***
 # should we (1|word) here?
@@ -630,7 +663,7 @@ summary(f_model20) # ***
 # Now, misproduction-hesitation interactions with social anxiety
 
 # Errors as explained by disfluency and SA: rate of misproduced syllables from rate of hesitated syllables and scaared
-f_model23 <- lmerTest::lmer(misprod ~ hesitation * scaaredSoc_gmc + (1|id) + (1|passage),
+f_model23 <- lmerTest::lmer(misprod_outcome ~ hesitation_predictor * scaaredSoc_gmc + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
 summary(f_model23)
 
@@ -654,7 +687,7 @@ summary(f_model23)
 
 # What happens when we control for age?
 #hesitation x scaaredSoc
-age_model1 <- lmerTest::lmer(hesitation ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
+age_model1 <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
                          data=errorDat, REML=TRUE)
 summary(age_model1)
 
@@ -675,78 +708,80 @@ summary(age_model1)
 # does misproduction location relative to a hesitation predict how many
 # instances we get in a particular reading?
 
-hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage),
-                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_1) # n.s., 0.271
-
-misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage),
-                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_1) # n.s., 0.108
-
-## does it interact with SA?
-hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
-                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_3) # n.s.
-
-misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
-                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_4) # n.s.
-
-# what if we control for word?
-hes_with_rel_misprod_model_1.5 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage) + (1|word),
-                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_1.5) # n.s., sameish
-
-misprod_with_rel_hes_model_1.5 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage) + (1|word),
-                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_1.5) # ., 0.0974
-
-## does it interact with SA?
-hes_with_rel_misprod_model_3.5 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                                               data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_3.5) # n.s.
-
-misprod_with_rel_hes_model_4.5 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                                               data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_4.5) # n.s.
-
-# and if we ignore passage?
-hes_with_rel_misprod_model_1.6 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|word),
+# TODO unfixed per earlier predictor/outcome differentiation
+if (FALSE) {
+  hes_with_rel_misprod_model_1 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage),
                                                  data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_1.6) # n.s., sameish
+  summary(hes_with_rel_misprod_model_1) # n.s., 0.271
 
-misprod_with_rel_hes_model_1.6 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|word),
+  misprod_with_rel_hes_model_1 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage),
                                                  data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_1.6) # made no difference, as you might expect
+  summary(misprod_with_rel_hes_model_1) # n.s., 0.108
 
-## does it interact with SA?
-hes_with_rel_misprod_model_3.6 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|word),
+  ## does it interact with SA?
+  hes_with_rel_misprod_model_3 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
                                                  data=errorDatLongHesWithRelMisprod, REML=TRUE)
-summary(hes_with_rel_misprod_model_3.6) # ""
+  summary(hes_with_rel_misprod_model_3) # n.s.
 
-misprod_with_rel_hes_model_4.6 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|word),
+  misprod_with_rel_hes_model_4 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
                                                  data=errorDatLongMisprodWithRelHes, REML=TRUE)
-summary(misprod_with_rel_hes_model_4.6) # ""
+  summary(misprod_with_rel_hes_model_4) # n.s.
 
+  # what if we control for word?
+  hes_with_rel_misprod_model_1.5 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage) + (1|word),
+                                                 data=errorDatLongHesWithRelMisprod, REML=TRUE)
+  summary(hes_with_rel_misprod_model_1.5) # n.s., sameish
+
+  misprod_with_rel_hes_model_1.5 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage) + (1|word),
+                                                 data=errorDatLongMisprodWithRelHes, REML=TRUE)
+  summary(misprod_with_rel_hes_model_1.5) # ., 0.0974
+
+  ## does it interact with SA?
+  hes_with_rel_misprod_model_3.5 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                                 data=errorDatLongHesWithRelMisprod, REML=TRUE)
+  summary(hes_with_rel_misprod_model_3.5) # n.s.
+
+  misprod_with_rel_hes_model_4.5 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+                                                 data=errorDatLongMisprodWithRelHes, REML=TRUE)
+  summary(misprod_with_rel_hes_model_4.5) # n.s.
+
+  # and if we ignore passage?
+  hes_with_rel_misprod_model_1.6 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|word),
+                                                   data=errorDatLongHesWithRelMisprod, REML=TRUE)
+  summary(hes_with_rel_misprod_model_1.6) # n.s., sameish
+
+  misprod_with_rel_hes_model_1.6 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|word),
+                                                   data=errorDatLongMisprodWithRelHes, REML=TRUE)
+  summary(misprod_with_rel_hes_model_1.6) # made no difference, as you might expect
+
+  ## does it interact with SA?
+  hes_with_rel_misprod_model_3.6 <- lmerTest::lmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|word),
+                                                   data=errorDatLongHesWithRelMisprod, REML=TRUE)
+  summary(hes_with_rel_misprod_model_3.6) # ""
+
+  misprod_with_rel_hes_model_4.6 <- lmerTest::lmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|word),
+                                                   data=errorDatLongMisprodWithRelHes, REML=TRUE)
+  summary(misprod_with_rel_hes_model_4.6) # ""
+}
 
 
 # Word frequency analysis with words absent from corpus dropped
 # Does a word's frequency predict hesitation on that word?
 errorDatAttestedFreqs <- filter(errorDat, log10frequency > 0)
-wordfreq_model_1 <- lmerTest::lmer(hesitation ~ log10frequency + (1|id) + (1|passage) + (1|word),
+wordfreq_model_1 <- lmerTest::lmer(hesitation_outcome ~ log10frequency_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_1)
-wordfreq_model_2 <- lmerTest::lmer(misprod ~ log10frequency + (1|id) + (1|passage) + (1|word),
+wordfreq_model_2 <- lmerTest::lmer(misprod_outcome ~ log10frequency_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_2)
 
 
 # Do social anxiety and frequency interact to predict hesitation rate or misproduction rate?
-wordfreq_model_3 <- lmerTest::lmer(hesitation ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_3 <- lmerTest::lmer(hesitation_outcome ~ log10frequency_gmc * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_3) # looks good!
 
-wordfreq_model_4 <- lmerTest::lmer(misprod ~ log10frequency * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_4 <- lmerTest::lmer(misprod_outcome ~ log10frequency_gmc * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDatAttestedFreqs, REML=TRUE)
 summary(wordfreq_model_4) # tldr no?
 
@@ -763,16 +798,19 @@ errorDat$log10frequency_with_absents_as_median <- case_match(
   0 ~ subtlexus_median,
   .default = errorDat$log10frequency)
 
-compare_freq <- data.frame(cbind(old = errorDat$log10frequency,
-                                 new = errorDat$log10frequency_with_absents_as_median))
+if (DEBUG) {
+  compare_freq <- data.frame(cbind(old = errorDat$log10frequency,
+                                   new = errorDat$log10frequency_with_absents_as_median))
 
-filter(compare_freq, old != new) %>% # confirm it worked as expected
-  filter(old != 0 | new != subtlexus_median) %>%
-  nrow == 0 # TRUE
+  filter(compare_freq, old != new) %>% # confirm it worked as expected
+    filter(old != 0 | new != subtlexus_median) %>%
+    nrow == 0 # TRUE
+}
 
+# TODO ADD GMC
 
 # Does a word's frequency predict hesitation on that word?
-wordfreq_model_with_absents_as_median_1 <- lmerTest::lmer(hesitation ~ log10frequency_with_absents_as_median + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_1 <- lmerTest::lmer(hesitation_outcome ~ log10frequency_with_absents_as_median + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
 summary(wordfreq_model_with_absents_as_median_1)
 
