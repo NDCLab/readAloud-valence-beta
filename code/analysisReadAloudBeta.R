@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-08-16
+# Last Updated: 2024-09-25
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -9,7 +9,7 @@
 # models
 
 # NOTES TO DO
-# gmc
+# z-score
 
 # Data dict
 
@@ -234,6 +234,7 @@ passage_no_after_trim1 - passage_no_after_trim2 #number of passages trimmed
 
 
 ### SECTION 3: ORGANIZE DATA FOR MODELING
+DEBUG <- FALSE
 errorDat <- dfTrim
 
 
@@ -280,17 +281,37 @@ errorDat <-
   add_gmc(words_with_hes_rate) %>%
   add_gmc(challengeAvgSub)
 
+# to check if gmc and scale return the same outputs
+if (DEBUG) {
+  res <-
+    errorDat %>%
+    mutate(base_R_scale = scale(words_with_misprod_rate,
+                                center = TRUE,
+                                scale = FALSE)) %>%
+    select(words_with_misprod_rate_gmc, base_R_scale)
 
-# sanity check
-for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
-  colname <- names(errorDat[col_index])
-  col <- errorDat[[col_index]]
-  print(colname)
+  print(res) # scope it out
 
-  avg <- mean(col)
-  print(paste('  mean:', avg,
-              '  rounded mean:', round(avg, digits = 10)))
+  print(
+    all.equal(res$words_with_misprod_rate_gmc, # 'manual' way we'd done it before
+              res$base_R_scale[,1]))           # base R built-in way
+  # -> TRUE
+
+  rm(res)
+
+  # sanity check: did we get means of zero
+  for (col_index in which(stringr::str_detect(colnames(errorDat), ".*_gmc"))) {
+    colname <- names(errorDat[col_index])
+    col <- errorDat[[col_index]]
+    print(colname)
+
+    avg <- mean(col)
+    print(paste('  mean:', avg,
+                '  rounded mean:', round(avg, digits = 10)))
+  }
 }
+
+
 
 
 #extract demo stats
