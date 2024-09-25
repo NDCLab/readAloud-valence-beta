@@ -9,7 +9,7 @@
 # models
 
 # NOTES TO DO
-# z-score
+
 
 # Data dict
 
@@ -281,6 +281,26 @@ errorDat <-
   add_gmc(words_with_hes_rate) %>%
   add_gmc(challengeAvgSub)
 
+errorDat$age_z <- scale(errorDat$age, center = TRUE, scale = TRUE)
+errorDat$bfne_z <- scale(errorDat$bfne, center = TRUE, scale = TRUE)
+errorDat$phq8_z <- scale(errorDat$phq8, center = TRUE, scale = TRUE)
+errorDat$scaaredTotal_z <- scale(errorDat$scaaredTotal, center = TRUE, scale = TRUE)
+errorDat$scaaredGA_z <- scale(errorDat$scaaredGA, center = TRUE, scale = TRUE)
+errorDat$scaaredSoc_z <- scale(errorDat$scaaredSoc, center = TRUE, scale = TRUE)
+errorDat$sps_z <- scale(errorDat$sps, center = TRUE, scale = TRUE)
+errorDat$lenSyll_z <- scale(errorDat$lenSyll, center = TRUE, scale = TRUE)
+errorDat$lenWord_z <- scale(errorDat$lenWord, center = TRUE, scale = TRUE)
+errorDat$avgSyllPerWord_z <- scale(errorDat$avgSyllPerWord, center = TRUE, scale = TRUE)
+
+errorDat$timePerSyllable_z <- scale(errorDat$timePerSyllable, center = TRUE, scale = TRUE)
+errorDat$timePerWord_z <- scale(errorDat$timePerWord, center = TRUE, scale = TRUE)
+
+errorDat$words_with_misprod_rate_z <- scale(errorDat$words_with_misprod_rate, center = TRUE, scale = TRUE)
+errorDat$words_with_hes_rate_z <- scale(errorDat$words_with_hes_rate, center = TRUE, scale = TRUE)
+errorDat$challengeAvgSub_z <- scale(errorDat$challengeAvgSub, center = TRUE, scale = TRUE)
+
+
+
 # to check if gmc and scale return the same outputs
 if (DEBUG) {
   res <-
@@ -311,8 +331,8 @@ if (DEBUG) {
   }
 }
 
-
-
+# make sure we don't accidentally use the wrong version
+errorDat <- select(errorDat, -ends_with('_gmc'))
 
 #extract demo stats
 errorDatStats <- subset(errorDat, !duplicated(errorDat$id))
@@ -492,10 +512,10 @@ errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithR
 #                          data=errorDat, REML=TRUE)
 # summary(model8)
 
-# fix: gmc
-model8_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+# fix: z-score
+model8_z_scored <- lmerTest::lmer(words_with_misprod_rate_z ~ scaaredSoc_z + (1|id) + (1|passage),
                          data=errorDat, REML=TRUE)
-summary(model8_center)
+summary(model8_z_scored)
 
 #words_with_misprod_rate x sps
 # model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
@@ -512,10 +532,11 @@ summary(model8_center)
 #                           data=errorDat, REML=TRUE)
 # summary(model11)
 
-# fix: gmc
-model11_center <- lmerTest::lmer(words_with_hes_rate_gmc ~ scaaredSoc_gmc + (1|id) + (1|passage),
+# fix: z-score
+
+model11_z_scored <- lmerTest::lmer(words_with_hes_rate_z ~ scaaredSoc_z + (1|id) + (1|passage),
                           data=errorDat, REML=TRUE)
-summary(model11_center)
+summary(model11_z_scored)
 
 #words_with_hes_rate x sps
 # model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
@@ -531,9 +552,9 @@ summary(model11_center)
 # Accuracy/comprehension as explained by social anxiety: scaaredSoc
 
 # outcome is binary 0/1 numeric
-f_model1 <- glmer(challengeACC_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage),
+f_model1_z_scored <- glmer(challengeACC_outcome ~ scaaredSoc_z + (1|id) + (1|passage),
                   data=errorDatPredictorsOutcomes, family = "binomial")
-summary(f_model1)
+summary(f_model1_z_scored)
 
 # fix: gmc (same column but with -1 (incorrect) and +1 (correct))
 # errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
@@ -569,9 +590,9 @@ summary(f_model1)
 # fix: gmc
 
 # outcome is binary 0/1 numeric
-f_model5_center <- glmer(challengeACC_outcome ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
+f_model5_z_scored <- glmer(challengeACC_outcome ~ words_with_hes_rate_z + (1|id) + (1|passage),
                   data=errorDatPredictorsOutcomes, family = "binomial")
-summary(f_model5_center)
+summary(f_model5_z_scored)
 
 
 
@@ -581,9 +602,9 @@ summary(f_model5_center)
 # summary(f_model6)
 
 # Accuracy/comprehension as explained by errors: misproductions per word
-f_model7 <- glmer(challengeACC_outcome ~ words_with_misprod_rate + (1|id) + (1|passage),
+f_model7_z_scored <- glmer(challengeACC_outcome ~ words_with_misprod_rate_z + (1|id) + (1|passage),
                   data=errorDatPredictorsOutcomes, family = "binomial")
-summary(f_model7)
+summary(f_model7_z_scored)
 
 
 
@@ -598,10 +619,10 @@ summary(f_model7)
 #                   data=errorDatPredictorsOutcomes, family = "binomial")
 # summary(f_model9)
 
-# fix: gmc
-f_model9_center <- glmer(challengeACC_outcome ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
+# fix: z score
+f_model9_z_scored <- glmer(challengeACC_outcome ~ words_with_hes_rate_z * scaaredSoc_z + (1|id) + (1|passage),
                          data=errorDatPredictorsOutcomes, family = "binomial")
-summary(f_model9_center)
+summary(f_model9_z_scored)
 
 
 # Accuracy/comprehension as explained by errors: misproductions per syllable with scaared
@@ -610,9 +631,9 @@ summary(f_model9_center)
 # summary(f_model10)
 
 # Accuracy/comprehension as explained by errors: misproductions per word with scaared
-f_model11 <- glmer(challengeACC_outcome ~ words_with_misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
+f_model11_z_scored <- glmer(challengeACC_outcome ~ words_with_misprod_rate_z * scaaredSoc_z + (1|id) + (1|passage),
                   data=errorDatPredictorsOutcomes, family = "binomial")
-summary(f_model11)
+summary(f_model11_z_scored)
 
 
 
@@ -674,10 +695,10 @@ summary(f_model11)
 #                             data=errorDat, REML=TRUE)
 # summary(f_model21) # ***
 
-# fix: gmc
-f_model21_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ words_with_hes_rate_gmc + (1|id) + (1|passage),
+# fix: z score
+f_model21_z_scored <- lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
-summary(f_model21_center) # ***
+summary(f_model21_z_scored) # ***
 
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated syllables
 # f_model22 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
@@ -698,10 +719,10 @@ summary(f_model21_center) # ***
 #                             data=errorDat, REML=TRUE)
 # summary(f_model24)
 
-# fix: gmc
-f_model24_center <- lmerTest::lmer(words_with_misprod_rate_gmc ~ words_with_hes_rate_gmc * scaaredSoc_gmc + (1|id) + (1|passage),
+# fix: z-score
+f_model24_z_scored <- lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z * scaaredSoc_z + (1|id) + (1|passage),
                                    data=errorDat, REML=TRUE)
-summary(f_model24_center)
+summary(f_model24_z_scored)
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared
@@ -785,9 +806,9 @@ summary(f_model24_center)
 # summary(age_model1)
 
 #words_with_hes_rate x scaaredSoc
-age_model2 <- lmerTest::lmer(words_with_hes_rate ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
+age_model2_z_scored <- lmerTest::lmer(words_with_hes_rate_z ~ scaaredSoc_z + age_z + (1|id) + (1|passage),
                           data=errorDat, REML=TRUE)
-summary(age_model2)
+summary(age_model2_z_scored)
 
 
 # And now ->> check our work

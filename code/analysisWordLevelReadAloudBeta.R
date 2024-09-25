@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-09-10
+# Last Updated: 2024-09-25
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -9,7 +9,7 @@
 # models
 
 # NOTES TO DO
-# rerun models of binary data using factorized predictors, numeric outcomes
+
 
 # Data dict
 
@@ -477,14 +477,14 @@ errorDat <- errorDatPredictorsOutcomes
 
 
 
-#center continuous predictors
-errorDat$age_gmc <- errorDat$age - mean(errorDat$age)
-errorDat$bfne_gmc <- errorDat$bfne - mean(errorDat$bfne)
-errorDat$phq8_gmc <- errorDat$phq8 - mean(errorDat$phq8)
-errorDat$scaaredTotal_gmc <- errorDat$scaaredTotal - mean(errorDat$scaaredTotal)
-errorDat$scaaredGA_gmc <- errorDat$scaaredGA - mean(errorDat$scaaredGA)
-errorDat$scaaredSoc_gmc <- errorDat$scaaredSoc - mean(errorDat$scaaredSoc)
-errorDat$sps_gmc <- errorDat$sps - mean(errorDat$sps)
+# z-score continuous predictors
+errorDat$age_z <- scale(errorDat$age, center = TRUE, scale = TRUE)
+errorDat$bfne_z <- scale(errorDat$bfne, center = TRUE, scale = TRUE)
+errorDat$phq8_z <- scale(errorDat$phq8, center = TRUE, scale = TRUE)
+errorDat$scaaredTotal_z <- scale(errorDat$scaaredTotal, center = TRUE, scale = TRUE)
+errorDat$scaaredGA_z <- scale(errorDat$scaaredGA, center = TRUE, scale = TRUE)
+errorDat$scaaredSoc_z <- scale(errorDat$scaaredSoc, center = TRUE, scale = TRUE)
+errorDat$sps_z <- scale(errorDat$sps, center = TRUE, scale = TRUE)
 
 # First we'll encapsulate centering so we don't write each column name out
 # manually three times. This way a typo in a column name can't screw it up. (It
@@ -505,10 +505,11 @@ if (DEBUG) {
   as.data.frame()
 }
 
-errorDat <-
-  errorDat %>%
-  add_gmc(log10frequency)
+# errorDat <-
+#   errorDat %>%
+#   add_gmc(log10frequency)
 
+errorDat$log10frequency_z <- scale(errorDat$log10frequency, center = TRUE, scale = TRUE)[,1]
 
 # sanity check
 if (DEBUG) {
@@ -584,9 +585,9 @@ if (DEBUG) {
                                  data=errorDat, REML=TRUE)
 }
 
-model2.5 <- lmerTest::lmer(misprod_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+model2.5_z_scored <- lmerTest::lmer(misprod_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                            data=errorDat, REML=TRUE)
-summary(model2.5)
+summary(model2.5_z_scored)
 
 if(DEBUG) { # compare to how it was/would've been before splitting outcome and predictor data
   wrong_model2.5 <- lmerTest::lmer(misprod_predictor ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
@@ -616,9 +617,9 @@ if(DEBUG) { # compare to how it was/would've been before splitting outcome and p
 # summary(model5)
 
 # hesitation x scaaredSoc, control for word
-model5.5 <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+model5.5_z_scored <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                          data=errorDat, REML=TRUE)
-summary(model5.5)
+summary(model5.5_z_scored)
 
 # results are similar
 # tldr 2/28/24: SA indv.s DO hesitate more
@@ -662,9 +663,9 @@ summary(f_model20) # ***
 # Now, misproduction-hesitation interactions with social anxiety
 
 # Errors as explained by disfluency and SA: rate of misproduced syllables from rate of hesitated syllables and scaared
-f_model23 <- lmerTest::lmer(misprod_outcome ~ hesitation_predictor * scaaredSoc_gmc + (1|id) + (1|passage),
+f_model23_z_scored <- lmerTest::lmer(misprod_outcome ~ hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage),
                             data=errorDat, REML=TRUE)
-summary(f_model23)
+summary(f_model23_z_scored)
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated words and scaared
 # f_model24 <- lmerTest::lmer(words_with_misprod ~ words_with_hes * scaaredSoc_gmc + (1|id) + (1|passage),
@@ -686,9 +687,9 @@ summary(f_model23)
 
 # What happens when we control for age?
 #hesitation x scaaredSoc
-age_model1 <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
+age_model1_z_scored <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_z + age_z + (1|id) + (1|passage),
                          data=errorDat, REML=TRUE)
-summary(age_model1)
+summary(age_model1_z_scored)
 
 #words_with_hes x scaaredSoc
 # age_model2 <- lmerTest::lmer(words_with_hes ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
@@ -804,41 +805,42 @@ if (DEBUG) {
 }
 
 # Mean center... then make sure we don't accidentally use the wrong one
-errorDat <- errorDat %>%
-  add_gmc(log10frequency_with_absents_as_median) %>%
-  select(-log10frequency_with_absents_as_median)
-
+# errorDat <- errorDat %>%
+#   add_gmc(log10frequency_with_absents_as_median) %>%
+#   select(-log10frequency_with_absents_as_median)
+errorDat$log10frequency_with_absents_as_median_z <- scale(errorDat$log10frequency_with_absents_as_median, center = TRUE, scale = TRUE)[,1]
+errorDat <- errorDat %>% select(-log10frequency_with_absents_as_median)
 
 # Does a word's frequency predict hesitation on that word?
-wordfreq_model_with_absents_as_median_1 <- lmerTest::lmer(hesitation_outcome ~ log10frequency_with_absents_as_median_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_1_z_scored <- lmerTest::lmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_as_median_1)
+summary(wordfreq_model_with_absents_as_median_1_z_scored)
 
 # "" misprod on that word?
-wordfreq_model_with_absents_as_median_2 <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_2_z_scored <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_as_median_2)
+summary(wordfreq_model_with_absents_as_median_2_z_scored)
 
 
 # Do social anxiety and frequency interact to the presence of a hesitation or misproduction?
-wordfreq_model_with_absents_as_median_3 <- lmerTest::lmer(hesitation_outcome ~ log10frequency_with_absents_as_median_gmc * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_3_z_scored <- lmerTest::lmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_as_median_3)
+summary(wordfreq_model_with_absents_as_median_3_z_scored)
 
-wordfreq_model_with_absents_as_median_4 <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_gmc * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_4_z_scored <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                                      data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_as_median_4)
+summary(wordfreq_model_with_absents_as_median_4_z_scored)
 
 
 # Do frequency and the presence of a hesitation interact to predict the presence of a misproduction?
-wordfreq_model_with_absents_as_median_5 <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_gmc * hesitation_predictor + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_5_z_scored <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_as_median_5)
+summary(wordfreq_model_with_absents_as_median_5_z_scored)
 
 # Do frequency, SA, and the presence of a hesitation all interact to predict the presence of a misproduction?
-wordfreq_model_with_absents_as_median_6 <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_gmc * hesitation_predictor * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
+wordfreq_model_with_absents_as_median_6_z_scored <- lmerTest::lmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
-summary(wordfreq_model_with_absents_as_median_6)
+summary(wordfreq_model_with_absents_as_median_6_z_scored)
 
 
 # todo check comprehension
@@ -956,7 +958,11 @@ interact_plot(model = wordfreq_model_6,
               modx = hesitation, mod2 = scaaredSoc_gmc,
               interval = TRUE)
 
-# fixed
+# fixed versions:
+interact_plot(model = wordfreq_model_with_absents_as_median_5,
+              pred = log10frequency_with_absents_as_median_gmc, modx = hesitation_predictor, interval = TRUE)
+
+
 interact_plot(model = wordfreq_model_with_absents_as_median_6,
               pred = log10frequency_with_absents_as_median_gmc,
               modx = hesitation_predictor, mod2 = scaaredSoc_gmc,
