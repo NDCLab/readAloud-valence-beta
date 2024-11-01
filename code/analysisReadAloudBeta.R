@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-09-25
+# Last Updated: 2024-10-31
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -9,7 +9,7 @@
 # models
 
 # NOTES TO DO
-
+# plot models
 
 # Data dict
 
@@ -119,6 +119,8 @@ library(ggplot2)
 library(gridExtra)
 library(grid)
 library(cowplot)
+library(effects)
+library(interactions)
 library(colorspace)
 library(colorblindr)
 
@@ -467,10 +469,23 @@ errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisp
 errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
 
 
-### SECTION 4: MODEL RESULTS
+### SECTION 4: MODEL RESULTS AND PLOTS
 # for every model involving comprehension accuracy, rather than errorDat we use
 # errorDatPredictorsOutcomes, which differentiates how comprehension accuracy is
 # represented as a predictor versus as an outcome
+
+# generic plotting wrapper:
+plot_lmer <- function(model, predictor, outcome, xlab = predictor, ...) {
+  # NB `outcome` will not catch your mistake; it's just a label
+  eff <- effect(predictor, model)
+  #dots <- substitute(alist(...)) # eval(substitute(alist(...)))
+  #print(dots)
+  #print(names(dots))
+  plot(eff, se = TRUE, rug = FALSE, xlab = xlab, ylab = outcome,
+       col.points = "red", col.lines = "blue", lty = 1,
+       ...)
+}
+
 
 #misprod_rate x bfne
 # model1 <- lmerTest::lmer(misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
@@ -517,6 +532,13 @@ model8_z_scored <- lmerTest::lmer(words_with_misprod_rate_z ~ scaaredSoc_z + (1|
                          data=errorDat, REML=TRUE)
 summary(model8_z_scored)
 
+plot_lmer(model8_z_scored,
+          predictor = 'scaaredSoc_z',
+          outcome = 'Rate of misproductions per word\n(z-scored)',
+          xlab = 'SCAARED-Social Score\n(z-scored)',
+          main = 'Social Anxiety Severity and Rate of Misproduction')
+
+
 #words_with_misprod_rate x sps
 # model9 <- lmerTest::lmer(words_with_misprod_rate ~ sps_gmc + (1|id) + (1|passage),
 #                          data=errorDat, REML=TRUE)
@@ -538,6 +560,13 @@ model11_z_scored <- lmerTest::lmer(words_with_hes_rate_z ~ scaaredSoc_z + (1|id)
                           data=errorDat, REML=TRUE)
 summary(model11_z_scored)
 
+plot_lmer(model11_z_scored,
+          predictor = 'scaaredSoc_z',
+          outcome = 'Rate of hesitations per word\n(z-scored)',
+          xlab = 'SCAARED-Social Score\n(z-scored)',
+          main = 'Social Anxiety Severity and Rate of Hesitation')
+
+
 #words_with_hes_rate x sps
 # model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
 #                           data=errorDat, REML=TRUE)
@@ -555,6 +584,12 @@ summary(model11_z_scored)
 f_model1_z_scored <- glmer(challengeACC_outcome ~ scaaredSoc_z + (1|id) + (1|passage),
                   data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model1_z_scored)
+
+plot_lmer(f_model1_z_scored,
+          predictor = 'scaaredSoc_z',
+          outcome = 'Average comprehension accuracy\n(z-scored)',
+          xlab = 'SCAARED-Social Score\n(z-scored)',
+          main = 'Social Anxiety Severity and Comprehension Accuracy')
 
 # fix: gmc (same column but with -1 (incorrect) and +1 (correct))
 # errorDat$challengeACC <- replace(errorDat$challengeACC, which(errorDat$challengeACC == 0), -1)
@@ -593,6 +628,12 @@ summary(f_model1_z_scored)
 f_model5_z_scored <- glmer(challengeACC_outcome ~ words_with_hes_rate_z + (1|id) + (1|passage),
                   data=errorDatPredictorsOutcomes, family = "binomial")
 summary(f_model5_z_scored)
+
+plot_lmer(f_model5_z_scored,
+          predictor = 'words_with_hes_rate_z',
+          outcome = 'Average comprehension accuracy\n(z-scored)',
+          xlab = 'Rate of hesitations per word\n(z-scored)',
+          main = 'Rate of Hesitation and Comprehension Accuracy')
 
 
 
@@ -700,6 +741,16 @@ f_model21_z_scored <- lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_
                             data=errorDat, REML=TRUE)
 summary(f_model21_z_scored) # ***
 
+
+
+plot_lmer(f_model21_z_scored,
+          predictor = 'words_with_hes_rate_z',
+          outcome = 'Rate of misproductions per word\n(z-scored)',
+          xlab = 'Rate of hesitations per word\n(z-scored)',
+          main = 'Rate of Hesitation and Rate of Misproduction')
+
+
+
 # Errors as explained by disfluency: rate of misproduced words from rate of hesitated syllables
 # f_model22 <- lmerTest::lmer(words_with_misprod_rate ~ hesitation_rate + (1|id) + (1|passage),
 #                             data=errorDat, REML=TRUE)
@@ -723,6 +774,17 @@ summary(f_model21_z_scored) # ***
 f_model24_z_scored <- lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z * scaaredSoc_z + (1|id) + (1|passage),
                                    data=errorDat, REML=TRUE)
 summary(f_model24_z_scored)
+
+
+interact_plot(model = f_model24_z_scored,
+              pred = words_with_hes_rate_z,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("Hesitation rate",
+                     "(% of all words)")),
+              y.label = 'Misproduction rate rate\n(% of all words)',
+              legend.main = "SCAARED-Social score")
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared
