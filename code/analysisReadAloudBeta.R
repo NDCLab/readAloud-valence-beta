@@ -666,6 +666,18 @@ f_model9_z_scored <- glmer(challengeACC_outcome ~ words_with_hes_rate_z * scaare
 summary(f_model9_z_scored)
 
 
+interact_plot(model = f_model9_z_scored,
+              pred = words_with_hes_rate_z,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("Rate of hesitations per word", "(z-scored)")),
+              y.label = expression(
+                atop("Average comprehension accuracy", "(z-scored)")),
+              legend.main = "SCAARED-Social score",
+              main.title = "Rate of Hesitation, Social Anxiety Severity, and Comprehension Accuracy")
+
+
 # Accuracy/comprehension as explained by errors: misproductions per syllable with scaared
 # f_model10 <- glmer(challengeACC ~ misprod_rate * scaaredSoc_gmc + (1|id) + (1|passage),
 #                   data=errorDat, family = "binomial")
@@ -781,10 +793,11 @@ interact_plot(model = f_model24_z_scored,
               modx = scaaredSoc_z,
               interval = TRUE,
               x.label = expression(
-                atop("Hesitation rate",
-                     "(% of all words)")),
-              y.label = 'Misproduction rate rate\n(% of all words)',
-              legend.main = "SCAARED-Social score")
+                atop("Rate of hesitations per word", "(z-scored)")),
+              y.label = expression(
+                atop('Rate of misproductions per word', '(z-scored)')),
+              legend.main = "SCAARED-Social score",
+              main.title = "Rate of Hesitation, Social Anxiety Severity, and Rate of Misproduction")
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared
