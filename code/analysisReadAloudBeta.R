@@ -1,12 +1,12 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-10-31
+# Last Updated: 2024-11-10
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
 
 # OUTPUTS
-# models
+# models, plots
 
 # NOTES TO DO
 # plot models

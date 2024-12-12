@@ -1,15 +1,15 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-09-25
+# Last Updated: 2024-12-12
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
 
 # OUTPUTS
-# models
+# models, plots
 
 # NOTES TO DO
-
+# plot models
 
 # Data dict
 
@@ -907,30 +907,57 @@ plot_lmer(model2.5,
           main = "Speech errors and social anxiety",
           xlab = expression("SCAARED-Social Score"))
 
-plot_lmer(model5.5,
-          "scaaredSoc_gmc",
-          "Hesitation rate\n(% of all words)",
-          main = "Hesitation and social anxiety",
-          xlab = expression("SCAARED-Social Score"))
+# fixme: is this the right description?
+plot_lmer(model2.5_z_scored,
+          predictor = 'scaaredSoc_z',
+          outcome = 'Probability of misproduction on a given word\n(z-scored)',
+          xlab = 'SCAARED-Social Score\n(z-scored)',
+          main = 'Social Anxiety Severity and Item-Level Misproductions')
+
+
+# plot_lmer(model5.5,
+#           "scaaredSoc_gmc",
+#           "Hesitation rate\n(% of all words)",
+#           main = "Hesitation and social anxiety",
+#           xlab = expression("SCAARED-Social Score"))
+
+# fixme: is this the right description?
+plot_lmer(model5.5_z_scored,
+          predictor = 'scaaredSoc_z',
+          outcome = 'Probability of hesitation on a given word\n(z-scored)',
+          xlab = 'SCAARED-Social Score\n(z-scored)',
+          main = 'Social Anxiety Severity and Item-Level Hesitations')
 
 
 # hesitation ~ wf x SA
-interact_plot(model = wordfreq_model_3,
-              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+# interact_plot(model = wordfreq_model_3,
+#               pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
+#
+# interact_plot(model = wordfreq_model_with_absents_as_median_3,
+#               pred = log10frequency_with_absents_as_median,
+#               modx = scaaredSoc_gmc, interval = TRUE)
+#
+# interact_plot(model = wordfreq_model_with_absents_as_median_3,
+#               pred = log10frequency_with_absents_as_median,
+#               modx = scaaredSoc_gmc,
+#               interval = TRUE,
+#               x.label = expression(
+#                 atop("log"['10']*" word frequency",
+#                      "(lower = rarer)")), #'testerx',
+#               y.label = 'Hesitation rate\n(% of all words)',
+#               legend.main = "SCAARED-Social score")
 
-interact_plot(model = wordfreq_model_with_absents_as_median_3,
-              pred = log10frequency_with_absents_as_median,
-              modx = scaaredSoc_gmc, interval = TRUE)
-
-interact_plot(model = wordfreq_model_with_absents_as_median_3,
-              pred = log10frequency_with_absents_as_median,
-              modx = scaaredSoc_gmc,
+interact_plot(model = wordfreq_model_with_absents_as_median_3_z_scored,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = scaaredSoc_z,
               interval = TRUE,
               x.label = expression(
                 atop("log"['10']*" word frequency",
                      "(lower = rarer)")), #'testerx',
-              y.label = 'Hesitation rate\n(% of all words)',
-              legend.main = "SCAARED-Social score")
+              y.label = expression('Probability of hesitation on a given word'),
+              legend.main = "SCAARED-Social score\n(z-scored)",
+              main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Hesitations")
+
 
 # misprod ~ wf x SA
 interact_plot(model = wordfreq_model_4,
@@ -950,19 +977,34 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4,
               legend.main = "SCAARED-Social score")
 
 # misprod ~ hes x wf
-interact_plot(model = wordfreq_model_5,
-              pred = log10frequency_with_absents_as_median, modx = hesitation, interval = TRUE)
+# interact_plot(model = wordfreq_model_5,
+#               pred = log10frequency_with_absents_as_median, modx = hesitation, interval = TRUE)
+#
+# interact_plot(model = wordfreq_model_6,
+#               pred = log10frequency_with_absents_as_median,
+#               modx = hesitation, mod2 = scaaredSoc_gmc,
+#               interval = TRUE)
 
-interact_plot(model = wordfreq_model_6,
-              pred = log10frequency_with_absents_as_median,
-              modx = hesitation, mod2 = scaaredSoc_gmc,
-              interval = TRUE)
+interact_plot(model = wordfreq_model_with_absents_as_median_5_z_scored,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = hesitation_predictor,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")), #'testerx',
+              y.label = expression('Probability of misproduction on a given word'),
+              legend.main = "Hesitation presence/absence",#\n(z-scored)",
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no hesitation", "hesitation"),
+              main.title = "Item-Level Word Frequency, Hesitations, and Misproductions") #+
+  # theme(plot.title = element_text(hjust = 0.5))
 
 # fixed versions:
 interact_plot(model = wordfreq_model_with_absents_as_median_5,
               pred = log10frequency_with_absents_as_median_gmc, modx = hesitation_predictor, interval = TRUE)
 
-
+# TODO this one is incomplete -- got to here,,
+# model on the above? maybe? but nb also mod2 here
 interact_plot(model = wordfreq_model_with_absents_as_median_6,
               pred = log10frequency_with_absents_as_median_gmc,
               modx = hesitation_predictor, mod2 = scaaredSoc_gmc,
