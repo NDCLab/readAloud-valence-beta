@@ -985,6 +985,7 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4,
 #               modx = hesitation, mod2 = scaaredSoc_gmc,
 #               interval = TRUE)
 
+# fixed versions:
 interact_plot(model = wordfreq_model_with_absents_as_median_5_z_scored,
               pred = log10frequency_with_absents_as_median_z,
               modx = hesitation_predictor,
@@ -999,16 +1000,21 @@ interact_plot(model = wordfreq_model_with_absents_as_median_5_z_scored,
               main.title = "Item-Level Word Frequency, Hesitations, and Misproductions") #+
   # theme(plot.title = element_text(hjust = 0.5))
 
-# fixed versions:
-interact_plot(model = wordfreq_model_with_absents_as_median_5,
-              pred = log10frequency_with_absents_as_median_gmc, modx = hesitation_predictor, interval = TRUE)
-
-# TODO this one is incomplete -- got to here,,
-# model on the above? maybe? but nb also mod2 here
-interact_plot(model = wordfreq_model_with_absents_as_median_6,
-              pred = log10frequency_with_absents_as_median_gmc,
-              modx = hesitation_predictor, mod2 = scaaredSoc_gmc,
-              interval = TRUE)
+interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = hesitation_predictor,
+              mod2 = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")), #'testerx',
+              y.label = expression('Probability of misproduction on a given word'),
+              legend.main = "Hesitation presence/absence",#\n(z-scored)",
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no hesitation", "hesitation"),
+              mod2.values = "mean-plus-minus",
+              mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions")
 
 # summary(errorDat$log10frequency_with_absents_as_median)
 

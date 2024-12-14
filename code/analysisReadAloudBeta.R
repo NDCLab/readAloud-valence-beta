@@ -587,7 +587,7 @@ summary(f_model1_z_scored)
 
 plot_lmer(f_model1_z_scored,
           predictor = 'scaaredSoc_z',
-          outcome = 'Average comprehension accuracy\n(z-scored)',
+          outcome = 'Average comprehension accuracy',
           xlab = 'SCAARED-Social Score\n(z-scored)',
           main = 'Social Anxiety Severity and Comprehension Accuracy')
 
@@ -631,7 +631,7 @@ summary(f_model5_z_scored)
 
 plot_lmer(f_model5_z_scored,
           predictor = 'words_with_hes_rate_z',
-          outcome = 'Average comprehension accuracy\n(z-scored)',
+          outcome = 'Average comprehension accuracy',
           xlab = 'Rate of hesitations per word\n(z-scored)',
           main = 'Rate of Hesitation and Comprehension Accuracy')
 
@@ -672,8 +672,9 @@ interact_plot(model = f_model9_z_scored,
               interval = TRUE,
               x.label = expression(
                 atop("Rate of hesitations per word", "(z-scored)")),
-              y.label = expression(
-                atop("Average comprehension accuracy", "(z-scored)")),
+              y.label = #expression(
+                #atop(
+                "Average comprehension accuracy",# "(z-scored)")),
               legend.main = "SCAARED-Social score",
               main.title = "Rate of Hesitation, Social Anxiety Severity, and Comprehension Accuracy")
 
