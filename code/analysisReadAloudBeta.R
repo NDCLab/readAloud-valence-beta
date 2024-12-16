@@ -675,7 +675,7 @@ interact_plot(model = f_model9_z_scored,
               y.label = #expression(
                 #atop(
                 "Average comprehension accuracy",# "(z-scored)")),
-              legend.main = "SCAARED-Social score",
+              legend.main = "SCAARED-Social score\n(z-scored)",
               main.title = "Rate of Hesitation, Social Anxiety Severity, and Comprehension Accuracy")
 
 
@@ -797,7 +797,7 @@ interact_plot(model = f_model24_z_scored,
                 atop("Rate of hesitations per word", "(z-scored)")),
               y.label = expression(
                 atop('Rate of misproductions per word', '(z-scored)')),
-              legend.main = "SCAARED-Social score",
+              legend.main = "SCAARED-Social score\n(z-scored)",
               main.title = "Rate of Hesitation, Social Anxiety Severity, and Rate of Misproduction")
 
 
