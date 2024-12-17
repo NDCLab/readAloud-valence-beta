@@ -561,17 +561,9 @@ errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisp
 errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
 
 
-
 ### SECTION 4: MODEL RESULTS
 # again, now prevent ourselves from using data that isn't explicitly set up to
 # be predictor or outcome: use the version that omitted the ambiguous columns
-
-
-#misprod x bfne
-# model1 <- lmerTest::lmer(misprod ~ bfne_gmc + (1|id) + (1|passage),
-#                          data=errorDat, REML=TRUE)
-# summary(model1)
-
 
 # these versions fail - as intended: object 'misprod' not found
 if (DEBUG) {
@@ -596,20 +588,8 @@ if(DEBUG) { # compare to how it was/would've been before splitting outcome and p
   summary(wrong_model2.5)
 }
 
-
-
 # tldr 2/28/24 SA indv. do not misproduce more/less
 
-
-#misprod x sps
-# model3 <- lmerTest::lmer(misprod ~ sps_gmc + (1|id) + (1|passage),
-#                          data=errorDat, REML=TRUE)
-# summary(model3)
-
-#hesitation x bfne
-# model4 <- lmerTest::lmer(hesitation ~ bfne_gmc + (1|id) + (1|passage),
-#                          data=errorDat, REML=TRUE)
-# summary(model4)
 
 #hesitation x scaaredSoc
 # model5 <- lmerTest::lmer(hesitation_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage),
@@ -623,12 +603,6 @@ summary(model5.5_z_scored)
 
 # results are similar
 # tldr 2/28/24: SA indv.s DO hesitate more
-
-
-#hesitation x sps
-# model6 <- lmerTest::lmer(hesitation ~ sps_gmc + (1|id) + (1|passage),
-#                          data=errorDat, REML=TRUE)
-# summary(model6)
 
 
 #### supplemental analyses
