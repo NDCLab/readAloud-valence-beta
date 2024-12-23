@@ -565,6 +565,25 @@ errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithR
 # again, now prevent ourselves from using data that isn't explicitly set up to
 # be predictor or outcome: use the version that omitted the ambiguous columns
 
+# set up plotting in same area so mistakes are less likely
+
+plot_glmer <- function(model, predictor, outcome, xlab = predictor, ...) {
+  # NB `outcome` will not catch your mistake; it's just a label
+  eff <- effect(predictor, model)
+  plot(eff, se = TRUE, rug = FALSE, xlab = xlab, ylab = outcome,
+       col.points = "red", col.lines = "blue", lty = 1,
+       ...)
+}
+
+# as in
+if (DEBUG) {
+  plot_glmer(wordfreq_model_1, "log10frequency", "hesitation")
+  plot_glmer(wordfreq_model_with_absents_as_median_1, "log10frequency_with_absents_as_median", "hesitation")
+  plot_glmer(wordfreq_model_with_absents_as_median_2, "log10frequency_with_absents_as_median", "misprod")
+  plot_glmer(wordfreq_model_2, "log10frequency", "misprod")
+}
+
+
 # these versions fail - as intended: object 'misprod' not found
 if (DEBUG) {
   #misprod x scaaredSoc
@@ -893,67 +912,16 @@ summary(word_level_comprehension_model_4_logistic)
 
 
 
-# effects
-# eff <- effect("log10frequency_with_absents_as_median", wordfreq_model_with_absents_as_median_1)
-# plot(eff, se = TRUE, rug = FALSE, xlab = "log10frequency_with_absents_as_median", ylab = "hesitation", col.points = "red", col.lines = "blue", lty = 1)
-# eff_noabsents <- effect("log10frequency", wordfreq_model_1)
-# plot(eff_noabsents, se = TRUE, rug = FALSE, xlab = "log10frequency", ylab = "hesitation", col.points = "red", col.lines = "blue", lty = 1)
-
-plot_lmer <- function(model, predictor, outcome, xlab = predictor, ...) {
-  # NB `outcome` will not catch your mistake; it's just a label
-  eff <- effect(predictor, model)
-  #dots <- substitute(alist(...)) # eval(substitute(alist(...)))
-  #print(dots)
-  #print(names(dots))
-  plot(eff, se = TRUE, rug = FALSE, xlab = xlab, ylab = outcome,
-       col.points = "red", col.lines = "blue", lty = 1,
-       ...)
-}
-
-# as in
-plot_lmer(wordfreq_model_1, "log10frequency", "hesitation")
-plot_lmer(wordfreq_model_with_absents_as_median_1, "log10frequency_with_absents_as_median", "hesitation")
-plot_lmer(wordfreq_model_with_absents_as_median_2, "log10frequency_with_absents_as_median", "misprod")
-plot_lmer(wordfreq_model_2, "log10frequency", "misprod")
-
-
-# plot_lmer(wordfreq_model_with_absents_as_median_1,
-#           "log10frequency_with_absents_as_median",
-#           "Hesitation rate\n(% of all words)",
-#           main = "Hesitation rate and word familiarity",
-#           xlab = expression(
-#             atop("log"['10']*" word frequency",
-#                  "(lower = rarer)")))
-
-plot_lmer(model2.5,
-          "scaaredSoc_gmc",
-          "Misproduction rate\n(% of all words)",
-          main = "Speech errors and social anxiety",
-          xlab = expression("SCAARED-Social Score"))
 
 # fixme: is this the right description?
-plot_lmer(model2.5_z_scored,
+plot_glmer(model2.5_z_scored,
           predictor = 'scaaredSoc_z',
           outcome = 'Probability of misproduction on a given word\n(z-scored)',
           xlab = 'SCAARED-Social Score\n(z-scored)',
           main = 'Social Anxiety Severity and Item-Level Misproductions')
 
-
-# plot_lmer(model5.5,
-#           "scaaredSoc_gmc",
-#           "Hesitation rate\n(% of all words)",
-#           main = "Hesitation and social anxiety",
-#           xlab = expression("SCAARED-Social Score"))
-
-# fixme: is this the right description?
-plot_lmer(model5.5_z_scored,
-          predictor = 'scaaredSoc_z',
-          outcome = 'Probability of hesitation on a given word\n(z-scored)',
-          xlab = 'SCAARED-Social Score\n(z-scored)',
-          main = 'Social Anxiety Severity and Item-Level Hesitations')
-
-# correction:
-plot_lmer(model5.5_z_scored_logistic,
+# corrected
+plot_glmer(model5.5_z_scored_logistic,
           predictor = 'scaaredSoc_z',
           outcome = 'Probability of hesitation on word',
           xlab = 'SCAARED-Social Score\n(z-scored)',
