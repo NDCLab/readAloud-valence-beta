@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-12-12
+# Last Updated: 2024-12-23
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -577,6 +577,7 @@ if (DEBUG) {
                                  data=errorDat, REML=TRUE)
 }
 
+# n.s.
 model2.5_z_scored <- glmer(misprod_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                            data=errorDat, family = "binomial")
 summary(model2.5_z_scored)
@@ -588,32 +589,11 @@ if(DEBUG) { # compare to how it was/would've been before splitting outcome and p
   summary(wrong_model2.5)
 }
 
-# tldr 2/28/24 SA indv. do not misproduce more/less
-
-
-#hesitation x scaaredSoc
-# model5 <- glmer(hesitation_outcome ~ scaaredSoc_gmc + (1|id) + (1|passage),
-#                          data=errorDat, family = "binomial")
-# summary(model5)
-
-# hesitation x scaaredSoc, control for word
-model5.5_z_scored <- glmer(hesitation_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-                         data=errorDat, family = "binomial")
-summary(model5.5_z_scored)
-
-# results are similar
-# tldr 2/28/24: SA indv.s DO hesitate more
-
-# revision 12/17/24: use the correct kind of model
-
-# outcome is binary
+# hesitation x scaaredSoc_z, control for word, binary outcome
+# scaaredSoc_z  0.21491    0.07715   2.786  0.00534 **
 model5.5_z_scored_logistic <- glmer(hesitation_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                                     data=errorDat, family = "binomial")
 summary(model5.5_z_scored_logistic)
-
-# `REML` does not work with glmer, nor does `family` with lmer
-# model5.5_z_scored_logistic_reml <- glmer(hesitation_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-#                                     data=errorDat, family = "binomial", REML=TRUE)
 
 
 #### supplemental analyses
@@ -622,66 +602,56 @@ summary(model5.5_z_scored_logistic)
 # Now, misproduction-hesitation relationships
 
 # Errors as explained by disfluency: rate of misproduced syllables from rate of hesitated syllables
-f_model20 <- glmer(misprod_outcome ~ hesitation_predictor + (1|id) + (1|passage),
+# hesitation_predictor1  0.39511    0.03292   12.00   <2e-16 ***
+f_model20_logistic <- glmer(misprod_outcome ~ hesitation_predictor + (1|id) + (1|passage),
                             data=errorDat, family = "binomial")
-summary(f_model20) # ***
-# should we (1|word) here?
-# no... that's not rate, is it? 3/27/24
-# that's whether a word being hesitated on predicts it (that same word) being misproduced
-# right?
+summary(f_model20_logistic)
 
-# Errors as explained by disfluency: rate of misproduced words from rate of hesitated words
-# f_model21 <- glmer(words_with_misprod ~ words_with_hes + (1|id) + (1|passage),
-#                             data=errorDat, family = "binomial")
-# summary(f_model21) # ***
-#
-#
-# # Errors as explained by disfluency: rate of misproduced words from rate of hesitated syllables
-# f_model22 <- glmer(words_with_misprod ~ hesitation + (1|id) + (1|passage),
-#                             data=errorDat, family = "binomial")
-# summary(f_model22) # ***
-# commented out 2/28/24 bc word level isn't applicable here; _all_ of this is at
-# word level
-# NB my * comments here (this section of models at least) are out of date
+# should we (1|word) here?
+# Errors as explained by disfluency: rate of misproduced syllables from rate of hesitated syllables, control for word
+# hesitation_predictor1  0.09129    0.03670   2.488   0.0129 *
+f_model20.5_logistic <- glmer(misprod_outcome ~ hesitation_predictor + (1|id) + (1|passage) + (1|word),
+                            data=errorDat, family = "binomial")
+summary(f_model20.5_logistic)
 
 
 # Now, misproduction-hesitation interactions with social anxiety
 
 # Errors as explained by disfluency and SA: rate of misproduced syllables from rate of hesitated syllables and scaared
-f_model23_z_scored <- glmer(misprod_outcome ~ hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage),
+# hesitation_predictor1               0.396320   0.033051  11.991   <2e-16 ***
+# scaaredSoc_z                        0.006507   0.078505   0.083    0.934
+# hesitation_predictor1:scaaredSoc_z -0.013847   0.031155  -0.444    0.657
+f_model23_z_scored_logistic <- glmer(misprod_outcome ~ hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage),
                             data=errorDat, family = "binomial")
-summary(f_model23_z_scored)
+summary(f_model23_z_scored_logistic)
 
-# Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated words and scaared
-# f_model24 <- glmer(words_with_misprod ~ words_with_hes * scaaredSoc_gmc + (1|id) + (1|passage),
-#                             data=errorDat, family = "binomial")
-# summary(f_model24)
-# commented out 2/28/24 bc word level isn't applicable here; _all_ of this is at
-# word level
+# Errors as explained by disfluency and SA: misproduction from hesitation and scaared_z, control for word
+# hesitation_predictor1               0.09261    0.03686   2.512    0.012 *
+# scaaredSoc_z                        0.01159    0.08326   0.139    0.889
+# hesitation_predictor1:scaaredSoc_z -0.01278    0.03332  -0.384    0.701
+f_model23.5_z_scored_logistic <- glmer(misprod_outcome ~ hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+                            data=errorDat, family = "binomial")
+summary(f_model23.5_z_scored_logistic)
 
-
-
-# Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared
-# f_model25 <- glmer(words_with_misprod ~ hesitation * scaaredSoc_gmc + (1|id) + (1|passage),
-#                             data=errorDat, family = "binomial")
-# summary(f_model25)
-# commented out 2/28/24 bc word level isn't applicable here; _all_ of this is at
-# word level
 
 
 
 # What happens when we control for age?
-#hesitation x scaaredSoc
-age_model1_z_scored <- glmer(hesitation_outcome ~ scaaredSoc_z + age_z + (1|id) + (1|passage),
+# hesitation x scaaredSoc_z, cf. model5.5
+# scaaredSoc_z  0.19651    0.07384   2.661  0.00779 **
+# age_z         0.16195    0.07340   2.206  0.02737 *
+age_model1_z_scored_logistic <- glmer(hesitation_outcome ~ scaaredSoc_z + age_z + (1|id) + (1|passage),
                          data=errorDat, family = "binomial")
-summary(age_model1_z_scored)
+summary(age_model1_z_scored_logistic)
 
-#words_with_hes x scaaredSoc
-# age_model2 <- glmer(words_with_hes ~ scaaredSoc_gmc + age_gmc + (1|id) + (1|passage),
-#                           data=errorDat, family = "binomial")
-# summary(age_model2)
-# commented out 2/28/24 bc word level isn't applicable here; _all_ of this is at
-# word level
+# What happens when we control for age?
+# hesitation x scaaredSoc_z, control for word, cf. model5.5
+# scaaredSoc_z  0.20149    0.07361   2.737   0.0062 **
+# age_z         0.16721    0.07311   2.287   0.0222 *
+age_model1.5_z_scored_logistic <- glmer(hesitation_outcome ~ scaaredSoc_z + age_z + (1|id) + (1|passage) + (1|word),
+                                      data=errorDat, family = "binomial")
+summary(age_model1.5_z_scored_logistic)
+
 
 
 # misprod-hes ordering
@@ -797,51 +767,51 @@ errorDat$log10frequency_with_absents_as_median_z <- scale(errorDat$log10frequenc
 errorDat <- errorDat %>% select(-log10frequency_with_absents_as_median)
 
 # Does a word's frequency predict hesitation on that word?
-wordfreq_model_with_absents_as_median_1_z_scored <- glmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
+# log10frequency_with_absents_as_median_z -0.44253    0.04150  -10.66   <2e-16 ***
+wordfreq_model_with_absents_as_median_1_z_scored_logistic <- glmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, family = "binomial")
-summary(wordfreq_model_with_absents_as_median_1_z_scored)
+summary(wordfreq_model_with_absents_as_median_1_z_scored_logistic)
 
-# "" misprod on that word?
-wordfreq_model_with_absents_as_median_2_z_scored <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
+# Does a word's frequency predict misprod on that word?
+# log10frequency_with_absents_as_median_z -0.68143    0.05109  -13.34   <2e-16 ***
+wordfreq_model_with_absents_as_median_2_z_scored_logistic <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, family = "binomial")
-summary(wordfreq_model_with_absents_as_median_2_z_scored)
+summary(wordfreq_model_with_absents_as_median_2_z_scored_logistic)
 
 
-# Do social anxiety and frequency interact to the presence of a hesitation or misproduction?
-wordfreq_model_with_absents_as_median_3_z_scored <- glmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-                                   data=errorDat, family = "binomial")
-summary(wordfreq_model_with_absents_as_median_3_z_scored)
-
-# outcome is binary
+# Do social anxiety and frequency interact to the presence of a hesitation?
+# log10frequency_with_absents_as_median_z              -0.444116   0.041562 -10.686  < 2e-16 ***
+# scaaredSoc_z                                          0.217698   0.077599   2.805  0.00502 **
+# log10frequency_with_absents_as_median_z:scaaredSoc_z  0.009726   0.013909   0.699  0.48441
 wordfreq_model_with_absents_as_median_3_z_scored_logistic <- glmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-                                                              data=errorDat, family="binomial")
+                                   data=errorDat, family = "binomial")
 summary(wordfreq_model_with_absents_as_median_3_z_scored_logistic)
 
-# wordfreq_model_with_absents_as_median_4_z_scored <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-#                                      data=errorDat, family = "binomial")
-# summary(wordfreq_model_with_absents_as_median_4_z_scored)
+
+# Do social anxiety and frequency interact to the presence of a misproduction?
+# log10frequency_with_absents_as_median_z              -0.681946   0.051084 -13.349   <2e-16 ***
+# scaaredSoc_z                                          0.007296   0.078917   0.092   0.9263
+# log10frequency_with_absents_as_median_z:scaaredSoc_z -0.032234   0.016058  -2.007   0.0447 *
+wordfreq_model_with_absents_as_median_4_z_scored_logistic <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+                                     data=errorDat, family = "binomial")
+summary(wordfreq_model_with_absents_as_median_4_z_scored_logistic)
 
 
 # Do frequency and the presence of a hesitation interact to predict the presence of a misproduction?
-wordfreq_model_with_absents_as_median_5_z_scored <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor + (1|id) + (1|passage) + (1|word),
-                                   data=errorDat, family = "binomial")
-summary(wordfreq_model_with_absents_as_median_5_z_scored)
-
-# outcome is binary
+# log10frequency_with_absents_as_median_z                       -0.73044    0.06304 -11.587   <2e-16 ***
+# hesitation_predictor1                                          0.02546    0.05489   0.464    0.643
+# log10frequency_with_absents_as_median_z:hesitation_predictor1 -0.05939    0.04113  -1.444    0.149
 wordfreq_model_with_absents_as_median_5_z_scored_logistic <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor + (1|id) + (1|passage) + (1|word),
                                                                    data=errorDat, family="binomial")
 summary(wordfreq_model_with_absents_as_median_5_z_scored_logistic)
 
-# Do frequency, SA, an  d the presence of a hesitation all interact to predict the presence of a misproduction?
-wordfreq_model_with_absents_as_median_6_z_scored <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-                                   data=errorDat, family = "binomial")
-summary(wordfreq_model_with_absents_as_median_6_z_scored)
+# Do frequency, SA, and the presence of a hesitation all interact to predict the presence of a misproduction?
+#
 
-# outcome is binary
 wordfreq_model_with_absents_as_median_6_z_scored_logistic <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                                                                    data=errorDat, family="binomial")
 # does not converge
-summary(wordfreq_model_with_absents_as_median_6_z_scored)
+summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic)
 
 
 # try again: raise # of iterations
@@ -864,32 +834,56 @@ wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa <-
 summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa)
 
 
+# Comprehension models
 
-# todo check comprehension
-# word_level_comprehension_model_0 <-
-#   glmer(challengeACC ~ scaaredSoc + (1|id) + (1|passage) + (1|word),
-#                  data=errorDat, family = "binomial")
-# summary(word_level_comprehension_model_0)
-#
-# word_level_comprehension_model_1 <-
-#   glmer(challengeACC ~ misprod + (1|id) + (1|passage) + (1|word),
-#                  data=errorDat, family = "binomial")
-# summary(word_level_comprehension_model_1)
-#
-# word_level_comprehension_model_2 <-
-#   glmer(challengeACC ~ hesitation + (1|id) + (1|passage) + (1|word),
-#                  data=errorDat, family = "binomial")
-# summary(word_level_comprehension_model_2)
-#
-# word_level_comprehension_model_3 <-
-#   glmer(challengeACC ~ misprod * scaaredSoc + (1|id) + (1|passage) + (1|word),
-#                  data=errorDat, family = "binomial")
-# summary(word_level_comprehension_model_3)
-#
-# word_level_comprehension_model_4 <-
-#   glmer(challengeACC ~ hesitation * scaaredSoc + (1|id) + (1|passage) + (1|word),
-#                  data=errorDat, family = "binomial")
-# summary(word_level_comprehension_model_4)
+# ???
+# "boundary (singular) fit: see help('isSingular')" for all of the below models
+
+# Social anxiety to predict comprehension accuracy
+# n.s.
+# scaaredSoc_z -0.05235    0.18485  -0.283    0.777
+word_level_comprehension_model_0_logistic <-
+  glmer(challengeACC_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+                 data=errorDat, family = "binomial")
+summary(word_level_comprehension_model_0_logistic)
+
+# Misproduction to predict comprehension accuracy
+# n.s.
+# misprod_predictor1 0.009751   0.023084   0.422    0.673
+word_level_comprehension_model_1_logistic <-
+  glmer(challengeACC_outcome ~ misprod_predictor + (1|id) + (1|passage) + (1|word),
+                 data=errorDat, family = "binomial")
+summary(word_level_comprehension_model_1_logistic)
+
+# Hesitation to predict comprehension accuracy
+# n.s.
+# hesitation_predictor1  0.03030    0.02167   1.398    0.162
+word_level_comprehension_model_2_logistic <-
+  glmer(challengeACC_outcome ~ hesitation_predictor + (1|id) + (1|passage) + (1|word),
+                 data=errorDat, family = "binomial")
+summary(word_level_comprehension_model_2_logistic)
+
+# Interaction between misproduction and social anxiety to predict comprehension accuracy
+# n.s.
+# misprod_predictor1               0.00975    0.02309   0.422    0.673
+# scaaredSoc_z                    -0.04265    0.19825  -0.215    0.830
+# misprod_predictor1:scaaredSoc_z  0.01022    0.02119   0.482    0.630
+word_level_comprehension_model_3_logistic <-
+  glmer(challengeACC_outcome ~ misprod_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+                 data=errorDat, family = "binomial")
+summary(word_level_comprehension_model_3_logistic)
+
+# Interaction between hesitation and social anxiety to predict comprehension accuracy
+# n.s.
+# hesitation_predictor1               0.031587   0.022160   1.425    0.154
+# scaaredSoc_z                       -0.058026   0.193953  -0.299    0.765
+# hesitation_predictor1:scaaredSoc_z -0.005708   0.020126  -0.284    0.777
+word_level_comprehension_model_4_logistic <-
+  glmer(challengeACC_outcome ~ hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+                 data=errorDat, family = "binomial")
+summary(word_level_comprehension_model_4_logistic)
+
+
 
 # effects
 # eff <- effect("log10frequency_with_absents_as_median", wordfreq_model_with_absents_as_median_1)
