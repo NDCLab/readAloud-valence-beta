@@ -4,3 +4,6 @@
 # ignore data specific files
 derivatives/*
 *.RData
+
+# interim statistics files
+results/statistics/screenshots/word-level/logistic
