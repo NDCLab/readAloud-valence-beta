@@ -578,9 +578,9 @@ if (DEBUG) {
 }
 
 # n.s.
-model2.5_z_scored <- glmer(misprod_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+model2.5_z_scored_logistic <- glmer(misprod_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                            data=errorDat, family = "binomial")
-summary(model2.5_z_scored)
+summary(model2.5_z_scored_logistic)
 
 if(DEBUG) { # compare to how it was/would've been before splitting outcome and predictor data
   wrong_model2.5 <- lmerTest::lmer(misprod_predictor ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
@@ -827,7 +827,15 @@ wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg <-
         data=errorDat, family="binomial")
 # does not converge
 # summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg)
+
 # try again: raise # of iterations
+# log10frequency_with_absents_as_median_z                                    -0.73250    0.06288 -11.649   <2e-16 ***
+# hesitation_predictor1                                                       0.02969    0.05514   0.538    0.590
+# scaaredSoc_z                                                               -0.00530    0.09156  -0.058    0.954
+# log10frequency_with_absents_as_median_z:hesitation_predictor1              -0.05852    0.04132  -1.416    0.157
+# log10frequency_with_absents_as_median_z:scaaredSoc_z                       -0.02604    0.03864  -0.674    0.500
+# hesitation_predictor1:scaaredSoc_z                                         -0.01228    0.05203  -0.236    0.813
+# log10frequency_with_absents_as_median_z:hesitation_predictor1:scaaredSoc_z  0.00722    0.03866   0.187    0.852
 wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa <-
   update(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg,
          control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
