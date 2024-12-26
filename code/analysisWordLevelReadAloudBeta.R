@@ -583,7 +583,6 @@ if (DEBUG) {
   plot_glmer(wordfreq_model_2, "log10frequency", "misprod")
 }
 
-
 # these versions fail - as intended: object 'misprod' not found
 if (DEBUG) {
   #misprod x scaaredSoc
@@ -596,11 +595,6 @@ if (DEBUG) {
                                  data=errorDat, REML=TRUE)
 }
 
-# n.s.
-model2.5_z_scored_logistic <- glmer(misprod_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
-                           data=errorDat, family = "binomial")
-summary(model2.5_z_scored_logistic)
-
 if(DEBUG) { # compare to how it was/would've been before splitting outcome and predictor data
   wrong_model2.5 <- lmerTest::lmer(misprod_predictor ~ scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, REML=TRUE)
@@ -608,11 +602,35 @@ if(DEBUG) { # compare to how it was/would've been before splitting outcome and p
   summary(wrong_model2.5)
 }
 
+
+
+# n.s.
+model2.5_z_scored_logistic <- glmer(misprod_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+                           data=errorDat, family = "binomial")
+summary(model2.5_z_scored_logistic)
+
+plot_glmer(model2.5_z_scored_logistic,
+           predictor = 'scaaredSoc_z',
+           outcome = 'Probability of misproduction \n(word-level)',
+           xlab = 'SCAARED-Social Score\n(z-scored)',
+           main = 'Social Anxiety Severity and Item-Level Misproductions')
+
+
 # hesitation x scaaredSoc_z, control for word, binary outcome
 # scaaredSoc_z  0.21491    0.07715   2.786  0.00534 **
 model5.5_z_scored_logistic <- glmer(hesitation_outcome ~ scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                                     data=errorDat, family = "binomial")
 summary(model5.5_z_scored_logistic)
+
+
+# corrected
+plot_glmer(model5.5_z_scored_logistic,
+           predictor = 'scaaredSoc_z',
+           outcome = 'Probability of hesitation\n(word level)',
+           xlab = 'SCAARED-Social Score\n(z-scored)',
+           main = 'Social Anxiety Severity and Item-Level Hesitations')
+
+
 
 
 #### supplemental analyses
@@ -626,12 +644,31 @@ f_model20_logistic <- glmer(misprod_outcome ~ hesitation_predictor + (1|id) + (1
                             data=errorDat, family = "binomial")
 summary(f_model20_logistic)
 
+effect(hesitation_predictor, f_model20_logistic) %>%
+  plot(se = TRUE, rug = FALSE, xlab = "Hesitation (presence/absence)", ylab = "Probability of misproduction\n(word-level)",
+       col.points = "red", col.lines = "blue", lty = 1)
+
+
+
+plot_glmer(f_model20_logistic,
+           predictor = 'hesitation_predictor',
+           outcome = 'Probability of misproduction\n(word-level)',
+           xlab = 'Hesitation',
+           main = 'Item-Level Misproductions and Hesitations')
+
+
 # should we (1|word) here?
 # Errors as explained by disfluency: rate of misproduced syllables from rate of hesitated syllables, control for word
 # hesitation_predictor1  0.09129    0.03670   2.488   0.0129 *
 f_model20.5_logistic <- glmer(misprod_outcome ~ hesitation_predictor + (1|id) + (1|passage) + (1|word),
                             data=errorDat, family = "binomial")
 summary(f_model20.5_logistic)
+
+plot_glmer(f_model20.5_logistic,
+           predictor = 'hesitation_predictor',
+           outcome = 'Probability of misproduction\n(word-level)',
+           xlab = 'Hesitation',
+           main = 'Item-Level Misproductions and Hesitations')
 
 
 # Now, misproduction-hesitation interactions with social anxiety
@@ -909,23 +946,6 @@ word_level_comprehension_model_4_logistic <-
   glmer(challengeACC_outcome ~ hesitation_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
                  data=errorDat, family = "binomial")
 summary(word_level_comprehension_model_4_logistic)
-
-
-
-
-# fixme: is this the right description?
-plot_glmer(model2.5_z_scored,
-          predictor = 'scaaredSoc_z',
-          outcome = 'Probability of misproduction on a given word\n(z-scored)',
-          xlab = 'SCAARED-Social Score\n(z-scored)',
-          main = 'Social Anxiety Severity and Item-Level Misproductions')
-
-# corrected
-plot_glmer(model5.5_z_scored_logistic,
-          predictor = 'scaaredSoc_z',
-          outcome = 'Probability of hesitation on word',
-          xlab = 'SCAARED-Social Score\n(z-scored)',
-          main = 'Social Anxiety Severity and Item-Level Hesitations')
 
 
 
