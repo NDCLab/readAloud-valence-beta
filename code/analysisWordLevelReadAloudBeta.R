@@ -715,6 +715,26 @@ f_model23.5_z_scored_logistic <- glmer(misprod_outcome ~ hesitation_predictor * 
                             data=errorDat, family = "binomial")
 summary(f_model23.5_z_scored_logistic)
 
+interact_plot(model = f_model23.5_z_scored_logistic,
+              pred = scaaredSoc_z,
+              modx = hesitation_predictor,
+              interval = TRUE,
+              x.label = "SCAARED-Social score\n(z-scored)",
+              y.label = expression('Probability of misproduction (word-level)'),
+              legend.main = "Presence/absence of hesitation (word-level)",
+              main.title = "Social Anxiety Severity and Item-Level Hesitations and Misproductions") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+interact_plot(model = f_model23.5_z_scored_logistic,
+              pred = hesitation_predictor,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = "Presence/absence of hesitation (word-level)",
+              y.label = expression('Probability of misproduction (word-level)'),
+              legend.main = "SCAARED-Social score\n(z-scored)",
+              main.title = "Social Anxiety Severity and Item-Level Hesitations and Misproductions") +
+  theme(plot.title = element_text(hjust = 0.5))
+
 
 
 
