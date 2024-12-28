@@ -575,6 +575,14 @@ plot_glmer <- function(model, predictor, outcome, xlab = predictor, ...) {
        ...)
 }
 
+# template:
+# plot_glmer(model,
+#            predictor = '',
+#            outcome = '',
+#            xlab = '',
+#            main = '')
+
+
 # as in
 if (DEBUG) {
   plot_glmer(wordfreq_model_1, "log10frequency", "hesitation")
