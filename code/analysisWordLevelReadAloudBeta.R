@@ -745,7 +745,6 @@ interact_plot(model = f_model23.5_z_scored_logistic,
 
 
 
-
 # What happens when we control for age?
 # hesitation x scaaredSoc_z, cf. model5.5
 # scaaredSoc_z  0.19651    0.07384   2.661  0.00779 **
@@ -753,6 +752,13 @@ interact_plot(model = f_model23.5_z_scored_logistic,
 age_model1_z_scored_logistic <- glmer(hesitation_outcome ~ scaaredSoc_z + age_z + (1|id) + (1|passage),
                          data=errorDat, family = "binomial")
 summary(age_model1_z_scored_logistic)
+
+plot_glmer(age_model1_z_scored_logistic,
+           predictor = 'scaaredSoc_z',
+           outcome = 'Probability of hesitation\n(word level)',
+           xlab = 'SCAARED-Social score\n(z-scored)',
+           main = 'Social Anxiety Severity and Item-Level Hesitations\n(accounting for age)')
+
 
 # What happens when we control for age?
 # hesitation x scaaredSoc_z, control for word, cf. model5.5
@@ -762,6 +768,11 @@ age_model1.5_z_scored_logistic <- glmer(hesitation_outcome ~ scaaredSoc_z + age_
                                       data=errorDat, family = "binomial")
 summary(age_model1.5_z_scored_logistic)
 
+plot_glmer(age_model1.5_z_scored_logistic,
+           predictor = 'scaaredSoc_z',
+           outcome = 'Probability of hesitation\n(word level)',
+           xlab = 'SCAARED-Social score\n(z-scored)',
+           main = 'Social Anxiety Severity and Item-Level Hesitations\n(accounting for age)')
 
 
 # misprod-hes ordering
