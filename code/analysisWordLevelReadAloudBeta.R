@@ -976,6 +976,15 @@ word_level_comprehension_model_0_logistic <-
                  data=errorDat, family = "binomial")
 summary(word_level_comprehension_model_0_logistic)
 
+plot_glmer(
+  word_level_comprehension_model_0_logistic,
+  predictor = 'scaaredSoc_z',
+  outcome = 'Probability of accurate comprehension\n(word-level)',
+  xlab = 'SCAARED-Social score\n(z-scored)',
+  main = 'Social Anxiety Severity and Item-Level Comprehension Accuracy'
+)
+
+
 # Misproduction to predict comprehension accuracy
 # n.s.
 # misprod_predictor1 0.009751   0.023084   0.422    0.673
@@ -984,6 +993,14 @@ word_level_comprehension_model_1_logistic <-
                  data=errorDat, family = "binomial")
 summary(word_level_comprehension_model_1_logistic)
 
+plot_glmer(
+  word_level_comprehension_model_1_logistic,
+  predictor = 'misprod_predictor',
+  outcome = 'Probability of accurate comprehension\n(word-level)',
+  xlab = 'Presence/absence of misproduction (word-level)',
+  main = 'Item-Level Misproductions and Comprehension Accuracy'
+)
+
 # Hesitation to predict comprehension accuracy
 # n.s.
 # hesitation_predictor1  0.03030    0.02167   1.398    0.162
@@ -991,6 +1008,14 @@ word_level_comprehension_model_2_logistic <-
   glmer(challengeACC_outcome ~ hesitation_predictor + (1|id) + (1|passage) + (1|word),
                  data=errorDat, family = "binomial")
 summary(word_level_comprehension_model_2_logistic)
+
+plot_glmer(
+  word_level_comprehension_model_2_logistic,
+  predictor = 'hesitation_predictor',
+  outcome = 'Probability of accurate comprehension\n(word-level)',
+  xlab = 'Presence/absence of hesitation (word-level)',
+  main = 'Item-Level Hesitations and Comprehension Accuracy'
+)
 
 # Interaction between misproduction and social anxiety to predict comprehension accuracy
 # n.s.
@@ -1002,6 +1027,28 @@ word_level_comprehension_model_3_logistic <-
                  data=errorDat, family = "binomial")
 summary(word_level_comprehension_model_3_logistic)
 
+interact_plot(model = word_level_comprehension_model_3_logistic,
+              pred = misprod_predictor,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = 'Presence/absence of misproduction (word-level)',
+              y.label = 'Probability of accurate comprehension\n(word-level)',
+              legend.main = "SCAARED-Social score\n(z-scored)",
+              main.title = "Item-Level Misproductions, Comprehension Accuracy, and Social Anxiety Severity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# alternative version
+interact_plot(model = word_level_comprehension_model_3_logistic,
+              pred = scaaredSoc_z,
+              modx = misprod_predictor,
+              interval = TRUE,
+              x.label = 'SCAARED-Social score\n(z-scored)',
+              y.label = 'Probability of accurate comprehension\n(word-level)',
+              legend.main = "Presence/absence of misproduction (word-level)",
+              main.title = "Item-Level Misproductions, Comprehension Accuracy, and Social Anxiety Severity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
 # Interaction between hesitation and social anxiety to predict comprehension accuracy
 # n.s.
 # hesitation_predictor1               0.031587   0.022160   1.425    0.154
@@ -1012,6 +1059,26 @@ word_level_comprehension_model_4_logistic <-
                  data=errorDat, family = "binomial")
 summary(word_level_comprehension_model_4_logistic)
 
+interact_plot(model = word_level_comprehension_model_4_logistic,
+              pred = hesitation_predictor,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = 'Presence/absence of hesitation (word-level)',
+              y.label = 'Probability of accurate comprehension\n(word-level)',
+              legend.main = "SCAARED-Social score\n(z-scored)",
+              main.title = "Item-Level Hesitations, Comprehension Accuracy, and Social Anxiety Severity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# alternative version
+interact_plot(model = word_level_comprehension_model_4_logistic,
+              pred = scaaredSoc_z,
+              modx = hesitation_predictor,
+              interval = TRUE,
+              x.label = 'SCAARED-Social score\n(z-scored)',
+              y.label = 'Probability of accurate comprehension\n(word-level)',
+              legend.main = "Presence/absence of hesitation (word-level)",
+              main.title = "Item-Level Hesitations, Comprehension Accuracy, and Social Anxiety Severity") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 # hesitation ~ wf x SA
