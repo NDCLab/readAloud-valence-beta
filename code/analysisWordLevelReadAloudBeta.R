@@ -893,11 +893,28 @@ wordfreq_model_with_absents_as_median_1_z_scored_logistic <- glmer(hesitation_ou
                                    data=errorDat, family = "binomial")
 summary(wordfreq_model_with_absents_as_median_1_z_scored_logistic)
 
+plot_glmer(wordfreq_model_with_absents_as_median_1_z_scored_logistic,
+           predictor = 'log10frequency_with_absents_as_median_z',
+           outcome = 'Probability of hesitation\n(word-level)',
+           xlab = expression(
+             atop("log"['10']*" word frequency",
+                  "(lower = rarer)")),
+           main = 'Item-level Word Frequency and Hesitations')
+
+
 # Does a word's frequency predict misprod on that word?
 # log10frequency_with_absents_as_median_z -0.68143    0.05109  -13.34   <2e-16 ***
 wordfreq_model_with_absents_as_median_2_z_scored_logistic <- glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
                                    data=errorDat, family = "binomial")
 summary(wordfreq_model_with_absents_as_median_2_z_scored_logistic)
+
+plot_glmer(wordfreq_model_with_absents_as_median_2_z_scored_logistic,
+           predictor = 'log10frequency_with_absents_as_median_z',
+           outcome = 'Probability of misproduction\n(word-level)',
+           xlab = expression(
+             atop("log"['10']*" word frequency",
+                  "(lower = rarer)")),
+           main = 'Item-level Word Frequency and Misproductions')
 
 
 # Do social anxiety and frequency interact to the presence of a hesitation?
@@ -965,7 +982,6 @@ summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa)
 
 # Comprehension models
 
-# ???
 # "boundary (singular) fit: see help('isSingular')" for all of the below models
 
 # Social anxiety to predict comprehension accuracy
