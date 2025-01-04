@@ -1020,6 +1020,7 @@ wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa <- # does work
   update(wordfreq_model_with_absents_as_median_6_z_scored_logistic,
          control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
 summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa)
+
 interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa,
               pred = log10frequency_with_absents_as_median_z,
               modx = hesitation_predictor,
@@ -1027,24 +1028,27 @@ interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored_logistic_
               interval = TRUE,
               x.label = expression(
                 atop("log"['10']*" word frequency",
-                     "(lower = rarer)")), #'testerx',
-              y.label = expression('Probability of misproduction (word-level)'),
-              legend.main = "Hesitation presence/absence",#\n(z-scored)",
+                     "(lower = rarer)")),
+              y.label = expression(
+                atop('Probability of misproduction',
+                     '(word-level)')),
+              legend.main = "Hesitation presence/absence",,
               modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
               modx.labels = c("no hesitation", "hesitation"),
               mod2.values = "mean-plus-minus",
               mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
-              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions")
+              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
-# try again, method 2: remove random effect
+# try again, method 2: remove random effect for passage
 wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg <-
   glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor * scaaredSoc_z + (1|id) + (1|word),
         data=errorDat, family="binomial")
-# does not converge
+# still does not converge
 # summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg)
 
-# try again: raise # of iterations
+# try again, method 3: raise # of iterations AND remove random effect for passage
 # log10frequency_with_absents_as_median_z                                    -0.73250    0.06288 -11.649   <2e-16 ***
 # hesitation_predictor1                                                       0.02969    0.05514   0.538    0.590
 # scaaredSoc_z                                                               -0.00530    0.09156  -0.058    0.954
@@ -1056,6 +1060,25 @@ wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa <-
   update(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg,
          control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
 summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa)
+
+interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = hesitation_predictor,
+              mod2 = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")),
+              y.label = expression(
+                atop('Probability of misproduction',
+                     '(word-level)')),
+              legend.main = "Hesitation presence/absence",,
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no hesitation", "hesitation"),
+              mod2.values = "mean-plus-minus",
+              mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 # Comprehension models
