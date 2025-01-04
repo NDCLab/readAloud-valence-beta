@@ -933,10 +933,12 @@ interact_plot(model = wordfreq_model_with_absents_as_median_3_z_scored_logistic,
               x.label = expression(
                 atop("log"['10']*" word frequency",
                      "(lower = rarer)")),
-              y.label = expression('Probability of hesitation (word-level)'),
+              y.label =  expression(
+                atop("Probability of hesitation",
+                     "(word-level)")),
               legend.main = "SCAARED-Social score\n(z-scored)",
-              main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Hesitations")
-
+              main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Hesitations") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 # Do social anxiety and frequency interact to the presence of a misproduction?
