@@ -973,6 +973,22 @@ wordfreq_model_with_absents_as_median_5_z_scored_logistic <- glmer(misprod_outco
                                                                    data=errorDat, family="binomial")
 summary(wordfreq_model_with_absents_as_median_5_z_scored_logistic)
 
+interact_plot(model = wordfreq_model_with_absents_as_median_5_z_scored_logistic,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = hesitation_predictor,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")), #'testerx',
+              y.label = expression('Probability of misproduction on a given word'),
+              legend.main = "Hesitation presence/absence",#\n(z-scored)",
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no hesitation", "hesitation"),
+              main.title = "Item-Level Word Frequency, Hesitations, and Misproductions") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
 # Do frequency, SA, and the presence of a hesitation all interact to predict the presence of a misproduction?
 #
 
@@ -982,14 +998,46 @@ wordfreq_model_with_absents_as_median_6_z_scored_logistic <- glmer(misprod_outco
 summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic)
 
 
-# try again: raise # of iterations
+# interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored,
+#               pred = log10frequency_with_absents_as_median_z,
+#               modx = hesitation_predictor,
+#               mod2 = scaaredSoc_z,
+#               interval = TRUE,
+#               x.label = expression(
+#                 atop("log"['10']*" word frequency",
+#                      "(lower = rarer)")), #'testerx',
+#               y.label = expression('Probability of misproduction (word-level)'),
+#               legend.main = "Hesitation presence/absence",#\n(z-scored)",
+#               modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+#               modx.labels = c("no hesitation", "hesitation"),
+#               mod2.values = "mean-plus-minus",
+#               mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+#               main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions")
+
+
+# try again, method 1: raise # of iterations
 wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa <- # does work
   update(wordfreq_model_with_absents_as_median_6_z_scored_logistic,
          control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
 summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa)
+interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = hesitation_predictor,
+              mod2 = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")), #'testerx',
+              y.label = expression('Probability of misproduction (word-level)'),
+              legend.main = "Hesitation presence/absence",#\n(z-scored)",
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no hesitation", "hesitation"),
+              mod2.values = "mean-plus-minus",
+              mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions")
 
 
-# try again: remove random effect
+# try again, method 2: remove random effect
 wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg <-
   glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * hesitation_predictor * scaaredSoc_z + (1|id) + (1|word),
         data=errorDat, family="binomial")
@@ -1011,7 +1059,6 @@ summary(wordfreq_model_with_absents_as_median_6_z_scored_logistic_no_psg_bobyqa)
 
 
 # Comprehension models
-
 # "boundary (singular) fit: see help('isSingular')" for all of the below models
 
 # Social anxiety to predict comprehension accuracy
@@ -1125,97 +1172,3 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
               legend.main = "Presence/absence of hesitation (word-level)",
               main.title = "Item-Level Hesitations, Comprehension Accuracy, and Social Anxiety Severity") +
   theme(plot.title = element_text(hjust = 0.5))
-
-
-# misprod ~ wf x SA
-
-interact_plot(model = wordfreq_model_with_absents_as_median_4,
-              pred = log10frequency_with_absents_as_median,
-              modx = scaaredSoc_gmc,
-              interval = TRUE,
-              x.label = expression(
-                atop("log"['10']*" word frequency",
-                     "(lower = rarer)")), #'testerx',
-              y.label = 'Misproduction rate\n(% of all words)',
-              legend.main = "SCAARED-Social score")
-
-# misprod ~ hes x wf
-# interact_plot(model = wordfreq_model_5,
-#               pred = log10frequency_with_absents_as_median, modx = hesitation, interval = TRUE)
-#
-# interact_plot(model = wordfreq_model_6,
-#               pred = log10frequency_with_absents_as_median,
-#               modx = hesitation, mod2 = scaaredSoc_gmc,
-#               interval = TRUE)
-
-# fixed versions:
-interact_plot(model = wordfreq_model_with_absents_as_median_5_z_scored,
-              pred = log10frequency_with_absents_as_median_z,
-              modx = hesitation_predictor,
-              interval = TRUE,
-              x.label = expression(
-                atop("log"['10']*" word frequency",
-                     "(lower = rarer)")), #'testerx',
-              y.label = expression('Probability of misproduction on a given word'),
-              legend.main = "Hesitation presence/absence",#\n(z-scored)",
-              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
-              modx.labels = c("no hesitation", "hesitation"),
-              main.title = "Item-Level Word Frequency, Hesitations, and Misproductions") #+
-  # theme(plot.title = element_text(hjust = 0.5))
-
-# revised, logistic version
-interact_plot(model = wordfreq_model_with_absents_as_median_5_z_scored_logistic,
-              pred = log10frequency_with_absents_as_median_z,
-              modx = hesitation_predictor,
-              interval = TRUE,
-              x.label = expression(
-                atop("log"['10']*" word frequency",
-                     "(lower = rarer)")), #'testerx',
-              y.label = expression('Probability of misproduction on a given word'),
-              legend.main = "Hesitation presence/absence",#\n(z-scored)",
-              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
-              modx.labels = c("no hesitation", "hesitation"),
-              main.title = "Item-Level Word Frequency, Hesitations, and Misproductions") +
-  theme(plot.title = element_text(hjust = 0.5))
-
-
-
-
-
-interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored,
-              pred = log10frequency_with_absents_as_median_z,
-              modx = hesitation_predictor,
-              mod2 = scaaredSoc_z,
-              interval = TRUE,
-              x.label = expression(
-                atop("log"['10']*" word frequency",
-                     "(lower = rarer)")), #'testerx',
-              y.label = expression('Probability of misproduction (word-level)'),
-              legend.main = "Hesitation presence/absence",#\n(z-scored)",
-              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
-              modx.labels = c("no hesitation", "hesitation"),
-              mod2.values = "mean-plus-minus",
-              mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
-              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions")
-
-# revised, logistic version
-interact_plot(model = wordfreq_model_with_absents_as_median_6_z_scored_logistic_bobyqa,
-              pred = log10frequency_with_absents_as_median_z,
-              modx = hesitation_predictor,
-              mod2 = scaaredSoc_z,
-              interval = TRUE,
-              x.label = expression(
-                atop("log"['10']*" word frequency",
-                     "(lower = rarer)")), #'testerx',
-              y.label = expression('Probability of misproduction (word-level)'),
-              legend.main = "Hesitation presence/absence",#\n(z-scored)",
-              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
-              modx.labels = c("no hesitation", "hesitation"),
-              mod2.values = "mean-plus-minus",
-              mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
-              main.title = "Social Anxiety Severity and Item-Level Word Frequency, Hesitations, and Misproductions")
-
-
-
-# summary(errorDat$log10frequency_with_absents_as_median)
-
