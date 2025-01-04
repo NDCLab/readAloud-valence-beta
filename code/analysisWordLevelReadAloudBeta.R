@@ -949,6 +949,21 @@ wordfreq_model_with_absents_as_median_4_z_scored_logistic <- glmer(misprod_outco
                                      data=errorDat, family = "binomial")
 summary(wordfreq_model_with_absents_as_median_4_z_scored_logistic)
 
+interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")),
+              y.label =  expression(
+                atop("Probability of misproduction",
+                     "(word-level)")),
+              legend.main = "SCAARED-Social score\n(z-scored)",
+              main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Misproductions") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
 
 # Do frequency and the presence of a hesitation interact to predict the presence of a misproduction?
 # log10frequency_with_absents_as_median_z                       -0.73044    0.06304 -11.587   <2e-16 ***
@@ -1113,11 +1128,6 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
 
 
 # misprod ~ wf x SA
-interact_plot(model = wordfreq_model_4,
-              pred = log10frequency, modx = scaaredSoc_gmc, interval = TRUE)
-
-interact_plot(model = wordfreq_model_with_absents_as_median_4,
-              pred = log10frequency_with_absents_as_median, modx = scaaredSoc_gmc, interval = TRUE)
 
 interact_plot(model = wordfreq_model_with_absents_as_median_4,
               pred = log10frequency_with_absents_as_median,
