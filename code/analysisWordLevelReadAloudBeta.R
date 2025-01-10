@@ -527,39 +527,52 @@ if (DEBUG) {
 ### SECTION 3.3: preparing for misprod-hes sequential analyses
 
 # ignore the misprod-hes columns for now
-errorDatMisprodHes <- select(errorDat, !contains("any_"))
+errorDatOrdering <- errorDat#PredictorsOutcomes
+errorDatMisprodHes <- select(errorDatOrdering, !contains("any_"))
+ordering_cols <- select(errorDatOrdering, contains("any_")) %>% colnames
 
 # First: look at a given misproduction and check for nearby hesitations
 justMisprodWithHesBefore <- cbind(errorDatMisprodHes,
                                   hes_position = 0, # "before",
-                                  misprod_in_adjacent_window = errorDat$misprod_with_any_prior_hesitation)
+                                  misprod_in_adjacent_window_predictor = errorDatOrdering$misprod_with_any_prior_hesitation_predictor,
+                                  misprod_in_adjacent_window_outcome = errorDatOrdering$misprod_with_any_prior_hesitation_outcome)
 
 justMisprodWithHesAfter <- cbind(errorDatMisprodHes,
                                  hes_position = 1, # "after",
-                                 misprod_in_adjacent_window = errorDat$misprod_with_any_upcoming_hesitation)
+                                 misprod_in_adjacent_window_predictor = errorDatOrdering$misprod_with_any_upcoming_hesitation_predictor,
+                                 misprod_in_adjacent_window_outcome = errorDatOrdering$misprod_with_any_upcoming_hesitation_outcome)
 
 
 # stack the ones before and the ones after as rows of a single df (my attempt at long form)
 errorDatLongMisprodWithRelHes <- rbind(justMisprodWithHesBefore, justMisprodWithHesAfter)
 
 # track the binary relative position as a factor
-errorDatLongMisprodWithRelHes$hes_position <- as.factor(errorDatLongMisprodWithRelHes$hes_position)
+# errorDatLongMisprodWithRelHes$hes_position <- as.factor(errorDatLongMisprodWithRelHes$hes_position)
+errorDatLongMisprodWithRelHes <-
+  errorDatLongMisprodWithRelHes %>%
+  split_many_predictors_and_outcomes("hes_position")#c("hes_position", "misprod_in_adjacent_window"))
+#  differentiate_predictor_and_outcome(errorDatLongMisprodWithRelHes, hes_position, keep_col = TRUE)
+# first half ^ is done, half below isn't
 
 # Then: look at a given hesitation and check for nearby misproductions
 justHesWithMisprodBefore <- cbind(errorDatMisprodHes,
                                   misprod_position = 0, # "before",
-                                  hes_in_adjacent_window = errorDat$hesitation_with_any_prior_misprod)
+                                  hes_in_adjacent_window = errorDatOrdering$hesitation_with_any_prior_misprod)
 
 justHesWithMisprodAfter <- cbind(errorDatMisprodHes,
                                  misprod_position = 1, # "after",
-                                 hes_in_adjacent_window = errorDat$hesitation_with_any_upcoming_misprod)
+                                 hes_in_adjacent_window = errorDatOrdering$hesitation_with_any_upcoming_misprod)
 
 # stack the ones before and the ones after as rows of a single df (my attempt at long form)
 errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisprodAfter)
 
 # track the binary relative position as a factor
-errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
+# errorDatLongHesWithRelMisprod$misprod_position <- as.factor(errorDatLongHesWithRelMisprod$misprod_position)
+errorDatLongHesWithRelMisprod <-
+  errorDatLongHesWithRelMisprod %>%
+  split_many_predictors_and_outcomes(c("misprod_position", "hes_in_adjacent_window"))
 
+# TODO differentiate predictors and outcomes
 
 ### SECTION 4: MODEL RESULTS
 # again, now prevent ourselves from using data that isn't explicitly set up to
@@ -784,22 +797,64 @@ plot_glmer(age_model1.5_z_scored_logistic,
 # does misproduction location relative to a hesitation predict how many
 # instances we get in a particular reading?
 
-# TODO unfixed per earlier predictor/outcome differentiation
+# wip, partly unfixed per earlier predictor/outcome differentiation
 if (FALSE) {
-  hes_with_rel_misprod_model_1 <- glmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage),
+  # add stats
+  # fixme
+  hes_with_rel_misprod_model_1_logistic <- glmer(hes_in_adjacent_window_outcome ~ misprod_position_predictor + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongHesWithRelMisprod, family = "binomial")
-  summary(hes_with_rel_misprod_model_1) # n.s., 0.271
+  summary(hes_with_rel_misprod_model_1_logistic) # n.s., 0.271 # confirm this
+  # now p = 0.226, n.s.
 
-  misprod_with_rel_hes_model_1 <- glmer(misprod_in_adjacent_window ~ hes_position + (1|id) + (1|passage),
+  # now plot
+  plot_glmer(hes_with_rel_misprod_model_1_logistic,
+             predictor = 'misprod_position_predictor',
+             outcome = 'Probability of adjacent hesitation\n(word level)',
+             xlab = 'Misproduction position\n(before or after hesitation in question)',
+             main = 'Item-Level Hesitation and Misproduction Position')
+
+
+  misprod_with_rel_hes_model_1_logistic <- glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongMisprodWithRelHes, family = "binomial")
-  summary(misprod_with_rel_hes_model_1) # n.s., 0.108
+  summary(misprod_with_rel_hes_model_1_logistic) # formerly: n.s., 0.108; now doesn't converge
+
+  misprod_with_rel_hes_model_1_logistic_bobyqa <- # does work
+    update(misprod_with_rel_hes_model_1_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5))) # it was set to 10000; hopefully identical but technically untested as of yet
+  summary(misprod_with_rel_hes_model_1_logistic_bobyqa)
+  # hes_position_predictor1  0.04742    0.02558   1.854   0.0638 .
+
+  # now marginally significant, i.e. p = 0.0638
+
+  # try again, method 2: remove random effect for passage
+  misprod_with_rel_hes_model_1_logistic_no_psg <-
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor + (1|id) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial") # works
+  summary(misprod_with_rel_hes_model_1_logistic_no_psg)
+  # hes_position_predictor1  0.04749    0.02850   1.666   0.0957 .
+
+  misprod_with_rel_hes_model_1_logistic_bobyqa_2 <- # does work
+    update(misprod_with_rel_hes_model_1_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e7)))
+  summary(misprod_with_rel_hes_model_1_logistic_bobyqa_2)
+  # hes_position_predictor1  0.04742    0.02558   1.854   0.0638 .
+  # just as above!
+
+  # now plot
+  plot_glmer(misprod_with_rel_hes_model_1_logistic_bobyqa_2,
+             predictor = 'hes_position_predictor',
+             outcome = 'Probability of adjacent misproduction\n(word level)',
+             xlab = 'Hesitation position\n(before or after misproduction in question)',
+             main = 'Item-Level Misproduction and Hesitation Position')
+
+
 
   ## does it interact with SA?
-  hes_with_rel_misprod_model_3 <- glmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage),
+  hes_with_rel_misprod_model_3 <- glmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongHesWithRelMisprod, family = "binomial")
   summary(hes_with_rel_misprod_model_3) # n.s.
 
-  misprod_with_rel_hes_model_4 <- glmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage),
+  misprod_with_rel_hes_model_4 <- glmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongMisprodWithRelHes, family = "binomial")
   summary(misprod_with_rel_hes_model_4) # n.s.
 
