@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-12-23
+# Last Updated: 2025-02-27
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -572,7 +572,10 @@ errorDatLongHesWithRelMisprod <-
   errorDatLongHesWithRelMisprod %>%
   split_many_predictors_and_outcomes(c("misprod_position", "hes_in_adjacent_window"))
 
-# TODO differentiate predictors and outcomes
+# z-score continuous predictors
+errorDatLongHesWithRelMisprod$scaaredSoc_z <- scale(errorDatLongHesWithRelMisprod$scaaredSoc, center = TRUE, scale = TRUE)
+errorDatLongMisprodWithRelHes$scaaredSoc_z <- scale(errorDatLongMisprodWithRelHes$scaaredSoc, center = TRUE, scale = TRUE)
+
 
 ### SECTION 4: MODEL RESULTS
 # again, now prevent ourselves from using data that isn't explicitly set up to
@@ -800,11 +803,10 @@ plot_glmer(age_model1.5_z_scored_logistic,
 # wip, partly unfixed per earlier predictor/outcome differentiation
 if (FALSE) {
   # add stats
-  # fixme
+
   hes_with_rel_misprod_model_1_logistic <- glmer(hes_in_adjacent_window_outcome ~ misprod_position_predictor + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongHesWithRelMisprod, family = "binomial")
-  summary(hes_with_rel_misprod_model_1_logistic) # n.s., 0.271 # confirm this
-  # now p = 0.226, n.s.
+  summary(hes_with_rel_misprod_model_1_logistic) # n.s., formerly 0.271, now 0.226
 
   # now plot
   plot_glmer(hes_with_rel_misprod_model_1_logistic,
@@ -850,9 +852,32 @@ if (FALSE) {
 
 
   ## does it interact with SA?
-  hes_with_rel_misprod_model_3 <- glmer(hes_in_adjacent_window ~ misprod_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                                                 data=errorDatLongHesWithRelMisprod, family = "binomial")
-  summary(hes_with_rel_misprod_model_3) # n.s.
+  hes_with_rel_misprod_model_3_logistic <- # does not converge
+    glmer(hes_in_adjacent_window_outcome ~ misprod_position_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongHesWithRelMisprod, family = "binomial")
+  summary(hes_with_rel_misprod_model_3_logistic)
+
+  hes_with_rel_misprod_model_3_logistic_bobyqa <- # sa *; misprod & interaction n.s.
+    update(hes_with_rel_misprod_model_3_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e7)))
+  summary(hes_with_rel_misprod_model_3_logistic_bobyqa)
+
+
+  interact_plot(model = hes_with_rel_misprod_model_3_logistic_bobyqa,
+                pred = misprod_position_predictor,
+                modx = scaaredSoc_z,
+                interval = TRUE,
+                x.label = expression(
+                  atop("Misproduction position",
+                       "(before or after hesitation in question)")),
+                y.label =  expression(
+                  atop("Probability of adjacent hesitation",
+                       "(word-level)")),
+                legend.main = "SCAARED-Social score\n(z-scored)",
+                main.title = 'Item-Level Hesitation, Misproduction Position, and Social Anxiety') +
+    theme(plot.title = element_text(hjust = 0.5))
+
+
 
   misprod_with_rel_hes_model_4 <- glmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongMisprodWithRelHes, family = "binomial")
