@@ -136,7 +136,7 @@ to_omit <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-
 out_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
 
 # to load latest data:
-# load(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-jan-10-25.RData"))
+# load(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-mar-02-25.RData"))
 
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
@@ -575,9 +575,33 @@ errorDatLongHesWithRelMisprod <-
   errorDatLongHesWithRelMisprod %>%
   split_many_predictors_and_outcomes(c("misprod_position", "hes_in_adjacent_window"))
 
+
+# then set up word frequency like the errorDat df does it
+errorDatLongHesWithRelMisprod$log10frequency_with_absents_as_median <-
+  case_match(
+    errorDatLongHesWithRelMisprod$log10frequency,
+    0 ~ subtlexus_median,
+    .default = errorDatLongHesWithRelMisprod$log10frequency
+  )
+
+errorDatLongMisprodWithRelHes$log10frequency_with_absents_as_median <-
+  case_match(
+    errorDatLongMisprodWithRelHes$log10frequency,
+    0 ~ subtlexus_median,
+    .default = errorDatLongMisprodWithRelHes$log10frequency
+  )
+
 # z-score continuous predictors
 errorDatLongHesWithRelMisprod$scaaredSoc_z <- scale(errorDatLongHesWithRelMisprod$scaaredSoc, center = TRUE, scale = TRUE)
 errorDatLongMisprodWithRelHes$scaaredSoc_z <- scale(errorDatLongMisprodWithRelHes$scaaredSoc, center = TRUE, scale = TRUE)
+
+errorDatLongHesWithRelMisprod$log10frequency_with_absents_as_median_z <- scale(errorDatLongHesWithRelMisprod$log10frequency_with_absents_as_median, center = TRUE, scale = TRUE)[,1]
+errorDatLongMisprodWithRelHes$log10frequency_with_absents_as_median_z <- scale(errorDatLongMisprodWithRelHes$log10frequency_with_absents_as_median, center = TRUE, scale = TRUE)[,1]
+
+# ...and remove the old version so we don't accidentally use it
+errorDatLongHesWithRelMisprod <- errorDatLongHesWithRelMisprod %>% select(-log10frequency_with_absents_as_median)
+errorDatLongMisprodWithRelHes <- errorDatLongMisprodWithRelHes %>% select(-log10frequency_with_absents_as_median)
+
 
 
 ### SECTION 4: MODEL RESULTS
@@ -879,7 +903,24 @@ if (FALSE) {
                 legend.main = "SCAARED-Social score\n(z-scored)",
                 main.title = 'Item-Level Hesitation, Misproduction Position, and Social Anxiety') +
     theme(plot.title = element_text(hjust = 0.5))
+  # alt: we'll definitely want the continuous variable on the x axis, not in the legend!
 
+  # attempt
+  interact_plot(model = hes_with_rel_misprod_model_3_logistic_bobyqa,
+                pred = scaaredSoc_z,
+                modx = misprod_position_predictor,
+                interval = TRUE,
+                x.label = "SCAARED-Social score\n(z-scored)",
+                y.label =  expression(
+                  atop("Probability of adjacent hesitation",
+                       "(word-level)")),
+                legend.main = expression(
+                  atop("Misproduction position",
+                       "(before or after hesitation in question)")),
+                modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+                modx.labels = c("preceding hesitation", "following hesitation"),
+                main.title = 'Item-Level Hesitation, Misproduction Position, and Social Anxiety') +
+    theme(plot.title = element_text(hjust = 0.5))
 
 
   misprod_with_rel_hes_model_4_logistic <- # does not converge
@@ -935,8 +976,102 @@ if (FALSE) {
                 legend.main = "SCAARED-Social score\n(z-scored)",
                 main.title = 'Item-Level Misproduction, Hesitation Position, and Social Anxiety') +
     theme(plot.title = element_text(hjust = 0.5))
+  # alt: we'll definitely want the continuous variable on the x axis, not in the legend!
+
+  # attempt:
+  interact_plot(model = misprod_with_rel_hes_model_4_logistic_no_psg,
+                pred = scaaredSoc_z,
+                modx = hes_position_predictor,
+                interval = TRUE,
+                x.label = "SCAARED-Social score\n(z-scored)",
+                y.label =  expression(
+                  atop("Probability of adjacent misproduction",
+                       "(word-level)")),
+                legend.main = expression(
+                  atop("Hesitation position",
+                       "(before or after misproduction in question)")),
+                modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+                modx.labels = c("preceding misproduction", "following hes_position_predictor"),
+                main.title = 'Item-Level Misproduction, Hesitation Position, and Social Anxiety') +
+    theme(plot.title = element_text(hjust = 0.5))
 
 
+  ## does the pre-post relationship interact with the word in question's frequency?
+  hes_with_rel_misprod_model_5_logistic_wordfreq_with_absents_as_median <- # wf ***, rest n.s.
+    glmer(hes_in_adjacent_window_outcome ~ misprod_position_predictor * log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongHesWithRelMisprod, family = "binomial")
+  summary(hes_with_rel_misprod_model_5_logistic_wordfreq_with_absents_as_median)
+
+  # verify:
+  interact_plot(model = hes_with_rel_misprod_model_5_logistic_wordfreq_with_absents_as_median,
+                pred = misprod_position_predictor,
+                modx = log10frequency_with_absents_as_median_z,
+                interval = TRUE,
+                x.label = expression(
+                  atop("Misproduction position",
+                       "(before or after misproduction in question)")),
+                y.label =  expression(
+                  atop("Probability of adjacent hesitation",
+                       "(word-level)")),
+                legend.main = expression(
+                  atop("log"['10']*" word frequency",
+                                  "(lower = rarer)")),
+                main.title = 'Item-Level Hesitation, Misproduction Position, and Word Frequency') +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  # alt
+  interact_plot(model = hes_with_rel_misprod_model_5_logistic_wordfreq_with_absents_as_median,
+                pred = log10frequency_with_absents_as_median_z,
+                modx = misprod_position_predictor,
+                interval = TRUE,
+                x.label = expression(
+                  atop("log"['10']*" word frequency",
+                       "(lower = rarer)")),
+                y.label =  expression(
+                  atop("Probability of adjacent hesitation",
+                       "(word-level)")),
+                legend.main = expression(
+                  atop("Misproduction position",
+                       "(before or after hesitation in question)")),
+                modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+                modx.labels = c("preceding hesitation", "following hesitation"),
+                main.title = 'Item-Level Hesitation, Misproduction Position, and Word Frequency') +
+    theme(plot.title = element_text(hjust = 0.5))
+
+
+  # reverse direction:
+  misprod_with_rel_hes_model_6_logistic_wordfreq_with_absents_as_median <- # does not converge
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * log10frequency_with_absents_as_median_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial")
+
+  # try again: raise # of iterations
+  misprod_with_rel_hes_model_6_logistic_wordfreq_with_absents_as_median_bobyqa <- # wf ***, hes *, interaction n.s.
+    update(misprod_with_rel_hes_model_6_logistic_wordfreq_with_absents_as_median,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5)))
+
+  # now plot
+  interact_plot(model = misprod_with_rel_hes_model_6_logistic_wordfreq_with_absents_as_median_bobyqa,
+                pred = log10frequency_with_absents_as_median_z,
+                modx = hes_position_predictor,
+                interval = TRUE,
+                x.label = expression(
+                  atop("log"['10']*" word frequency",
+                       "(lower = rarer)")),
+                y.label =  expression(
+                  atop("Probability of adjacent misproduction",
+                       "(word-level)")),
+                legend.main = expression(
+                  atop("Hesitation position",
+                       "(before or after misproduction in question)")),
+                modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+                modx.labels = c("preceding misproduction", "following misproduction"),
+                main.title = 'Item-Level Misproduction, Hesitation Position, and Word Frequency') +
+    theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+  # below is out of date nb; we're already controlling for word in the above!!
   # what if we control for word?
   hes_with_rel_misprod_model_1.5 <- glmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage) + (1|word),
                                                  data=errorDatLongHesWithRelMisprod, family = "binomial")
