@@ -135,6 +135,9 @@ to_omit <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
 out_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
 
+# to load latest data:
+# load(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-jan-10-25.RData"))
+
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
 passage_omissions_df <- read.csv(to_omit, row.names = NULL) # hand-crafted list of participant x passage entries to exclude, based on coder comments
@@ -879,9 +882,60 @@ if (FALSE) {
 
 
 
-  misprod_with_rel_hes_model_4 <- glmer(misprod_in_adjacent_window ~ hes_position * scaaredSoc_gmc + (1|id) + (1|passage) + (1|word),
-                                                 data=errorDatLongMisprodWithRelHes, family = "binomial")
-  summary(misprod_with_rel_hes_model_4) # n.s.
+  misprod_with_rel_hes_model_4_logistic <- # does not converge
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial")
+  summary(misprod_with_rel_hes_model_4_logistic)
+
+
+  misprod_with_rel_hes_model_4_logistic_bobyqa <- # fails to converge
+    update(misprod_with_rel_hes_model_4_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e7)))
+
+  # fails
+  misprod_with_rel_hes_model_4_logistic_bobyqa_2 <- # still fails
+    update(misprod_with_rel_hes_model_4_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+  # all these still fail
+  misprod_with_rel_hes_model_4_logistic_bobyqa_3 <-
+    update(misprod_with_rel_hes_model_4_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5))) # shot in the dark
+
+
+  misprod_with_rel_hes_model_4_logistic_bobyqa_4 <-
+    update(misprod_with_rel_hes_model_4_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e11)))
+
+
+  misprod_with_rel_hes_model_4_logistic_bobyqa_5 <-
+    update(misprod_with_rel_hes_model_4_logistic,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = Inf)))
+
+  # next try non-bobyqa but without `(1|psg)`:
+
+  # try again, second alt method - remove random effect for passage:
+  misprod_with_rel_hes_model_4_logistic_no_psg <- # works
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * scaaredSoc_z + (1|id) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial")
+
+  summary(misprod_with_rel_hes_model_4_logistic_no_psg) # hes ., sa ., interaction n.s.
+
+  # verify:
+  interact_plot(model = misprod_with_rel_hes_model_4_logistic_no_psg,
+                pred = hes_position_predictor,
+                modx = scaaredSoc_z,
+                interval = TRUE,
+                x.label = expression(
+                  atop("Hesitation position",
+                       "(before or after misproduction in question)")),
+                y.label =  expression(
+                  atop("Probability of adjacent misproduction",
+                       "(word-level)")),
+                legend.main = "SCAARED-Social score\n(z-scored)",
+                main.title = 'Item-Level Misproduction, Hesitation Position, and Social Anxiety') +
+    theme(plot.title = element_text(hjust = 0.5))
+
 
   # what if we control for word?
   hes_with_rel_misprod_model_1.5 <- glmer(hes_in_adjacent_window ~ misprod_position + (1|id) + (1|passage) + (1|word),
