@@ -555,7 +555,6 @@ errorDatLongMisprodWithRelHes <-
   errorDatLongMisprodWithRelHes %>%
   split_many_predictors_and_outcomes("hes_position")#c("hes_position", "misprod_in_adjacent_window"))
 #  differentiate_predictor_and_outcome(errorDatLongMisprodWithRelHes, hes_position, keep_col = TRUE)
-# first half ^ is done, half below isn't
 
 # Then: look at a given hesitation and check for nearby misproductions
 justHesWithMisprodBefore <- cbind(errorDatMisprodHes,
@@ -926,7 +925,7 @@ if (FALSE) {
   misprod_with_rel_hes_model_4_logistic <- # does not converge
     glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
           data=errorDatLongMisprodWithRelHes, family = "binomial")
-  summary(misprod_with_rel_hes_model_4_logistic)
+  # summary(misprod_with_rel_hes_model_4_logistic)
 
 
   misprod_with_rel_hes_model_4_logistic_bobyqa <- # fails to converge
@@ -1068,6 +1067,74 @@ if (FALSE) {
                 main.title = 'Item-Level Misproduction, Hesitation Position, and Word Frequency') +
     theme(plot.title = element_text(hjust = 0.5))
 
+
+  # models with both SA *and* wordfreq
+
+  # v1: predict probability of hesitation
+  hes_with_rel_misprod_model_7_logistic_wordfreq_with_absents_as_median <- # does not converge
+    glmer(hes_in_adjacent_window_outcome ~ misprod_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongHesWithRelMisprod, family = "binomial")
+  # summary(hes_with_rel_misprod_model_7_logistic_wordfreq_with_absents_as_median)
+
+
+  # try again: raise # of iterations
+  hes_with_rel_misprod_model_7_logistic_wordfreq_with_absents_as_median_bobyqa <- #wordfreq ***, sa *, rest (including all interactions) n.s.
+    update(hes_with_rel_misprod_model_7_logistic_wordfreq_with_absents_as_median,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5)))
+
+  # not plotting because no interaction came out significant
+
+
+  # reverse direction:
+  misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median <- # does not converge
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial")
+
+  # try again: raise # of iterations
+  misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa <- # hes_position *, wordfreq ***, SA n.s., SA:wordfreq *, rest n.s.
+    update(misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5)))
+
+  # now plot
+  interact_plot(model = misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+                pred = log10frequency_with_absents_as_median_z,
+                modx = hes_position_predictor,
+                mod2 = scaaredSoc_z,
+                interval = TRUE,
+                x.label = expression(
+                  atop("log"['10']*" word frequency",
+                       "(lower = rarer)")),
+                y.label = expression(
+                  atop('Probability of misproduction',
+                       '(word-level)')),
+                legend.main = expression(
+                  atop("Hesitation position",
+                       "(before or after misproduction in question)")),
+                modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+                modx.labels = c("preceding misproduction", "following misproduction"),
+                mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+                main.title = "Item-Level Misproduction, Word Frequency, Hesitation Position, and Social Anxiety") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  # alt way
+  interact_plot(model = misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+                pred = log10frequency_with_absents_as_median_z,
+                modx = scaaredSoc_z,
+                mod2 = hes_position_predictor,
+                interval = TRUE,
+                x.label = expression(
+                  atop("log"['10']*" word frequency",
+                       "(lower = rarer)")),
+                y.label = expression(
+                  atop('Probability of misproduction',
+                       '(word-level)')),
+                modx.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+                legend.main = expression(
+                  atop("SCAARED-Social score", "(z-scored)")),
+                mod2.labels = c("hesitation precedes misproduction", "hesitation follows misproduction"),
+                mod2.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+                main.title = "Item-Level Misproduction, Word Frequency, Hesitation Position, and Social Anxiety") +
+    theme(plot.title = element_text(hjust = 0.5))
 
 
 
