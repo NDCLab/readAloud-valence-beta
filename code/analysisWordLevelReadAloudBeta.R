@@ -317,11 +317,11 @@ split_many_predictors_and_outcomes <- function(df, colnames) {
 relevant_columns <-
   errorDat %>% select(where(is.logical), challengeACC) %>% colnames
 
-
 # e.g.
 errorDatPredictorsOutcomes <-
   errorDatPredictorsOutcomes %>%
   split_many_predictors_and_outcomes(relevant_columns)
+
 
 
 #errorDat <-
@@ -1086,14 +1086,37 @@ if (FALSE) {
 
 
   # reverse direction:
+  # misprod_rel_hes_in_adjacent_window ~ SA * wf * hes_position
   misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median <- # does not converge
     glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial")
+
+  # same, controlling for sex
+  sex_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median <-
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + sex + (1|id) + (1|passage) + (1|word),
+          data=errorDatLongMisprodWithRelHes, family = "binomial")
+
+  # same, controlling for age
+  age_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median <-
+    glmer(misprod_in_adjacent_window_outcome ~ hes_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + age + (1|id) + (1|passage) + (1|word),
           data=errorDatLongMisprodWithRelHes, family = "binomial")
 
   # try again: raise # of iterations
   misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa <- # hes_position *, wordfreq ***, SA n.s., SA:wordfreq *, rest n.s.
     update(misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median,
            control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5)))
+
+  # same, controlling for sex
+  sex_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa <-
+    update(sex_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5)))
+
+  # same, controlling for age
+  age_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa <-
+    update(age_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median,
+           control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e5)))
+
+
 
   # now plot
   interact_plot(model = misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa,
@@ -1276,8 +1299,21 @@ interact_plot(model = wordfreq_model_with_absents_as_median_3_z_scored_logistic,
               main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Hesitations") +
   theme(plot.title = element_text(hjust = 0.5))
 
+# hesitation ~ wf x SA, control for age
+age_wordfreq_model_with_absents_as_median_3_z_scored_logistic <- glmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + age_z + (1|id) + (1|passage) + (1|word),
+                                                                       data=errorDat, family = "binomial")
+summary(age_wordfreq_model_with_absents_as_median_3_z_scored_logistic)
+
+# hesitation ~ wf x SA, control for sex
+sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic <- glmer(hesitation_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + sex + (1|id) + (1|passage) + (1|word),
+                                                                       data=errorDat, family = "binomial")
+summary(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic)
+
+
 
 # Do social anxiety and frequency interact to the presence of a misproduction?
+# i.e. misprod ~ wf x SA
+
 # log10frequency_with_absents_as_median_z              -0.681946   0.051084 -13.349   <2e-16 ***
 # scaaredSoc_z                                          0.007296   0.078917   0.092   0.9263
 # log10frequency_with_absents_as_median_z:scaaredSoc_z -0.032234   0.016058  -2.007   0.0447 *
@@ -1298,6 +1334,20 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
               legend.main = "SCAARED-Social score\n(z-scored)",
               main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Misproductions") +
   theme(plot.title = element_text(hjust = 0.5))
+
+
+# misprod ~ wf x SA, control for age
+age_wordfreq_model_with_absents_as_median_4_z_scored_logistic <-
+  glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + age_z + (1|id) + (1|passage) + (1|word),
+        data=errorDat, family = "binomial")
+summary(age_wordfreq_model_with_absents_as_median_4_z_scored_logistic)
+
+# misprod ~ wf x SA, control for sex
+sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic <-
+  glmer(misprod_outcome ~ log10frequency_with_absents_as_median_z * scaaredSoc_z + sex + (1|id) + (1|passage) + (1|word),
+        data=errorDat, family = "binomial")
+summary(sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic)
+
 
 
 
