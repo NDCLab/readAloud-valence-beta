@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2025-02-27
+# Last Updated: 2025-05-09
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -9,7 +9,7 @@
 # models, plots
 
 # NOTES TO DO
-# plot models
+# stats tables
 
 # Data dict
 
@@ -122,6 +122,7 @@ library(gridExtra)
 library(grid)
 library(cowplot)
 library(colorspace)
+library(insight); library(sjPlot)
 library(effects)
 # library(colorblindr)
 
@@ -1581,3 +1582,104 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
               legend.main = "Presence/absence of hesitation (word-level)",
               main.title = "Item-Level Hesitations, Comprehension Accuracy, and Social Anxiety Severity") +
   theme(plot.title = element_text(hjust = 0.5))
+
+
+
+# Generate tables for core analyses
+
+
+
+# Generate tables for control analyses
+tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
+          show.est = TRUE, # estimates
+          show.std = TRUE, # show standardized betas
+          show.se = TRUE,
+          std.response = TRUE, # trying with this: don't restandardize what we already did
+          show.stat = TRUE, # test statistic
+          show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+          pred.labels = c("Intercept",
+                          "Word frequency",
+                          "SCAARED social (z-scored)",
+                          "Female sex",
+                          "Word frequency × SCAARED social (z-scored)"),
+          dv.labels = "",
+        # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
+          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
+                        "stat", "p", "df.error", "response.level"))
+
+tab_model(age_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
+          show.est = TRUE, # estimates
+          show.std = TRUE, # show standardized betas
+          show.se = TRUE,
+          std.response = TRUE, # trying with this: don't restandardize what we already did
+          show.stat = TRUE, # test statistic
+          show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+          pred.labels = c("Intercept",
+                          "Word frequency",
+                          "SCAARED social (z-scored)",
+                          "Age",
+                          "Word frequency × SCAARED social (z-scored)"),
+          dv.labels = "",
+          # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for age",
+          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
+                        "stat", "p", "df.error", "response.level"))
+
+
+tab_model(sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+          show.est = TRUE, # estimates
+          show.std = TRUE, # show standardized betas
+          show.se = TRUE,
+          std.response = TRUE, # trying with this: don't restandardize what we already did
+          show.stat = TRUE, # test statistic
+          show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+        # pred.labels = c("Intercept",
+        #                 "Word frequency",
+        #                 "SCAARED social (z-scored)",
+        #                 "Sex", # verify which one
+        #                 "Word frequency × SCAARED social (z-scored)"),
+          dv.labels = "",
+          # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
+          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
+                        "stat", "p", "df.error", "response.level"))
+
+
+
+tab_model(age_wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+          show.est = TRUE, # estimates
+          show.std = TRUE, # show standardized betas
+          show.se = TRUE,
+          std.response = TRUE, # trying with this: don't restandardize what we already did
+          show.stat = TRUE, # test statistic
+          show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+          pred.labels = c("Intercept",
+                          "Word frequency",
+                          "SCAARED social (z-scored)",
+                          "Age",
+                          "Word frequency × SCAARED social (z-scored)"),
+          dv.labels = "",
+          # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
+          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
+                        "stat", "p", "df.error", "response.level"))
+
+
+tab_model(age_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+          show.est = TRUE, # estimates
+          show.std = TRUE, # DON'T show standardized betas
+          show.se = TRUE,
+          std.response = TRUE, # trying with this: don't restandardize what we already did
+          show.stat = TRUE, # test statistic
+          show.df = TRUE,
+          pred.labels = c("Intercept",
+                          "Hesitation position (after misproduction)",
+                          "Word frequency",
+                          "SCAARED social (z-scored)",
+                          "Age",
+                          "Hesitation position (after misproduction) × Word frequency",
+                          "Hesitation position (after misproduction) × SCAARED social (z-scored)",
+                          "Word frequency × SCAARED social (z-scored)",
+                          "Hesitation position (after misproduction) × Word frequency × SCAARED social (z-scored)"
+          ),
+          dv.labels = "",
+          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
+                        "stat", "p", "df.error", "response.level")
+          )
