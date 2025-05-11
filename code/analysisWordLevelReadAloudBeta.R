@@ -258,7 +258,8 @@ errorDat <- dfTrim
 #                they are predictors or outcomes in the models to follow
 
 #modify contrasts for categorical predictors
-contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
+errorDatcopy <- errorDat
+contrasts(errorDat$sex) <- rev(contr.sum(2)) #male: -1, female: +1
 
 errorDatPredictorsOutcomes <- errorDat # separate them
 
@@ -556,6 +557,12 @@ errorDatLongMisprodWithRelHes <-
   errorDatLongMisprodWithRelHes %>%
   split_many_predictors_and_outcomes("hes_position")#c("hes_position", "misprod_in_adjacent_window"))
 #  differentiate_predictor_and_outcome(errorDatLongMisprodWithRelHes, hes_position, keep_col = TRUE)
+copy <- errorDatLongMisprodWithRelHes
+# contrasts(copy$sex) <- contr.sum(2) #male: -1, female: +1
+# contrasts(copy$sex) <- rev(contr.sum(2)) #male: +1, female: -1
+contrasts(errorDatLongMisprodWithRelHes$sex) <- rev(contr.sum(2)) #male: +1, female: -1
+
+
 
 # Then: look at a given hesitation and check for nearby misproductions
 justHesWithMisprodBefore <- cbind(errorDatMisprodHes,
@@ -574,6 +581,10 @@ errorDatLongHesWithRelMisprod <- rbind(justHesWithMisprodBefore, justHesWithMisp
 errorDatLongHesWithRelMisprod <-
   errorDatLongHesWithRelMisprod %>%
   split_many_predictors_and_outcomes(c("misprod_position", "hes_in_adjacent_window"))
+copy2 <- errorDatLongHesWithRelMisprod
+# contrasts(copy$sex) <- contr.sum(2) #male: -1, female: +1
+# contrasts(copy$sex) <- rev(contr.sum(2)) #male: +1, female: -1
+contrasts(errorDatLongHesWithRelMisprod$sex) <- rev(contr.sum(2)) #male: +1, female: -1
 
 
 # then set up word frequency like the errorDat df does it
@@ -1600,7 +1611,7 @@ tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           pred.labels = c("Intercept",
                           "Word frequency",
                           "SCAARED social (z-scored)",
-                          "Female sex",
+                          "Male sex",
                           "Word frequency × SCAARED social (z-scored)"),
           dv.labels = "",
         # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
