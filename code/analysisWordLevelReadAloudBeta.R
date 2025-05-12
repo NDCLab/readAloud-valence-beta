@@ -1607,13 +1607,32 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
 # removing show.std appears to fix it
 # then instead of refitting we can just manipulate `transform`, e.g. to NULL or to identity
 # exp is the default
+# tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
+#           show.est = TRUE, # estimates
+#           show.std = TRUE, # show standardized betas
+#           show.se = TRUE,
+#           std.response = TRUE, # trying with this: don't restandardize what we already did
+#           show.stat = TRUE, # test statistic
+#           show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+#           pred.labels = c("Intercept",
+#                           "Word frequency",
+#                           "SCAARED social (z-scored)",
+#                           "Male sex",
+#                           "Word frequency × SCAARED social (z-scored)"),
+#           dv.labels = "",
+#         # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
+#           col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
+#                         "stat", "p", "df.error", "response.level"))
 tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           show.est = TRUE, # estimates
-          show.std = TRUE, # show standardized betas
+          string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
           show.se = TRUE,
+          string.se = "SE",
           std.response = TRUE, # trying with this: don't restandardize what we already did
           show.stat = TRUE, # test statistic
+          string.stat = "z", # determined per model output
           show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+          p.style = "numeric_stars",
           pred.labels = c("Intercept",
                           "Word frequency",
                           "SCAARED social (z-scored)",
@@ -1621,8 +1640,8 @@ tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
                           "Word frequency × SCAARED social (z-scored)"),
           dv.labels = "",
         # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
-          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
-                        "stat", "p", "df.error", "response.level"))
+          col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                        "stat", "p", "response.level"))
 
 tab_model(age_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           show.est = TRUE, # estimates
