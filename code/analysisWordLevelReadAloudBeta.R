@@ -122,8 +122,9 @@ library(gridExtra)
 library(grid)
 library(cowplot)
 library(colorspace)
-library(insight); library(sjPlot)
+library(insight); library(sjPlot) # tables
 library(effects)
+library(xml2) # for saving tables to disk
 # library(colorblindr)
 
 #set up date for output file naming
@@ -135,6 +136,7 @@ data <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAl
 to_omit <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 # out_path <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/'
 out_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/'
+results_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/results/'
 
 # to load latest data:
 # load(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-mar-02-25.RData"))
@@ -1601,28 +1603,24 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
 
 
 # Generate tables for control analyses
+ctrl_tables_sex_word_level <- 'tables/word-level/logistic/control-analyses/sex'
+ctrl_tables_age_word_level <- 'tables/word-level/logistic/control-analyses/age'
 
+SAVE_TABLES_TO_DISK <- FALSE # assume don't want to overwrite; change if desired
 
-# model itself converged but this won't...
-# removing show.std appears to fix it
-# then instead of refitting we can just manipulate `transform`, e.g. to NULL or to identity
-# exp is the default
-# tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
-#           show.est = TRUE, # estimates
-#           show.std = TRUE, # show standardized betas
-#           show.se = TRUE,
-#           std.response = TRUE, # trying with this: don't restandardize what we already did
-#           show.stat = TRUE, # test statistic
-#           show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
-#           pred.labels = c("Intercept",
-#                           "Word frequency",
-#                           "SCAARED social (z-scored)",
-#                           "Male sex",
-#                           "Word frequency × SCAARED social (z-scored)"),
-#           dv.labels = "",
-#         # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
-#           col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
-#                         "stat", "p", "df.error", "response.level"))
+write_table_html_to_disk <- function(model_table, namespace, table_name = deparse(substitute(model_table))) {
+  # reads variable name as default output name unless specified otherwise
+  table_basename <- paste0(table_name, '.html')
+  table_dirname <- paste(sep = '/', results_path, namespace)
+  table_out_path <- paste(sep = '/', table_dirname, table_basename)
+  table_html <- read_html(model_table$page.complete)
+
+  if (SAVE_TABLES_TO_DISK) {
+    fs::dir_create(table_dirname)
+    write_html(table_html, table_out_path)
+  }
+}
+
 tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           show.est = TRUE, # estimates
           string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
@@ -1643,23 +1641,29 @@ tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
                         "stat", "p", "response.level"))
 
-tab_model(age_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
-          show.est = TRUE, # estimates
-          show.std = TRUE, # show standardized betas
-          show.se = TRUE,
-          std.response = TRUE, # trying with this: don't restandardize what we already did
-          show.stat = TRUE, # test statistic
-          show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
-          pred.labels = c("Intercept",
-                          "Word frequency",
-                          "SCAARED social (z-scored)",
-                          "Age",
-                          "Word frequency × SCAARED social (z-scored)"),
-          dv.labels = "",
-          # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for age",
-          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
-                        "stat", "p", "df.error", "response.level"))
+age_wordfreq_table_with_absents_as_median_3_z_scored_logistic <-
+  tab_model(age_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept",
+                            "Word frequency",
+                            "SCAARED social (z-scored)",
+                            "Age",
+                            "Word frequency × SCAARED social (z-scored)"),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "response.level")); age_wordfreq_table_with_absents_as_median_3_z_scored_logistic
 
+write_table_html_to_disk(age_wordfreq_table_with_absents_as_median_3_z_scored_logistic,
+                         ctrl_tables_age_word_level,
+                         "age_wordfreq_table_with_absents_as_median_3_z_scored_logistic")
 
 tab_model(sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic,
           show.est = TRUE, # estimates

@@ -1,0 +1,156 @@
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+<style>
+html, body { background-color: white; }
+table { border-collapse:collapse; border:none; }
+caption { font-weight: bold; text-align:left; }
+td {  }
+.thead { border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; }
+.tdata { padding:0.2cm; text-align:left; vertical-align:top; }
+.arc { background-color:#f2f2f2; }
+.summary { padding-top:0.1cm; padding-bottom:0.1cm; }
+.summarydata { text-align:left; }
+.fixedparts { font-weight:bold; text-align:left; }
+.randomparts { font-weight:bold; text-align:left; padding-top:.8em; }
+.zeroparts { font-weight:bold; text-align:left; padding-top:.8em; }
+.simplexparts { font-weight:bold; text-align:left; padding-top:.8em; }
+.lasttablerow { border-bottom: double; }
+.firsttablerow {  }
+.firstsumrow { border-top:1px solid; }
+.labelcellborder { border-bottom:1px solid; }
+.depvarhead { text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal; }
+.depvarheadnodv { border-top: double; text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal; }
+.leftalign { text-align:left; }
+.centeralign { text-align:center; }
+.firsttablecol { text-align:left; }
+.footnote { font-style:italic; border-top:double black; text-align:right; }
+.subtitle { font-weight: normal; }
+.modelcolumn1 {  }
+.modelcolumn2 {  }
+.modelcolumn3 {  }
+.modelcolumn4 {  }
+.modelcolumn5 {  }
+.modelcolumn6 {  }
+.modelcolumn7 {  }
+.col1 {  }
+.col2 {  }
+.col3 {  }
+.col4 {  }
+.col5 {  }
+.col6 {  }
+</style>
+</head>
+<body>
+<table>
+  <tr>
+    <td class="depvarheadnodv firsttablerow firsttablecol col1">Predictors</td>
+    <td class="depvarheadnodv firsttablerow col2">β</td>
+    <td class="depvarheadnodv firsttablerow col3">SE</td>
+    <td class="depvarheadnodv firsttablerow col4">df</td>
+    <td class="depvarheadnodv firsttablerow col5">CI</td>
+    <td class="depvarheadnodv firsttablerow col6">z</td>
+    <td class="depvarheadnodv firsttablerow col7">p</td>
+    <td class="depvarheadnodv firsttablerow col8"></td>
+  </tr>
+  <tr>
+    <td class="tdata firsttablecol col1">Intercept</td>
+    <td class="tdata centeralign modelcolumn1 col2">0.01</td>
+    <td class="tdata centeralign modelcolumn1 col3">0.00</td>
+    <td class="tdata centeralign modelcolumn1 col4">Inf</td>
+    <td class="tdata centeralign modelcolumn1 col5">0.01&nbsp;&ndash;&nbsp;0.02</td>
+    <td class="tdata centeralign modelcolumn1 col6">&#45;24.94</td>
+    <td class="tdata centeralign modelcolumn1 col7"><strong>&lt;0.001</strong></td>
+    <td class="tdata centeralign modelcolumn1 col8"><strong>***</strong></td>
+</tr>
+  <tr>
+    <td class="tdata firsttablecol col1">Word frequency</td>
+    <td class="tdata centeralign modelcolumn1 col2">0.64</td>
+    <td class="tdata centeralign modelcolumn1 col3">0.03</td>
+    <td class="tdata centeralign modelcolumn1 col4">Inf</td>
+    <td class="tdata centeralign modelcolumn1 col5">0.59&nbsp;&ndash;&nbsp;0.70</td>
+    <td class="tdata centeralign modelcolumn1 col6">&#45;10.68</td>
+    <td class="tdata centeralign modelcolumn1 col7"><strong>&lt;0.001</strong></td>
+    <td class="tdata centeralign modelcolumn1 col8"><strong>***</strong></td>
+</tr>
+  <tr>
+    <td class="tdata firsttablecol col1">SCAARED social (z-scored)</td>
+    <td class="tdata centeralign modelcolumn1 col2">1.24</td>
+    <td class="tdata centeralign modelcolumn1 col3">0.10</td>
+    <td class="tdata centeralign modelcolumn1 col4">Inf</td>
+    <td class="tdata centeralign modelcolumn1 col5">1.07&nbsp;&ndash;&nbsp;1.44</td>
+    <td class="tdata centeralign modelcolumn1 col6">2.78</td>
+    <td class="tdata centeralign modelcolumn1 col7"><strong>0.005</strong></td>
+    <td class="tdata centeralign modelcolumn1 col8"><strong>**</strong></td>
+</tr>
+  <tr>
+    <td class="tdata firsttablecol col1">Male sex</td>
+    <td class="tdata centeralign modelcolumn1 col2">0.88 <sup></sup></td>
+    <td class="tdata centeralign modelcolumn1 col3">0.15</td>
+    <td class="tdata centeralign modelcolumn1 col4">Inf</td>
+    <td class="tdata centeralign modelcolumn1 col5">0.64&nbsp;&ndash;&nbsp;1.22</td>
+    <td class="tdata centeralign modelcolumn1 col6">&#45;0.77</td>
+    <td class="tdata centeralign modelcolumn1 col7">0.440</td>
+    <td class="tdata centeralign modelcolumn1 col8"></td>
+</tr>
+  <tr>
+    <td class="tdata firsttablecol col1">Word frequency × SCAARED social (z-scored)</td>
+    <td class="tdata centeralign modelcolumn1 col2">1.01 <sup></sup></td>
+    <td class="tdata centeralign modelcolumn1 col3">0.01</td>
+    <td class="tdata centeralign modelcolumn1 col4">Inf</td>
+    <td class="tdata centeralign modelcolumn1 col5">0.98&nbsp;&ndash;&nbsp;1.04</td>
+    <td class="tdata centeralign modelcolumn1 col6">0.70</td>
+    <td class="tdata centeralign modelcolumn1 col7">0.484</td>
+    <td class="tdata centeralign modelcolumn1 col8"></td>
+</tr>
+  <tr>
+    <td colspan="7" class="randomparts">Random Effects</td>
+  </tr>
+
+  <tr>
+    <td class="tdata leftalign summary">&sigma;<sup>2</sup></td>
+    <td class="tdata summary summarydata" colspan="6">3.29</td>
+  </tr>
+
+  <tr>
+    <td class="tdata leftalign summary">&tau;<sub>00</sub> <sub>word</sub></td>
+    <td class="tdata summary summarydata" colspan="6">0.75</td>
+
+  <tr>
+    <td class="tdata leftalign summary">&tau;<sub>00</sub> <sub>id</sub></td>
+    <td class="tdata summary summarydata" colspan="6">0.29</td>
+
+  <tr>
+    <td class="tdata leftalign summary">&tau;<sub>00</sub> <sub>passage</sub></td>
+    <td class="tdata summary summarydata" colspan="6">0.00</td>
+
+  <tr>
+    <td class="tdata leftalign summary">ICC</td>
+    <td class="tdata summary summarydata" colspan="6">0.24</td>
+
+  <tr>
+    <td class="tdata leftalign summary">N <sub>id</sub></td>
+    <td class="tdata summary summarydata" colspan="6">51</td>
+
+  <tr>
+    <td class="tdata leftalign summary">N <sub>passage</sub></td>
+    <td class="tdata summary summarydata" colspan="6">18</td>
+
+  <tr>
+    <td class="tdata leftalign summary">N <sub>word</sub></td>
+    <td class="tdata summary summarydata" colspan="6">1427</td>
+  <tr>
+    <td class="tdata leftalign summary firstsumrow">Observations</td>
+    <td class="tdata summary summarydata firstsumrow" colspan="6">154202</td>
+  </tr>
+  <tr>
+    <td class="tdata leftalign summary">Marginal R<sup>2</sup> / Conditional R<sup>2</sup></td>
+    <td class="tdata summary summarydata" colspan="6">0.054 / 0.282</td>
+  </tr>
+  <tr>
+    <td colspan="7" class="footnote">* p&lt;0.05&nbsp;&nbsp;&nbsp;** p&lt;0.01&nbsp;&nbsp;&nbsp;*** p&lt;0.001</td>
+</tr>
+
+</table>
+
+</body></html>
