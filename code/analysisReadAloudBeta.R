@@ -1021,6 +1021,52 @@ write_table_html_to_disk(
   tables_core_passage_level
 )
 
+# non significant core analyses:
+table_model8_z_scored <-
+  tab_model(model8_z_scored,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            transform = exp, # make sure it standardizes betas
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept", "SCAARED social (z-scored)"),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); table_model8_z_scored
+
+write_table_html_to_disk(
+  table_model8_z_scored,
+  tables_non_sig_passage_level
+)
+
+table_f_model1_z_scored <-
+  tab_model(f_model1_z_scored,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            transform = exp, # make sure it standardizes betas
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept", "SCAARED social (z-scored)"),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); table_f_model1_z_scored
+
+write_table_html_to_disk(
+  table_f_model1_z_scored,
+  tables_non_sig_passage_level
+)
+
+
 # Generate tables for control analyses
 ctrl_tables_sex_passage_level <- 'tables/control-analyses/age'
 ctrl_tables_age_passage_level <- 'tables/control-analyses/age'
