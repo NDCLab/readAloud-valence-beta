@@ -1601,6 +1601,12 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
 
 
 # Generate tables for control analyses
+
+
+# model itself converged but this won't...
+# removing show.std appears to fix it
+# then instead of refitting we can just manipulate `transform`, e.g. to NULL or to identity
+# exp is the default
 tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           show.est = TRUE, # estimates
           show.std = TRUE, # show standardized betas
