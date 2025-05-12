@@ -1599,16 +1599,6 @@ interact_plot(model = word_level_comprehension_model_4_logistic,
 
 
 # Generate tables for core analyses
-
-
-
-# Generate tables for control analyses
-ctrl_tables_sex_word_level <- 'tables/word-level/logistic/control-analyses/sex'
-ctrl_tables_age_word_level <- 'tables/word-level/logistic/control-analyses/age'
-ctrl_tables_sex_pre_post <- 'tables/word-level/logistic/pre-post/control-analyses/sex'
-ctrl_tables_age_pre_post <- 'tables/word-level/logistic/pre-post/control-analyses/age'
-
-
 SAVE_TABLES_TO_DISK <- FALSE # assume don't want to overwrite; change if desired
 
 write_table_html_to_disk <- function(model_table, namespace, table_name = deparse(substitute(model_table))) {
@@ -1623,6 +1613,94 @@ write_table_html_to_disk <- function(model_table, namespace, table_name = depars
     write_html(table_html, table_out_path)
   }
 }
+tables_core_word_level <- 'tables/word-level/logistic/'
+tables_core_pre_post <- 'tables/word-level/logistic/pre-post/'
+
+wordfreq_table_with_absents_as_median_3_z_scored_logistic <-
+  tab_model(wordfreq_model_with_absents_as_median_3_z_scored_logistic,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept",
+                            "Word frequency",
+                            "SCAARED social (z-scored)",
+                            "Word frequency × SCAARED social (z-scored)"),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); wordfreq_table_with_absents_as_median_3_z_scored_logistic
+
+write_table_html_to_disk(
+  wordfreq_table_with_absents_as_median_3_z_scored_logistic,
+  tables_core_word_level
+)
+
+wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
+  tab_model(wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept",
+                            "Word frequency",
+                            "SCAARED social (z-scored)",
+                            "Word frequency × SCAARED social (z-scored)"),
+            dv.labels = "",
+            # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); wordfreq_table_with_absents_as_median_4_z_scored_logistic
+
+write_table_html_to_disk(
+  wordfreq_table_with_absents_as_median_4_z_scored_logistic,
+  tables_core_word_level
+)
+
+misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa <-
+  tab_model(misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept",
+                            "Hesitation position (after misproduction)",
+                            "Word frequency",
+                            "SCAARED social (z-scored)",
+                            "Hesitation position (after misproduction) × Word frequency",
+                            "Hesitation position (after misproduction) × SCAARED social (z-scored)",
+                            "Word frequency × SCAARED social (z-scored)",
+                            "Hesitation position (after misproduction) × Word frequency × SCAARED social (z-scored)"
+            ),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
+
+write_table_html_to_disk(
+  misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+  tables_core_pre_post
+)
+
+
+
+# Generate tables for control analyses
+ctrl_tables_sex_word_level <- 'tables/word-level/logistic/control-analyses/sex'
+ctrl_tables_age_word_level <- 'tables/word-level/logistic/control-analyses/age'
+ctrl_tables_sex_pre_post <- 'tables/word-level/logistic/pre-post/control-analyses/sex'
+ctrl_tables_age_pre_post <- 'tables/word-level/logistic/pre-post/control-analyses/age'
 
 tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           show.est = TRUE, # estimates
@@ -1642,7 +1720,7 @@ tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           dv.labels = "",
         # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
           col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
-                        "stat", "p", "response.level"))
+                        "stat", "p", "est", "response.level"))
 
 age_wordfreq_table_with_absents_as_median_3_z_scored_logistic <-
   tab_model(age_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
@@ -1662,11 +1740,12 @@ age_wordfreq_table_with_absents_as_median_3_z_scored_logistic <-
                             "Word frequency × SCAARED social (z-scored)"),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
-                          "stat", "p", "response.level")); age_wordfreq_table_with_absents_as_median_3_z_scored_logistic
+                          "stat", "p", "est", "response.level")); age_wordfreq_table_with_absents_as_median_3_z_scored_logistic
 
-write_table_html_to_disk(age_wordfreq_table_with_absents_as_median_3_z_scored_logistic,
-                         ctrl_tables_age_word_level,
-                         "age_wordfreq_table_with_absents_as_median_3_z_scored_logistic")
+write_table_html_to_disk(
+  age_wordfreq_table_with_absents_as_median_3_z_scored_logistic,
+  ctrl_tables_age_word_level,
+)
 
 sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
   tab_model(sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic,
@@ -1687,14 +1766,12 @@ sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
             dv.labels = "",
           # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
-                          "stat", "p", "p", "response.level")); sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic
+                          "stat", "p", "est", "response.level")); sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic
 
 write_table_html_to_disk(
   sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic,
   ctrl_tables_sex_word_level
 )
-
-
 
 age_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
   tab_model(age_wordfreq_model_with_absents_as_median_4_z_scored_logistic,
@@ -1714,7 +1791,7 @@ age_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
                             "Word frequency × SCAARED social (z-scored)"),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
-                          "stat", "p", "response.level")); age_wordfreq_table_with_absents_as_median_4_z_scored_logistic
+                          "stat", "p", "est", "response.level")); age_wordfreq_table_with_absents_as_median_4_z_scored_logistic
 
 write_table_html_to_disk(
   age_wordfreq_table_with_absents_as_median_4_z_scored_logistic,
@@ -1745,7 +1822,7 @@ age_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
             ),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
-                          "stat", "p", "p", "response.level")); age_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
+                          "stat", "p", "est", "response.level")); age_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
 
 write_table_html_to_disk(
   age_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa,
