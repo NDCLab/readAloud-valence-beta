@@ -1668,22 +1668,31 @@ write_table_html_to_disk(age_wordfreq_table_with_absents_as_median_3_z_scored_lo
                          ctrl_tables_age_word_level,
                          "age_wordfreq_table_with_absents_as_median_3_z_scored_logistic")
 
-tab_model(sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic, # fixme
-          show.est = TRUE, # estimates
-          show.std = TRUE, # show standardized betas
-          show.se = TRUE,
-          std.response = TRUE, # trying with this: don't restandardize what we already did
-          show.stat = TRUE, # test statistic
-          show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
-        # pred.labels = c("Intercept",
-        #                 "Word frequency",
-        #                 "SCAARED social (z-scored)",
-        #                 "Sex", # verify which one
-        #                 "Word frequency × SCAARED social (z-scored)"),
-          dv.labels = "",
+sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
+  tab_model(sex_wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept",
+                            "Word frequency",
+                            "SCAARED social (z-scored)",
+                            "Male sex", # verify which one
+                            "Word frequency × SCAARED social (z-scored)"),
+            dv.labels = "",
           # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
-          col.order = c("std.est", "se", "ci", "ci.inner", "ci.outer",
-                        "stat", "p", "df.error", "response.level"))
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "p", "response.level")); sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic
+
+write_table_html_to_disk(
+  sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic,
+  ctrl_tables_sex_word_level
+)
 
 
 
@@ -1743,4 +1752,38 @@ write_table_html_to_disk(
   ctrl_tables_age_pre_post
 )
 
-# save.image("~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/RWE-item-level-with-zscoring-logistic-and-pre-post-and-control-analyses-may-07-25.RData")
+
+sex_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa <-
+  tab_model(sex_misprod_with_rel_hes_model_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept",
+                            "Hesitation position (after misproduction)",
+                            "Word frequency",
+                            "SCAARED social (z-scored)",
+                            "Male sex",
+                            "Hesitation position (after misproduction) × Word frequency",
+                            "Hesitation position (after misproduction) × SCAARED social (z-scored)",
+                            "Word frequency × SCAARED social (z-scored)",
+                            "Hesitation position (after misproduction) × Word frequency × SCAARED social (z-scored)"
+            ),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); sex_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
+
+write_table_html_to_disk(
+  sex_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa,
+  ctrl_tables_sex_pre_post
+)
+
+
+
+
+# save.image(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-and-control-analyses-may-07-25.RData"))
