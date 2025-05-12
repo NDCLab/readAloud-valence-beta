@@ -119,10 +119,12 @@ library(ggplot2)
 library(gridExtra)
 library(grid)
 library(cowplot)
-library(effects)
 library(interactions)
 library(colorspace)
-library(colorblindr)
+library(insight); library(sjPlot) # tables
+library(effects)
+library(xml2) # for saving tables to disk
+# library(colorblindr)
 
 # ```
 # Warning in install.packages :
@@ -139,8 +141,9 @@ today <- format(today, "%Y%m%d")
 
 #set up directories for input/output data
 # data <- '/Users/jalexand/github/readAloud-valence-beta/derivatives/readAloudBetaData_20230630.csv'
-data <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
-to_omit <- '/home/luc/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
+data <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
+to_omit <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
+results_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/results/'
 
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
@@ -951,3 +954,30 @@ summary(age_model2_z_scored)
 # wordfreq_model_4 <- lmerTest::lmer(misprod_rate ~ avgWordFreq * scaaredSoc_gmc + (1|id) + (1|passage),
 #                                    data=errorDat, REML=TRUE)
 # summary(wordfreq_model_4)
+
+
+# Generate tables for core analyses
+SAVE_TABLES_TO_DISK <- FALSE # assume don't want to overwrite; change if desired
+
+write_table_html_to_disk <- function(model_table, namespace, table_name = deparse(substitute(model_table))) {
+  # reads variable name as default output name unless specified otherwise
+  table_basename <- paste0(table_name, '.html')
+  table_dirname <- paste(sep = '/', results_path, namespace)
+  table_out_path <- paste(sep = '/', table_dirname, table_basename)
+  table_html <- read_html(model_table$page.complete)
+
+  if (SAVE_TABLES_TO_DISK) {
+    fs::dir_create(table_dirname)
+    write_html(table_html, table_out_path)
+  }
+}
+tables_core_passage_level <- 'tables'
+tables_non_sig_passage_level <- 'tables/non-sig'
+
+
+
+# Generate tables for control analyses
+ctrl_tables_sex_passage_level <- 'tables/control-analyses/age'
+ctrl_tables_age_passage_level <- 'tables/control-analyses/age'
+
+# save.image("~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/RWE-passage-level-with-zscoring-may-13-25.RData")
