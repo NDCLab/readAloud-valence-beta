@@ -244,7 +244,7 @@ errorDat <- dfTrim
 
 
 #modify contrasts for categorical predictors
-contrasts(errorDat$sex) <- contr.sum(2) #male: -1, female: +1
+contrasts(errorDat$sex) <- rev(contr.sum(2)) # female: -1, male: +1
 # now verify:
 contrasts(errorDat$sex)
 # see below for how I've handled challengeACC- a special case as it is used both
@@ -569,6 +569,15 @@ plot_lmer(model11_z_scored,
           xlab = 'SCAARED-Social Score\n(z-scored)',
           main = 'Social Anxiety Severity and Rate of Hesitation')
 
+# same, controlling for sex:
+sex_model11_z_scored <- lmerTest::lmer(words_with_hes_rate_z ~ scaaredSoc_z + sex + (1|id) + (1|passage),
+                                   data=errorDat, REML=TRUE)
+summary(sex_model11_z_scored)
+
+# same, controlling for age:
+age_model11_z_scored <- lmerTest::lmer(words_with_hes_rate_z ~ scaaredSoc_z + age_z + (1|id) + (1|passage),
+                                       data=errorDat, REML=TRUE)
+summary(age_model11_z_scored)
 
 #words_with_hes_rate x sps
 # model12 <- lmerTest::lmer(words_with_hes_rate ~ sps_gmc + (1|id) + (1|passage),
@@ -802,6 +811,17 @@ interact_plot(model = f_model24_z_scored,
                 atop('Rate of misproductions per word', '(z-scored)')),
               legend.main = "SCAARED-Social score\n(z-scored)",
               main.title = "Rate of Hesitation, Social Anxiety Severity, and Rate of Misproduction")
+
+# same, controlling for sex:
+sex_f_model24_z_scored <-  lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z * scaaredSoc_z + sex + (1|id) + (1|passage),
+                                          data=errorDat, REML=TRUE)
+summary(sex_f_model24_z_scored)
+
+# same, controlling for age:
+age_f_model24_z_scored <-  lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z * scaaredSoc_z + age_z + (1|id) + (1|passage),
+                                          data=errorDat, REML=TRUE)
+summary(age_f_model24_z_scored)
+
 
 
 # Errors as explained by disfluency and SA: rate of misproduced words from rate of hesitated syllables and scaared

@@ -7,3 +7,4 @@ derivatives/*
 
 # interim statistics files
 results/statistics/screenshots/word-level/logistic
+results/statistics/screenshots/control-analyses
