@@ -1025,7 +1025,7 @@ table_f_model24_z_scored <-
             string.se = "SE",
             std.response = TRUE, # trying with this: don't restandardize what we already did
             show.stat = TRUE, # test statistic
-            string.stat = "z", # determined per model output
+            string.stat = "t", # determined per model output
             show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
             p.style = "numeric_stars",
             pred.labels = c("Intercept",
@@ -1051,7 +1051,7 @@ table_model8_z_scored <-
             string.se = "SE",
             std.response = TRUE, # trying with this: don't restandardize what we already did
             show.stat = TRUE, # test statistic
-            string.stat = "z", # determined per model output
+            string.stat = "t", # determined per model output
             show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
             p.style = "numeric_stars",
             pred.labels = c("Intercept", "SCAARED social (z-scored)"),
@@ -1088,7 +1088,113 @@ write_table_html_to_disk(
 
 
 # Generate tables for control analyses
-ctrl_tables_sex_passage_level <- 'tables/control-analyses/age'
+ctrl_tables_sex_passage_level <- 'tables/control-analyses/sex'
 ctrl_tables_age_passage_level <- 'tables/control-analyses/age'
+
+table_age_model11_z_scored <-
+  tab_model(age_model11_z_scored,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            transform = exp, # make sure it standardizes betas
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "t", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c("Intercept", "SCAARED social (z-scored)", "Age"),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); table_age_model11_z_scored
+
+write_table_html_to_disk(
+  table_age_model11_z_scored,
+  ctrl_tables_age_passage_level
+)
+
+table_sex_model11_z_scored <-
+  tab_model(sex_model11_z_scored,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            transform = exp, # make sure it standardizes betas
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "t", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c(
+              "Intercept",
+              "SCAARED social (z-scored)",
+              "Male sex"
+            ),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); table_sex_model11_z_scored
+
+write_table_html_to_disk(
+  table_sex_model11_z_scored,
+  ctrl_tables_sex_passage_level
+)
+
+table_age_f_model24_z_scored <-
+  tab_model(age_f_model24_z_scored,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            transform = exp, # make sure it standardizes betas
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "t", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c(
+              "Intercept",
+              "Hesitation rate (z-scored)",
+              "SCAARED social (z-scored)",
+              "Age",
+              "Hesitation rate (z-scored) × SCAARED social (z-scored)"
+            ),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); table_age_f_model24_z_scored
+
+write_table_html_to_disk(
+  table_age_f_model24_z_scored,
+  ctrl_tables_age_passage_level
+)
+
+
+table_sex_f_model24_z_scored <-
+  tab_model(sex_f_model24_z_scored,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            transform = exp, # make sure it standardizes betas
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "t", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            pred.labels = c(
+              "Intercept",
+              "Hesitation rate (z-scored)",
+              "SCAARED social (z-scored)",
+              "Male sex",
+              "Hesitation rate (z-scored) × SCAARED social (z-scored)"
+            ),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); table_sex_f_model24_z_scored
+
+write_table_html_to_disk(
+  table_sex_f_model24_z_scored,
+  ctrl_tables_sex_passage_level
+)
+
 
 # save.image("~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/RWE-passage-level-with-zscoring-may-13-25.RData")
