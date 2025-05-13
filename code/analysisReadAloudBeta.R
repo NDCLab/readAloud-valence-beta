@@ -124,6 +124,7 @@ library(colorspace)
 library(insight); library(sjPlot) # tables
 library(effects)
 library(xml2) # for saving tables to disk
+library(htmlTable) # for descriptive table
 # library(colorblindr)
 
 # ```
@@ -975,6 +976,24 @@ summary(age_model2_z_scored)
 #                                    data=errorDat, REML=TRUE)
 # summary(wordfreq_model_4)
 
+# Generate descriptive stats as table
+errorDat %>%
+  select(words_with_hes_rate, words_with_misprod_rate, challengeAvgSub, scaaredSoc, bfne, sps) %>%
+  mutate(
+    across(words_with_hes_rate:challengeAvgSub,
+           ~ 100 * .)) %>%
+  reframe(
+    across(words_with_hes_rate:sps,
+           \(x) { c(mean(x), sd(x)) } )) %>%
+  mutate(
+    across(words_with_hes_rate:challengeAvgSub,
+           ~ paste0(round(., digits = 2), '%'))) %>%
+  mutate(
+    across(scaaredSoc:sps, ~ round(., 2))) %>%
+  as.data.frame %>%
+ `rownames<-`(c("Mean", "SD")) %>%
+ `colnames<-`(c("Hesitation rate", "Misproduction rate", "Comprehension accuracy", "SCAARED Social", "BFNE", "SPS")) %>%
+  htmlTableWidget()
 
 # Generate tables for core analyses
 SAVE_TABLES_TO_DISK <- FALSE # assume don't want to overwrite; change if desired
