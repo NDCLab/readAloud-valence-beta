@@ -92,9 +92,24 @@ interact_plot(model = hesitation_adjacent_misproduction_model_1_logistic_wordfre
 # in the second dataframe, we set hes_position to NA again
 # then for any row in that dataframe, for any row where any_upcoming_hesitation is TRUE, we change hes_position to 1
 
-# then we stack the two rows on top of each other
+# then we stack the two sets of rows on top of each other
+
+revisedDatLookBackwards <- revisedDatNoNAs
+revisedDatLookBackwards$hesitation_position_predictor <- if_else(
+  as.logical(revisedDatLookBackwards$any_prior_hesitation_outcome),
+  true = -1, # meaning before the syllable in question
+  false = NA)
+
+revisedDatLookBackwards$hesitation_position_predictor
 
 
+revisedDatLookForwards <- revisedDatNoNAs
+revisedDatLookForwards$hesitation_position_predictor <- if_else(
+  as.logical(revisedDatLookForwards$any_upcoming_hesitation_outcome),
+  true = 1, # meaning after the syllable in question
+  false = NA)
+revisedDatLookForwards$hesitation_position_predictor
 
+revisedDatWithPosition <- rbind(revisedDatLookBackwards, revisedDatLookForwards)
 
 
