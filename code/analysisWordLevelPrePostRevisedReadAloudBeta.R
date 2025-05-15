@@ -54,3 +54,47 @@ hesitation_adjacent_misproduction_model_1_logistic_wordfreq_with_absents_as_medi
 hesitation_adjacent_misproduction_model_1_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
   update(hesitation_adjacent_misproduction_model_1_logistic_wordfreq_with_absents_as_median_no_psg,
          control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+# now plot
+interact_plot(model = hesitation_adjacent_misproduction_model_1_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = any_adjacent_hesitation_predictor,
+              interval = TRUE,
+             #fixme x.label = "SCAARED-Social score\n(z-scored)",
+              y.label =  expression(
+                atop("Probability of misproduction",
+                     "(word-level)")),
+              # legend.main = expression(
+              #   atop("Hesitation position",
+              #        "(before or after misproduction in question)")),
+              # modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              # modx.labels = c("preceding misproduction", "following hes_position_predictor"),
+              # main.title = 'Item-Level Misproduction, Hesitation Position, and Social Anxiety'
+) # + theme(plot.title = element_text(hjust = 0.5))
+
+
+# second model
+# two observations per word, once forward and once back
+# new predictor variable is NA when there is no adjacent hesitation
+# the predictor is 1 when there IS an adjacent hesitation and it is AFTER the syllable in question
+# the predictor is -1 when there IS an adjacent hesitation and it is BEFORE the syllable in question
+# having each word as two observations accounts for the possibility that a given word might have a hesitation on both sides
+
+# so I think we double all rows
+# in theory, each row corresponds to one instance of predictor = 1 and predictor = -1
+# but for half of them, if any_prior_hesitation is false, we set the predictor to NA
+# and for the other half, if any_upcoming_hesitation, we set the predictor to NA
+
+# similar to what we did before, we can create two new variant dataframes and join them
+# one has hes_position set to NA
+# then in that dataframe, for any row where any_prior_hesitation is TRUE, we change hes_position to -1
+
+# in the second dataframe, we set hes_position to NA again
+# then for any row in that dataframe, for any row where any_upcoming_hesitation is TRUE, we change hes_position to 1
+
+# then we stack the two rows on top of each other
+
+
+
+
+
