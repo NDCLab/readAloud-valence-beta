@@ -95,21 +95,49 @@ interact_plot(model = hesitation_adjacent_misproduction_model_1_logistic_wordfre
 # then we stack the two sets of rows on top of each other
 
 revisedDatLookBackwards <- revisedDatNoNAs
-revisedDatLookBackwards$hesitation_position_predictor <- if_else(
+revisedDatLookBackwards$hesitation_position <- if_else(
   as.logical(revisedDatLookBackwards$any_prior_hesitation_outcome),
   true = -1, # meaning before the syllable in question
   false = NA)
 
-revisedDatLookBackwards$hesitation_position_predictor
+revisedDatLookBackwards$hesitation_position
 
 
 revisedDatLookForwards <- revisedDatNoNAs
-revisedDatLookForwards$hesitation_position_predictor <- if_else(
+revisedDatLookForwards$hesitation_position <- if_else(
   as.logical(revisedDatLookForwards$any_upcoming_hesitation_outcome),
   true = 1, # meaning after the syllable in question
   false = NA)
-revisedDatLookForwards$hesitation_position_predictor
+revisedDatLookForwards$hesitation_position
 
 revisedDatWithPosition <- rbind(revisedDatLookBackwards, revisedDatLookForwards)
 
+revisedDatWithPosition <-
+  differentiate_predictor_and_outcome(revisedDatWithPosition, "hesitation_position")
+revisedDatWithPosition$hesitation_position_outcome <- NULL # because unused
 
+# set up model 2
+hesitation_adjacent_misproduction_model_2_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
+  glmer(misprod_outcome ~ any_adjacent_hesitation_predictor * hesitation_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|word),
+        data=revisedDatWithPosition, family = "binomial")
+# fails, try again without the earlier predictor, because it is already encompassed by the new positional predictor
+
+hesitation_adjacent_misproduction_model_3_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
+  glmer(misprod_outcome ~ hesitation_position_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|word),
+        data=revisedDatWithPosition, family = "binomial")
+
+# raise # of iterations
+hesitation_adjacent_misproduction_model_3_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
+  update(hesitation_adjacent_misproduction_model_3_logistic_wordfreq_with_absents_as_median_no_psg,
+         control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+# now plot
+interact_plot(model = hesitation_adjacent_misproduction_model_3_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = hesitation_position_predictor,
+              interval = TRUE,
+              #fixme x.label = "SCAARED-Social score\n(z-scored)",
+              y.label =  expression(
+                atop("Probability of misproduction",
+                     "(word-level)")),
+)
