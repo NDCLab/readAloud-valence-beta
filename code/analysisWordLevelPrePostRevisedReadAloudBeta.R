@@ -230,5 +230,20 @@ revisedDatWithPositionAlt %>%
 # set up model 3
 hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
   glmer(misprod_outcome ~ adjacent_hesitation_present_in_direction_looked * direction_searched_for_potential_hesitation * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|word),
-        data=revisedDatWithPositionAlt, family = "binomial")
+        data=revisedDatWithPositionAlt, family = "binomial") # does not converge
 
+# raise # of iterations
+hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
+  update(hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg,
+         control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+# now plot at least initially
+interact_plot(model = hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = adjacent_hesitation_present_in_direction_looked,
+              modx = direction_searched_for_potential_hesitation,
+              interval = TRUE,
+              #fixme x.label = "SCAARED-Social score\n(z-scored)",
+              y.label =  expression(
+                atop("Probability of misproduction",
+                     "(word-level)")),
+)
