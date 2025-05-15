@@ -180,3 +180,55 @@ interact_plot(model = hesitation_adjacent_misproduction_model_3_logistic_wordfre
                 atop("Probability of misproduction",
                      "(word-level)")),
 )
+
+# third model attempt
+# two observations per word, once forward and once back
+# hesitationLocation, which is identical to hes_position in original batch of models
+# (always -1 for looking backwards, always +1 for looking forwards)
+# I want to name it direction_searched_for_potential_hesitations, because it is defined even when there is no adjacent hesitation
+
+# when direction_searched_for_potential_hesitations is +1,
+# adjacent_hesitation_present_in_direction_looked is equal to any_upcoming_hesitation
+
+# when direction_searched_for_potential_hesitations is -1,
+# adjacent_hesitation_present_in_direction_looked is equal to any_prior_hesitation
+
+
+# similar to what we did before, we can create two new variant dataframes and join them
+# then we stack the two sets of rows on top of each other
+
+revisedDatLookBackwardsPositional <- revisedDatNoNAs
+revisedDatLookForwardsPositional <- revisedDatNoNAs
+
+revisedDatLookBackwardsPositional$direction_searched_for_potential_hesitation <- -1 # before word in question
+revisedDatLookForwardsPositional$direction_searched_for_potential_hesitation <- 1 # after word in question
+
+# for lookback  instances of each original observation (word), adjacent_hesitation_present_in_direction_looked is just any_prior_hesitation
+# for lookahead instances of each original observation (word), adjacent_hesitation_present_in_direction_looked is just any_upcoming_hesitation
+
+revisedDatLookBackwardsPositional$adjacent_hesitation_present_in_direction_looked <- revisedDatLookBackwardsPositional$any_prior_hesitation_predictor
+revisedDatLookForwardsPositional$adjacent_hesitation_present_in_direction_looked  <- revisedDatLookForwardsPositional$any_upcoming_hesitation_predictor
+
+# combine
+revisedDatWithPositionAlt <- rbind(revisedDatLookBackwardsPositional, revisedDatLookForwardsPositional)
+
+
+# want to explore?
+revisedDatWithPositionAlt %>%
+  slice_sample(n = 200) %>%
+  select(direction_searched_for_potential_hesitation,
+         adjacent_hesitation_present_in_direction_looked,
+         any_upcoming_hesitation_predictor,
+         any_prior_hesitation_predictor,
+         misprod_outcome,
+         any_adjacent_hesitation_predictor) %>%
+  View()
+
+# then we would just have to differentiate predictors and outcomes, but
+# unnecessary because all the new variables created will only ever be predictors
+
+# set up model 3
+hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
+  glmer(misprod_outcome ~ adjacent_hesitation_present_in_direction_looked * direction_searched_for_potential_hesitation * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|word),
+        data=revisedDatWithPositionAlt, family = "binomial")
+
