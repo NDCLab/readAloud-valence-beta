@@ -60,17 +60,20 @@ interact_plot(model = hesitation_adjacent_misproduction_model_1_logistic_wordfre
               pred = log10frequency_with_absents_as_median_z,
               modx = any_adjacent_hesitation_predictor,
               interval = TRUE,
-             #fixme x.label = "SCAARED-Social score\n(z-scored)",
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                             "(lower = more rare)")),
               y.label =  expression(
                 atop("Probability of misproduction",
                      "(word-level)")),
-              # legend.main = expression(
-              #   atop("Hesitation position",
+              legend.main = # expression(
+              #  atop(
+               "Adjacent hesitation (within 5 words)",
               #        "(before or after misproduction in question)")),
-              # modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
-              # modx.labels = c("preceding misproduction", "following hes_position_predictor"),
-              # main.title = 'Item-Level Misproduction, Hesitation Position, and Social Anxiety'
-) # + theme(plot.title = element_text(hjust = 0.5))
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no adjacent hesitation", "adjacent hesitation"),
+              main.title = 'Item-Level Misproduction, Adjacent Hesitation, and Word Frequency'
+) + theme(plot.title = element_text(hjust = 0.5))
 
 
 # second model
