@@ -340,3 +340,49 @@ interact_plot(model = hesitation_adjacent_misproduction_model_4_logistic_wordfre
   #             mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
   #             main.title = "Item-Level Misproduction, Word Frequency, Hesitation Position, and Social Anxiety") +
   # theme(plot.title = element_text(hjust = 0.5))
+
+
+# make table
+hesitation_adjacent_misproduction_table_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
+  tab_model(hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+            show.est = TRUE, # estimates
+            string.est = "β", # ...which it will transform by default, (i.e. standardize, by way of `exp`). In the manuscript we clarify that standardized is the default when not explicitly specified otherwise. This is easy to verify, e.g. exp(-0.44) gives 0.6440364, which is exactly what the table will print by default. (where -0.44 is the "raw" estimate shown in the output of summary(model_name))
+            show.se = TRUE,
+            string.se = "SE",
+            std.response = TRUE, # trying with this: don't restandardize what we already did
+            show.stat = TRUE, # test statistic
+            string.stat = "z", # determined per model output
+            show.df = TRUE, # degrees of freedom, Kenward-Rogers approximation
+            p.style = "numeric_stars",
+            show.r2 = FALSE,
+            show.icc = FALSE,
+            show.ngroups = FALSE,
+            show.dev = FALSE,
+            show.re.var = FALSE,
+            show.obs = FALSE,
+            pred.labels = c(
+              "Intercept",
+              "Presence of hesitation in relevant adjacent window",
+              "Direction looked for presence of adjacent hesitation = forwards",
+              "Word frequency",
+              "SCAARED social (z-scored)",
+              "Presence of hesitation in relevant adjacent window × Direction looked for presence of adjacent hesitation = forwards",
+              "Presence of hesitation in relevant adjacent window × Word frequency",
+              "Direction looked for presence of adjacent hesitation = forwards × Word frequency",
+              "Presence of hesitation in relevant adjacent window × SCAARED social (z-scored)",
+              "Direction looked for presence of adjacent hesitation = forwards × SCAARED social (z-scored)",
+              "Word frequency × SCAARED social (z-scored)",
+              "Presence of hesitation in relevant adjacent window × Direction looked for presence of adjacent hesitation = forwards × Word frequency",
+              "Presence of hesitation in relevant adjacent window × Direction looked for presence of adjacent hesitation = forwards × SCAARED social (z-scored)",
+              "Presence of hesitation in relevant adjacent window × Word frequency × SCAARED social (z-scored)",
+              "Direction looked for presence of adjacent hesitation = forwards × Word frequency × SCAARED social (z-scored)",
+              "Presence of hesitation in relevant adjacent window × Direction looked for presence of adjacent hesitation = forwards × Word frequency × SCAARED social (z-scored)"
+            ),
+            dv.labels = "",
+            col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
+                          "stat", "p", "est", "response.level")); hesitation_adjacent_misproduction_table_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa
+
+write_table_html_to_disk(
+  hesitation_adjacent_misproduction_table_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+  tables_core_pre_post
+)
