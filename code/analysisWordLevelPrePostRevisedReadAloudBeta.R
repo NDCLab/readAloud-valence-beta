@@ -211,6 +211,7 @@ revisedDatLookForwardsPositional$adjacent_hesitation_present_in_direction_looked
 
 # combine
 revisedDatWithPositionAlt <- rbind(revisedDatLookBackwardsPositional, revisedDatLookForwardsPositional)
+revisedDatWithPositionAltTesting$direction_searched_for_potential_hesitation <- differentiate_predictor_and_outcome(revisedDatWithPositionAltTesting, "direction_searched_for_potential_hesitation")
 
 
 # want to explore?
@@ -227,6 +228,12 @@ revisedDatWithPositionAlt %>%
 # then we would just have to differentiate predictors and outcomes, but
 # unnecessary because all the new variables created will only ever be predictors
 
+revisedDatWithPositionAltTesting <- revisedDatWithPositionAlt
+
+
+revisedDatWithPositionAltTesting <- differentiate_predictor_and_outcome(revisedDatWithPositionAltTesting, "direction_searched_for_potential_hesitation")
+
+
 # set up model 3
 hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
   glmer(misprod_outcome ~ adjacent_hesitation_present_in_direction_looked * direction_searched_for_potential_hesitation * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|word),
@@ -238,12 +245,82 @@ hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_medi
          control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
 
 # now plot at least initially
-interact_plot(model = hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
-              pred = adjacent_hesitation_present_in_direction_looked,
-              modx = direction_searched_for_potential_hesitation,
+cat_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = "adjacent_hesitation_present_in_direction_looked",
+              modx = "direction_searched_for_potential_hesitation_predictor",
               interval = TRUE,
               #fixme x.label = "SCAARED-Social score\n(z-scored)",
-              y.label =  expression(
-                atop("Probability of misproduction",
-                     "(word-level)")),
 )
+
+# alt plot: non-sig adjacent_hesitation_present_in_direction_looked x direction_searched_for_potential_hesitation x freq
+
+
+# factorize and try again
+hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
+  glmer(misprod_outcome ~ adjacent_hesitation_present_in_direction_looked * direction_searched_for_potential_hesitation_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + (1|id) + (1|word),
+        data=revisedDatWithPositionAltTesting, family = "binomial") # does not converge
+
+# raise # of iterations
+hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
+  update(hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg,
+         control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+
+
+interact_plot(model = hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = adjacent_hesitation_present_in_direction_looked,
+              mod2 = direction_searched_for_potential_hesitation,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")),
+              y.label = expression(
+                atop('Probability of misproduction',
+                     '(word-level)')),
+              legend.main = 'Hesitation presence/absence in direction looked',
+              modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("no hesitation in direction looked", "hesitation in direction looked"),
+              mod2.values = factor(c(-1, 1)),
+              mod2.labels = c("Looking backwards for hesitations", "Looking forwards for hesitations")
+
+
+
+)
+
+# or switch 'em
+interact_plot(model = hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = direction_searched_for_potential_hesitation,
+              mod2 = adjacent_hesitation_present_in_direction_looked,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = rarer)")),
+              y.label = expression(
+                atop('Probability of misproduction',
+                     '(word-level)')),
+              legend.main = 'Direction looked for hesitation presence/absence',
+              modx.values = c(-1, 1), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+              modx.labels = c("backwards", "forwards"),
+           mod2.values = factor(c(-1,1)),
+           mod2.labels = c('No hesitation in direction looked', 'Hesitation in direction looked')
+
+
+              # to try
+              # legend.main = expression(
+              # atop("Direction looked for nearby hesitation",
+              #      "(before or after word in question)")),
+#modx.values = factor(c(1, -1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+#modx.labels = c("forwards", "backwards")
+)
+
+              # fixme: below are from another model just for reference re: structuring call to interact_plot
+  #             legend.main = expression(
+  #               atop("Hesitation position",
+  #                    "(before or after misproduction in question)")),
+  #             modx.values = factor(c(-1, 1)), # implicit, but specifying s.t. labels are guaranteed to align with the right value
+  #             modx.labels = c("preceding misproduction", "following misproduction"),
+  #             mod2.labels = c("Mean SCAARED-Social score - 1 SD", "Mean SCAARED-Social score", "Mean SCAARED-Social score + 1 SD"),
+  #             main.title = "Item-Level Misproduction, Word Frequency, Hesitation Position, and Social Anxiety") +
+  # theme(plot.title = element_text(hjust = 0.5))
