@@ -421,3 +421,78 @@ write_table_html_to_disk(
   hesitation_adjacent_misproduction_table_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
   tables_core_pre_post
 )
+
+
+# attempt to identify post-hoc contrasts for the interaction
+# credit to @jessb0t
+library(openxlsx)
+model_pre_post <- hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa
+summary_pre_post <- summary(model_pre_post)
+
+em_pre_post_presence_of_adj_hes <-
+  emmeans(model_pre_post,
+          pairwise ~ adjacent_hesitation_present_in_direction_looked,
+          adjust="fdr", pbkrtest.limit = 4000)
+
+em_pre_post_direction_searched <-
+  emmeans(model_pre_post,
+          pairwise ~ direction_searched_for_potential_hesitation_predictor,
+          adjust="fdr", pbkrtest.limit = 4000)
+
+em_pre_post_presence_of_adj_hes_x_direction_searched <-
+  emmeans(model_pre_post,
+          pairwise ~ adjacent_hesitation_present_in_direction_looked|direction_searched_for_potential_hesitation_predictor,
+          adjust="fdr", pbkrtest.limit = 4000)
+
+em_pre_post_direction_searched_x_presence_of_adj_hes <-
+  emmeans(model_pre_post,
+          pairwise ~ direction_searched_for_potential_hesitation_predictor|adjacent_hesitation_present_in_direction_looked,
+          adjust="fdr", pbkrtest.limit = 4000)
+
+workbook <- createWorkbook()
+addWorksheet(workbook, sheetName="model-summary")
+writeData(workbook,
+          sheet="model-summary",
+          summary_pre_post$coefficients,
+          rowNames=TRUE)
+
+addWorksheet(workbook, sheetName="emmeans-presence_of_adj_hes")
+writeData(workbook,
+          sheet="emmeans-presence_of_adj_hes",
+          em_pre_post_presence_of_adj_hes$contrasts,
+          rowNames=TRUE)
+
+addWorksheet(workbook, sheetName="emmeans-direction_searched")
+writeData(workbook,
+          sheet="emmeans-direction_searched",
+          em_pre_post_direction_searched$contrasts,
+          rowNames=TRUE)
+
+addWorksheet(workbook, sheetName="emmeans-presadjhesXdirsearched")
+writeData(workbook, sheet="emmeans-presadjhesXdirsearched",
+          em_pre_post_presence_of_adj_hes_x_direction_searched$contrasts,
+          rowNames=TRUE)
+
+addWorksheet(workbook, sheetName="emmeans-dirsearchedXpresadjhes")
+writeData(workbook,
+          sheet="emmeans-dirsearchedXpresadjhes",
+          em_pre_post_direction_searched_x_presence_of_adj_hes$contrasts,
+          rowNames=TRUE)
+
+# addWorksheet(workbook, sheetName="summary-stats-pre-post")
+# writeData(workbook,
+#           sheet="summary-stats-emo",
+#           dfT_acc_emo,
+#           rowNames=TRUE)
+#
+# addWorksheet(workbook, sheetName="summary-stats-chnsxemo")
+# writeData(workbook,
+#           sheet="summary-stats-chnsxemo",
+#           dfT_acc_speaker_mean,
+#           rowNames=TRUE)
+
+saveWorkbook(workbook,
+             paste0(results_path,
+                   "/tables/summary_pre_post_",
+                   Sys.Date(), ".xlsx",
+                   collapse=NULL))
