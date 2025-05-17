@@ -252,21 +252,37 @@ cat_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfreq_wit
          modx = "direction_searched_for_potential_hesitation_predictor",
          interval = TRUE,
               #fixme x.label = "SCAARED-Social score\n(z-scored)",
-         modx.labels = c("behind word in question", "ahead of word in question"),
+         modx.labels = c("before word in question", "after word in question"),
          modx.values = factor(c(-1, 1)),
          legend.main = 'Direction looked for hesitation presence/absence',
          y.label = expression(
            atop('Probability of misproduction',
                 '(word-level)')),
-         geom = 'bar',
-
+       # geom = 'bar',
+         geom = 'line',
          pred.values = factor(c(-1,1)),
          pred.labels = c('No adjacent hesitation\nin direction looked', 'Adjacent hesitation\nin direction looked'),
          x.label = 'Hesitation presence/absence in direction looked',
-
-
-
 )
+
+# other format
+interact_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+              pred = "adjacent_hesitation_present_in_direction_looked",
+              modx = "direction_searched_for_potential_hesitation_predictor",
+              interval = TRUE,
+              #fixme x.label = "SCAARED-Social score\n(z-scored)",
+              modx.labels = c("before word in question", "after word in question"),
+              modx.values = factor(c(-1, 1)),
+              legend.main = 'Direction looked for hesitation presence/absence',
+              y.label = expression(
+                atop('Probability of misproduction',
+                     '(word-level)')),
+              # geom = 'bar',
+              geom = 'line', # line.thickness = 0,
+              pred.values = factor(c(-1,1)),
+              pred.labels = c('No adjacent hesitation\nin direction looked', 'Adjacent hesitation\nin direction looked'),
+              x.label = 'Hesitation presence/absence in direction looked', point.shape = TRUE,
+) + scale_x_discrete(labels=c('No adjacent hesitation\nin direction looked', 'Adjacent hesitation\nin direction looked'))
 
 # alt plot: non-sig adjacent_hesitation_present_in_direction_looked x direction_searched_for_potential_hesitation x freq
 
