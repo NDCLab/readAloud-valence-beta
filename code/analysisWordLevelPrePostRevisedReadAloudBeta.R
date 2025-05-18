@@ -306,7 +306,7 @@ interact_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfre
               #fixme x.label = "SCAARED-Social score\n(z-scored)",
               modx.labels = c('Hesitation present', 'Hesitation absent'),
               modx.values = factor(c(1, -1)),
-              legend.main = 'Hesitation presence/absence in direction looked',
+              legend.main = 'Hesitation presence/absence',
               y.label = expression(
                 atop('Probability of misproduction',
                      '(word-level)')),

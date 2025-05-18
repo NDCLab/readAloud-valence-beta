@@ -1,6 +1,6 @@
 # readAloud-valence-beta Reading Task Analyses
 # Authors: Luc Sahar, Jessica M. Alexander
-# Last Updated: 2024-11-10
+# Last Updated: 2025-05-17
 
 # INPUTS
 # data/df: behavioral data, for each participant on each passage, with relevant participant information and trial-level stimulus information
@@ -491,6 +491,7 @@ plot_lmer <- function(model, predictor, outcome, xlab = predictor, ...) {
 }
 
 
+
 #misprod_rate x bfne
 # model1 <- lmerTest::lmer(misprod_rate ~ bfne_gmc + (1|id) + (1|passage),
 #                          data=errorDat, REML=TRUE)
@@ -569,6 +570,38 @@ plot_lmer(model11_z_scored,
           outcome = 'Rate of hesitations per word\n(z-scored)',
           xlab = 'SCAARED-Social Score\n(z-scored)',
           main = 'Social Anxiety Severity and Rate of Hesitation')
+
+# alt
+plot_model(model11_z_scored,
+           type = "pred",
+           terms = "scaaredSoc_z",
+           colors = "#4b9bc7"
+) + theme(
+  plot.title = element_text(size = 18),
+  text = element_text(size = 16),
+) + # geom_line(size = 2) +
+  theme_bw() +
+  scale_color_manual(values = c("blue")) +
+  theme(plot.title = element_text(size = 18),
+        text = element_text(size = 16),
+        panel.border = element_blank(),
+        panel.grid = element_line(linewidth = 0.6, linetype = 'dashed'),
+        panel.grid.minor = element_blank(),
+        axis.line.x = element_line(linewidth = 0.6, linetype = 'dashed', color = '#bbbbbb60'),
+        axis.ticks.x = element_blank()
+        #  plot.background = element_rect(color = '#ffffff')
+        # rect = element_blank() #element_rect(fill = 'white')
+  ) +
+  labs(title = 'Social Anxiety Severity and Rate of Hesitation') +
+  theme(plot.title = element_text(face = 'bold')) +
+  xlab('SCAARED-Social Score\n(z-scored)') +
+  ylab('Rate of hesitations per word\n(z-scored)') +
+ # scale_x_continuous(breaks = -1:5) +
+  scale_x_continuous(breaks = c(-1, -0.5, 0, 0.5, 1, 1.5, 2)) +
+  theme(plot.title = element_text(hjust = 0.05))
+
+
+
 
 # same, controlling for sex:
 sex_model11_z_scored <- lmerTest::lmer(words_with_hes_rate_z ~ scaaredSoc_z + sex + (1|id) + (1|passage),
@@ -812,6 +845,38 @@ interact_plot(model = f_model24_z_scored,
                 atop('Rate of misproductions per word', '(z-scored)')),
               legend.main = "SCAARED-Social score\n(z-scored)",
               main.title = "Rate of Hesitation, Social Anxiety Severity, and Rate of Misproduction")
+
+# alt: don't plot interaction; up font
+
+plot_model(f_model24_z_scored,
+           type = "pred",
+           terms = "words_with_hes_rate_z",
+           colors = "#4b9bc7"
+) + theme(
+  plot.title = element_text(size = 18),
+  text = element_text(size = 16),
+) + # geom_line(size = 2) +
+  theme_bw() +
+  scale_color_manual(values = c("blue")) +
+  theme(plot.title = element_text(size = 18),
+        text = element_text(size = 16),
+        panel.border = element_blank(),
+        panel.grid = element_line(linewidth = 0.6, linetype = 'dashed'),
+        panel.grid.minor = element_blank(),
+        axis.line.x = element_line(linewidth = 0.6, linetype = 'dashed', color = '#bbbbbb60'),
+        axis.ticks.x = element_blank()
+      #  plot.background = element_rect(color = '#ffffff')
+        # rect = element_blank() #element_rect(fill = 'white')
+        ) +
+  labs(title = 'Rate of Hesitation and Rate of Misproduction') +
+  theme(plot.title = element_text(face = 'bold')) +
+  xlab('Rate of hesitations per word\n(z-scored)') +
+  ylab('Rate of misproductions per word\n(z-scored)') +
+  scale_x_continuous(breaks = -1:5) +
+  scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2)) +
+  theme(plot.title = element_text(hjust = 0.05))
+
+
 
 # same, controlling for sex:
 sex_f_model24_z_scored <-  lmerTest::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z * scaaredSoc_z + sex + (1|id) + (1|passage),

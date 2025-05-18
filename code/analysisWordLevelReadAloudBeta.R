@@ -1341,13 +1341,28 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
               interval = TRUE,
               x.label = expression(
                 atop("log"['10']*" word frequency",
-                     "(lower = rarer)")),
+                     "(lower = more rare)")),
               y.label =  expression(
                 atop("Probability of misproduction",
                      "(word-level)")),
               legend.main = "SCAARED-Social score\n(z-scored)",
               main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Misproductions") +
   theme(plot.title = element_text(hjust = 0.5))
+
+# alt plot
+interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+              pred = log10frequency_with_absents_as_median_z,
+              modx = scaaredSoc_z,
+              interval = TRUE,
+              x.label = expression(
+                atop("log"['10']*" word frequency",
+                     "(lower = more rare)")),
+              y.label =  expression(
+                atop("Probability of misproduction",
+                     "(word-level)")),
+              legend.main = "SCAARED-Social score\n(z-scored)",
+              main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Misproductions") +
+  theme(plot.title = element_text(hjust = -2, size = 18), text = element_text(size = 16))
 
 
 # misprod ~ wf x SA, control for age
