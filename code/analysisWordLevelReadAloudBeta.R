@@ -126,6 +126,9 @@ library(insight); library(sjPlot) # tables
 library(effects)
 library(xml2) # for saving tables to disk
 # library(colorblindr)
+library(MetBrewer)
+library(RColorBrewer)
+
 
 #set up date for output file naming
 today <- Sys.Date()
@@ -666,6 +669,14 @@ if(DEBUG) { # compare to how it was/would've been before splitting outcome and p
   summary(wrong_model2.5)
 }
 
+#helper functions
+digit_display <- function(number) { # to 4 decimal places if < 0.001 else just 3
+  ifelse(abs(number) < 0.001, "%.4f", "%.3f") %>% sprintf(number)
+}
+
+tinyps <- function(pval) {
+  ifelse(pval < 0.001, "< 0.001", paste0("= ", round(pval, 3)))
+}
 
 
 # n.s.

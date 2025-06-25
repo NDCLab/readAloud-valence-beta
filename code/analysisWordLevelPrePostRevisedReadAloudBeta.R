@@ -303,6 +303,7 @@ interact_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfre
               modx = "adjacent_hesitation_present_in_direction_looked",
               pred = "direction_searched_for_potential_hesitation_predictor",
               interval = TRUE,
+              colors = "Qual2",
               #fixme x.label = "SCAARED-Social score\n(z-scored)",
               modx.labels = c('Hesitation present', 'Hesitation absent'),
               modx.values = factor(c(1, -1)),
@@ -422,6 +423,28 @@ write_table_html_to_disk(
   tables_core_pre_post
 )
 
+
+# control analyses
+sex_hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
+  glmer(misprod_outcome ~ adjacent_hesitation_present_in_direction_looked * direction_searched_for_potential_hesitation_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + sex + (1|id) + (1|word),
+        data=revisedDatWithPositionAltTesting, family = "binomial") # does not converge
+
+# raise # of iterations
+sex_hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
+  update(sex_hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg,
+         control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+## to run
+age_hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg <- # starting sans passage because prior model with fewer predictors still did not initially converge
+  glmer(misprod_outcome ~ adjacent_hesitation_present_in_direction_looked * direction_searched_for_potential_hesitation_predictor * log10frequency_with_absents_as_median_z * scaaredSoc_z + age + (1|id) + (1|word),
+        data=revisedDatWithPositionAltTesting, family = "binomial") # does not converge
+
+
+age_hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa <-
+  update(age_hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg,
+         control = glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 1e9)))
+
+save.image("~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/RWE-item-level-with-zscoring-logistic-and-pre-post-and-control-analyses-may-29-25.RData")
 
 # attempt to identify post-hoc contrasts for the interaction
 # credit to @jessb0t

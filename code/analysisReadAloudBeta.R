@@ -126,6 +126,8 @@ library(effects)
 library(xml2) # for saving tables to disk
 library(htmlTable) # for descriptive table
 # library(colorblindr)
+library(MetBrewer)
+library(RColorBrewer)
 
 # ```
 # Warning in install.packages :
@@ -490,6 +492,32 @@ plot_lmer <- function(model, predictor, outcome, xlab = predictor, ...) {
        ...)
 }
 
+# visual details
+rwe_palette <- brewer.pal(4, "Purples")
+rwe_palette <- colorRampPalette(rwe_palette)(17)
+rwe_palette <- rwe_palette[4:17]
+
+# helpers
+
+#helper functions
+digit_display <- function(number){
+  if(abs(number)<0.001){
+    x <- sprintf("%.4f", number)
+  }else{
+    x <- sprintf("%.3f", number)
+  }
+  return (x) #this is a string
+}
+
+tinyps <- function(pval){
+  if(pval < 0.001){
+    x = "< 0.001"
+  }else {
+    tmp <- round(pval,3)
+    x = paste("= ", as.character(tmp), sep="")
+  }
+  return (x) #this is a string
+}
 
 
 #misprod_rate x bfne
@@ -575,13 +603,15 @@ plot_lmer(model11_z_scored,
 plot_model(model11_z_scored,
            type = "pred",
            terms = "scaaredSoc_z",
-           colors = "#4b9bc7"
+           colors = "mediumpurple2"
+         # colors = rwe_palette
 ) + theme(
   plot.title = element_text(size = 18),
   text = element_text(size = 16),
 ) + # geom_line(size = 2) +
-  theme_bw() +
-  scale_color_manual(values = c("blue")) +
+ theme_bw() +
+# scale_color_manual(values = c("plum3")) +
+# scale_color_manual(values = rwe_palette)
   theme(plot.title = element_text(size = 18),
         text = element_text(size = 16),
         panel.border = element_blank(),
@@ -599,6 +629,69 @@ plot_model(model11_z_scored,
  # scale_x_continuous(breaks = -1:5) +
   scale_x_continuous(breaks = c(-1, -0.5, 0, 0.5, 1, 1.5, 2)) +
   theme(plot.title = element_text(hjust = 0.05))
+
+
+# Jess' version
+plot_fig_2 <- function() {
+  coefsmodel11z <- summary(model11_z_scored)$coef
+  cis <- confint(model11_z_scored)
+  b0 <- coefsmodel11z[1]
+  b1 <- coefsmodel11z[2]
+  se <- coefsmodel11z[4]
+
+  #bootstrap ci ribbon
+  iterations = 1000
+  a <- tibble(i=rep(1:iterations,))
+  a <- mutate(a, intercept=NA, beta=NA)
+  for(i in 1:nrow(a)){
+    rows <- sample(1:nrow(errorDat), nrow(errorDat), replace=TRUE)
+    df <- errorDat[rows, c('id', 'passage', 'scaaredSoc_z', 'words_with_hes_rate_z')]
+    mdl <- lme4::lmer(words_with_hes_rate_z ~ scaaredSoc_z + (1|id) + (1|passage),
+                      data=df, REML=TRUE, control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+    a[i,2] <- lme4::fixef(mdl)[1]
+    a[i,3] <- lme4::fixef(mdl)[2]
+  }
+
+
+  #create df for annotation
+  label_text <- data.frame(
+    label = c(paste("\u03b2 = ", digit_display(b1),
+                    "\nSE = ", digit_display(se),
+                    "\nCI = [", digit_display(cis[5,1]), " - ", digit_display(cis[5,2]), "]",
+                    "\np ", tinyps(coefsmodel11z[10]), sep="")),
+    scaaredSoc_z = c(-1.1),
+    #words_with_hes_rate_z = c(4.5)) #location for plot with all datapoints
+    words_with_hes_rate_z = c(0.75)) #location for plot with limited y-axis
+
+  #plot
+  p <- ggplot(errorDat, aes(x=scaaredSoc_z, y=words_with_hes_rate_z)) +
+    geom_jitter(aes(color=factor(scaaredSoc)), alpha=0.5, width=0.05, show.legend=FALSE) +
+    scale_color_manual(values=rwe_palette)
+
+  for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
+    p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette[3], alpha=0.1)
+  }
+
+  p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette[14], linewidth=1) +
+    guides(color=FALSE, shape=FALSE) +
+    geom_label(data=label_text, aes(x=scaaredSoc_z, y=words_with_hes_rate_z, label=label), size=3) +
+    ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
+    theme_bw() +
+    theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),
+          text = element_text(size=16),
+          panel.border = element_blank(),
+          panel.grid = element_line(linewidth=0.6, linetype='dashed'),
+          panel.grid.minor = element_blank(),
+          axis.line.x = element_line(linewidth=0.6, linetype='dashed', color='#bbbbbb60'),
+          axis.ticks.x = element_blank()) +
+    labs(title="Social Anxiety Symptoms × Hesitation Rate",
+         x="SCAARED-Social Score\n(z-scored)",
+         y="Rate of Hesitations\n(per word, z-scored)")
+  return(p)
+}
+
+#save file (adjust width/height as needed)
+ggsave(file.path(outpath, "fig2.jpg"), plot=plot_fig_2(), width=8, height=5, units="in")
 
 
 
@@ -875,6 +968,75 @@ plot_model(f_model24_z_scored,
   scale_x_continuous(breaks = -1:5) +
   scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2)) +
   theme(plot.title = element_text(hjust = 0.05))
+
+# Jess' version, wip
+plot_fig_3 <- function() {
+  # determine degrees of purple needed for this variable
+  rwe_palette_custom <- brewer.pal(4, "Purples")
+  number_of_values <-
+    pull(errorDat, words_with_hes_rate_z) %>%
+    unique %>%
+    length
+
+  rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
+  rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
+
+  coefsmodel11z <- summary(f_model24_z_scored)$coef
+  cis <- confint(f_model24_z_scored)
+  b0 <- coefsmodel11z[1]
+  b1 <- coefsmodel11z[2]
+  se <- coefsmodel11z[4]
+
+  #bootstrap ci ribbon
+  iterations = 1000
+  a <- tibble(i=rep(1:iterations,))
+  a <- mutate(a, intercept=NA, beta=NA)
+  for(i in 1:nrow(a)){
+    rows <- sample(1:nrow(errorDat), nrow(errorDat), replace=TRUE)
+    df <- errorDat[rows, c('id', 'passage', 'words_with_hes_rate_z', 'words_with_misprod_rate_z')]
+    mdl <- lme4::lmer(words_with_misprod_rate_z ~ words_with_hes_rate_z + (1|id) + (1|passage),
+                      data=df, REML=TRUE, control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+    a[i,2] <- lme4::fixef(mdl)[1]
+    a[i,3] <- lme4::fixef(mdl)[2]
+  }
+
+
+  #create df for annotation
+  label_text <- data.frame(
+    label = c(paste("\u03b2 = ", digit_display(b1),
+                    "\nSE = ", digit_display(se),
+                    "\nCI = [", digit_display(cis[5,1]), " - ", digit_display(cis[5,2]), "]",
+                    "\np ", tinyps(coefsmodel11z[10]), sep="")),
+    words_with_hes_rate_z = c(-1.1),
+    words_with_misprod_rate_z = c(0.75)) #location for plot with limited y-axis
+
+  #plot
+  p <- ggplot(errorDat, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z)) +
+    geom_jitter(aes(color=factor(words_with_hes_rate_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
+    scale_color_manual(values=rwe_palette_custom)
+
+  for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
+    p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette_custom[3], alpha=0.1)
+  }
+
+  p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette_custom[number_of_values], linewidth=1) +
+    guides(color=FALSE, shape=FALSE) +
+    geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z, label=label), size=3) +
+    ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
+    theme_bw() +
+    theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),
+          text = element_text(size=16),
+          panel.border = element_blank(),
+          panel.grid = element_line(linewidth=0.6, linetype='dashed'),
+          panel.grid.minor = element_blank(),
+          axis.line.x = element_line(linewidth=0.6, linetype='dashed', color='#bbbbbb60'),
+          axis.ticks.x = element_blank()) +
+    labs(title="Hesitation Rate × Misproduction Rate",
+         x="Rate of Hesitations\n(per word, z-scored)",
+         y="Rate of Misproductions\n(per word, z-scored)")
+  return(p)
+}
+ggsave(file.path(outpath, "fig3.jpg"), plot=plot_fig_3(), width=8, height=5, units="in")
 
 
 
