@@ -128,6 +128,7 @@ library(htmlTable) # for descriptive table
 # library(colorblindr)
 library(MetBrewer)
 library(RColorBrewer)
+library(merDeriv)
 
 # ```
 # Warning in install.packages :
@@ -633,11 +634,17 @@ plot_model(model11_z_scored,
 
 # Jess' version
 plot_fig_2 <- function() {
-  coefsmodel11z <- summary(model11_z_scored)$coef
-  cis <- confint(model11_z_scored)
-  b0 <- coefsmodel11z[1]
-  b1 <- coefsmodel11z[2]
-  se <- coefsmodel11z[4]
+
+  # fixme
+  # coefsmodel11z <- summary(model11_z_scored)$coef
+  # cis <- confint(model11_z_scored)
+  # b0 <- coefsmodel11z[1]
+  # b1 <- coefsmodel11z[2]
+  # se <- coefsmodel11z[4]
+  m2_params <- parameters::model_parameters(model11_z_scored)
+  b0 <- m2_params$Coefficient[1]
+  b1 <- m2_params$Coefficient[2]
+  se <- m2_params$SE[2] # also confirm we use this
 
   #bootstrap ci ribbon
   iterations = 1000
@@ -652,13 +659,20 @@ plot_fig_2 <- function() {
     a[i,3] <- lme4::fixef(mdl)[2]
   }
 
+  ll <- mean(a$beta) - (2 * sd(a$beta))
+  ul <- mean(a$beta) + (2 * sd(a$beta))
+
+  print(sum(a$beta<ul & a$beta>ll))
+  #sum(a$beta<ul & a$beta>ll) #this should be ~950 if iterations=1000
+
+  a <- filter(a, beta<ul & beta>ll)
 
   #create df for annotation
   label_text <- data.frame(
-    label = c(paste("\u03b2 = ", digit_display(b1),
-                    "\nSE = ", digit_display(se),
-                    "\nCI = [", digit_display(cis[5,1]), " - ", digit_display(cis[5,2]), "]",
-                    "\np ", tinyps(coefsmodel11z[10]), sep="")),
+    # label = c(paste("\u03b2 = ", digit_display(b1),
+    #                 "\nSE = ", digit_display(se),
+    #                 "\nCI = [", digit_display(cis[5,1]), " - ", digit_display(cis[5,2]), "]",
+    #                 "\np ", tinyps(coefsmodel11z[10]), sep="")),
     scaaredSoc_z = c(-1.1),
     #words_with_hes_rate_z = c(4.5)) #location for plot with all datapoints
     words_with_hes_rate_z = c(0.75)) #location for plot with limited y-axis
@@ -674,7 +688,8 @@ plot_fig_2 <- function() {
 
   p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette[14], linewidth=1) +
     guides(color=FALSE, shape=FALSE) +
-    geom_label(data=label_text, aes(x=scaaredSoc_z, y=words_with_hes_rate_z, label=label), size=3) +
+    # geom_label(data=label_text,
+    #            aes(x=scaaredSoc_z, y=words_with_hes_rate_z), size=3) +
     ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
     theme_bw() +
     theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),
@@ -972,20 +987,24 @@ plot_model(f_model24_z_scored,
 # Jess' version, wip
 plot_fig_3 <- function() {
   # determine degrees of purple needed for this variable
-  rwe_palette_custom <- brewer.pal(4, "Purples")
-  number_of_values <-
-    pull(errorDat, words_with_hes_rate_z) %>%
-    unique %>%
-    length
-
-  rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
-  rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
-
-  coefsmodel11z <- summary(f_model24_z_scored)$coef
-  cis <- confint(f_model24_z_scored)
-  b0 <- coefsmodel11z[1]
-  b1 <- coefsmodel11z[2]
-  se <- coefsmodel11z[4]
+  # rwe_palette_custom <- brewer.pal(4, "Purples")
+  # number_of_values <-
+  #   pull(errorDat, scaaredSoc_z) %>% # RERUN NOW THAT I'VE FIXED THIS
+  #   unique %>%
+  #   length
+  #
+  # rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
+  # rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
+  #
+  # coefsmodel11z <- summary(f_model24_z_scored)$coef
+  # cis <- confint(f_model24_z_scored)
+  # b0 <- coefsmodel11z[1]
+  # b1 <- coefsmodel11z[2]
+  # se <- coefsmodel11z[4]
+  m2_params <- parameters::model_parameters(model11_z_scored)
+  b0 <- m2_params$Coefficient[1]
+  b1 <- m2_params$Coefficient[2]
+  se <- m2_params$SE[2] # also confirm we use this
 
   #bootstrap ci ribbon
   iterations = 1000
@@ -1000,28 +1019,37 @@ plot_fig_3 <- function() {
     a[i,3] <- lme4::fixef(mdl)[2]
   }
 
+  ll <- mean(a$beta) - (2 * sd(a$beta))
+  ul <- mean(a$beta) + (2 * sd(a$beta))
+
+  print(sum(a$beta<ul & a$beta>ll))
+  #sum(a$beta<ul & a$beta>ll) #this should be ~950 if iterations=1000
+
+  a <- filter(a, beta<ul & beta>ll)
 
   #create df for annotation
   label_text <- data.frame(
-    label = c(paste("\u03b2 = ", digit_display(b1),
-                    "\nSE = ", digit_display(se),
-                    "\nCI = [", digit_display(cis[5,1]), " - ", digit_display(cis[5,2]), "]",
-                    "\np ", tinyps(coefsmodel11z[10]), sep="")),
+    # label = c(paste("\u03b2 = ", digit_display(b1),
+    #                 "\nSE = ", digit_display(se),
+    #                 "\nCI = [", digit_display(cis[5,1]), " - ", digit_display(cis[5,2]), "]",
+    #                 "\np ", tinyps(coefsmodel11z[10]), sep="")),
     words_with_hes_rate_z = c(-1.1),
+    #words_with_hes_rate_z = c(4.5)) #location for plot with all datapoints
     words_with_misprod_rate_z = c(0.75)) #location for plot with limited y-axis
+
 
   #plot
   p <- ggplot(errorDat, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z)) +
     geom_jitter(aes(color=factor(words_with_hes_rate_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
-    scale_color_manual(values=rwe_palette_custom)
+    scale_color_manual(values=rwe_palette)
 
   for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
     p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette_custom[3], alpha=0.1)
   }
 
-  p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette_custom[number_of_values], linewidth=1) +
+  p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette[14], linewidth=1) +
     guides(color=FALSE, shape=FALSE) +
-    geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z, label=label), size=3) +
+    geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z), size=3) +
     ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
     theme_bw() +
     theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),

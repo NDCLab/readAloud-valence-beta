@@ -1352,28 +1352,125 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
               interval = TRUE,
               x.label = expression(
                 atop("log"['10']*" word frequency",
-                     "(lower = more rare)")),
+                     "(z-scored; lower = more rare)")),
               y.label =  expression(
-                atop("Probability of misproduction",
+                atop("Probability of Misproduction",
                      "(word-level)")),
-              legend.main = "SCAARED-Social score\n(z-scored)",
+              legend.main = "SCAARED-Social Score\n(z-scored)",
               main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Misproductions") +
   theme(plot.title = element_text(hjust = 0.5))
 
 # alt plot
+# interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+#               pred = log10frequency_with_absents_as_median_z,
+#               modx = scaaredSoc_z,
+#               interval = TRUE,
+#               colors = "Purples",
+#               x.label = expression(
+#                 atop("log"['10']*" word frequency",
+#                      "(z-scored; lower = more rare)")),
+#               y.label =  expression(
+#                 atop("Probability of Misproduction",
+#                      "(word-level)")),
+#               legend.main = "SCAARED-Social Score\n(z-scored)",
+#               main.title = "Item-Level Word Frequency × Social Anxiety Severity × Item-Level Misproductions") +
+#   theme( plot.title = element_text(hjust = -0.05, size = 18),
+#         text = element_text(size = 16))
+
 interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
               pred = log10frequency_with_absents_as_median_z,
               modx = scaaredSoc_z,
               interval = TRUE,
+              colors = "Purples",
               x.label = expression(
-                atop("log"['10']*" word frequency",
-                     "(lower = more rare)")),
+                atop("Word Frequency",
+                     "(z-scored logarithm; lower = more rare)")),
               y.label =  expression(
-                atop("Probability of misproduction",
+                atop("Probability of Misproduction",
                      "(word-level)")),
-              legend.main = "SCAARED-Social score\n(z-scored)",
-              main.title = "Item-Level Word Frequency, Social Anxiety Severity, and Item-Level Misproductions") +
-  theme(plot.title = element_text(hjust = -2, size = 18), text = element_text(size = 16))
+              legend.main = "SCAARED-Social Score\n(z-scored)",
+              main.title = "Item-Level Word Frequency × Social Anxiety Symptom Severity × Item-Level Misproductions") +
+  theme(plot.title = element_text(hjust = -0.05, size = 18),
+        text = element_text(size = 16),
+        legend.position = "inside",
+        legend.position.inside = c(0.792, 0.7065))
+
+# Jess' version
+plot_fig_4 <- function() { # FIXME
+  # determine degrees of purple needed for this variable
+  # rwe_palette_custom <- brewer.pal(4, "Purples")
+  # number_of_values <-
+  #   pull(errorDat, log10frequency_with_absents_as_median_z) %>%
+  #   unique %>%
+  #   length
+  #
+  # rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
+  # rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
+  #
+
+  # fixme don't use coefsmodel
+
+  # coefsmodel4z <- summary(wordfreq_model_with_absents_as_median_4_z_scored_logistic)$coef
+  # cis <- confint(wordfreq_model_with_absents_as_median_4_z_scored_logistic)
+  # b0 <- coefsmodel4z[1]
+  # b1 <- coefsmodel4z[2] # todo make sure we would actually want b0, and not, like, b3?
+  # se <- coefsmodel4z[4]
+  # m_params <- parameters::model_parameters(wordfreq_model_with_absents_as_median_4_z_scored_logistic, exponentiate = TRUE)
+  # interaction_ci_low_high <- select(m_params[4,], CI_low, CI_high)
+
+  # #bootstrap ci ribbon
+  # iterations = 1000
+  # a <- tibble(i=rep(1:iterations,))
+  # a <- mutate(a, intercept=NA, beta=NA)
+  # for(i in 1:nrow(a)){
+  #   rows <- sample(1:nrow(errorDat), nrow(errorDat), replace=TRUE)
+  #   df <- errorDat[rows, c('id', 'passage', 'log10frequency_with_absents_as_median_z', 'words_with_misprod_rate_z')]
+  #   mdl <- lme4::lmer(words_with_misprod_rate_z ~ log10frequency_with_absents_as_median_z + (1|id) + (1|passage),
+  #                     data=df, REML=TRUE, control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+  #   a[i,2] <- lme4::fixef(mdl)[1]
+  #   a[i,3] <- lme4::fixef(mdl)[2]
+  # }
+
+
+  #create df for annotation
+  # label_text <- data.frame(
+  #   label = c(paste("\u03b2 = ", digit_display(b1),
+  #                   "\nSE = ", digit_display(se),
+  #                   "\nCI = [", interaction_ci_low_high %>% map_vec(digit_display) %>% paste(collapse = ' - '), "]",
+  #                   "\np ", tinyps(coefsmodel11z[10]), sep="")),
+  #   log10frequency_with_absents_as_median_z = c(-1.1),
+  #   misprod_outcome = c(0.75)) #location for plot with limited y-axis
+
+  #plot
+  # check this.............
+  p <- ggplot(errorDat, aes(x=log10frequency_with_absents_as_median_z, y=misprod_outcome)) +
+    geom_jitter(aes(color=factor(log10frequency_with_absents_as_median_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
+    scale_color_manual(values="Purples") #???? fixme
+
+#   for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
+#     p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette_custom[3], alpha=0.1)
+#   }
+
+  p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette_custom[number_of_values], linewidth=1) +
+    guides(color=FALSE, shape=FALSE) +
+    geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z, label=label), size=3) +
+    ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
+    theme_bw() +
+    theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),
+          text = element_text(size=16),
+          panel.border = element_blank(),
+          panel.grid = element_line(linewidth=0.6, linetype='dashed'),
+          panel.grid.minor = element_blank(),
+          axis.line.x = element_line(linewidth=0.6, linetype='dashed', color='#bbbbbb60'),
+          axis.ticks.x = element_blank()) +
+    labs(title="Hesitation Rate × Misproduction Rate",
+         x="Rate of Hesitations\n(per word, z-scored)",
+         y="Rate of Misproductions\n(per word, z-scored)")
+  return(p)
+}
+
+ggsave(file.path(outpath, "fig4.jpg"), plot=plot_fig_4(), width=8, height=5, units="in")
+
 
 
 # misprod ~ wf x SA, control for age
