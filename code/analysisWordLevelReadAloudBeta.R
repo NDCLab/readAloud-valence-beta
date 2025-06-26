@@ -1984,6 +1984,7 @@ write_table_html_to_disk(
 )
 
 
-
+errorDatFig4 <- errorDat %>% select(id,scaaredSoc_z, misprod_outcome, log10frequency_with_absents_as_median_z) %>% group_by(log10frequency_with_absents_as_median_z, id) %>% add_count(log10frequency_with_absents_as_median_z, id) %>% mutate(log10frequency_with_absents_as_median_z, id) %>% mutate(num_total = n(), num_wrong = sum(misprod_outcome))
+errorDatFig4 %>% mutate(ratio = num_wrong/num_total) %>% select(id, scaaredSoc_z, log10frequency_with_absents_as_median_z, ratio) %>% unique()
 
 # save.image(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-and-control-analyses-may-13-25.RData"))

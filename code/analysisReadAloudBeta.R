@@ -148,6 +148,7 @@ today <- format(today, "%Y%m%d")
 data <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/derivatives/readAloudBetaData_20230825.csv'
 to_omit <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/input/passages-to-omit_20230810.csv'
 results_path <- '~/Documents/ndclab/rwe-analysis-sandbox/rwe-analysis/results/'
+figures_path <- paste0(results_path, 'figures/')
 
 #read in data
 df <- read.csv(data, row.names = NULL) # output of prep script
@@ -690,7 +691,7 @@ plot_fig_2 <- function() {
     guides(color=FALSE, shape=FALSE) +
     # geom_label(data=label_text,
     #            aes(x=scaaredSoc_z, y=words_with_hes_rate_z), size=3) +
-    ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
+   # ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
     theme_bw() +
     theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),
           text = element_text(size=16),
@@ -704,9 +705,10 @@ plot_fig_2 <- function() {
          y="Rate of Hesitations\n(per word, z-scored)")
   return(p)
 }
+fig2 <- plot_fig_2() + coord_cartesian(xlim = c(-1.4, 1.92), ylim = c(-1.51, 2.43), expand = FALSE)
 
 #save file (adjust width/height as needed)
-ggsave(file.path(outpath, "fig2.jpg"), plot=plot_fig_2(), width=8, height=5, units="in")
+ggsave(file.path(figures_path, "fig2.jpg"), plot=fig2, width=8, height=5, units="in")
 
 
 
@@ -986,25 +988,10 @@ plot_model(f_model24_z_scored,
 
 # Jess' version, wip
 plot_fig_3 <- function() {
-  # determine degrees of purple needed for this variable
-  # rwe_palette_custom <- brewer.pal(4, "Purples")
-  # number_of_values <-
-  #   pull(errorDat, scaaredSoc_z) %>% # RERUN NOW THAT I'VE FIXED THIS
-  #   unique %>%
-  #   length
-  #
-  # rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
-  # rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
-  #
-  # coefsmodel11z <- summary(f_model24_z_scored)$coef
-  # cis <- confint(f_model24_z_scored)
-  # b0 <- coefsmodel11z[1]
-  # b1 <- coefsmodel11z[2]
-  # se <- coefsmodel11z[4]
-  m2_params <- parameters::model_parameters(model11_z_scored)
-  b0 <- m2_params$Coefficient[1]
-  b1 <- m2_params$Coefficient[2]
-  se <- m2_params$SE[2] # also confirm we use this
+  m3_params <- parameters::model_parameters(f_model24_z_scored)
+  b0 <- m3_params$Coefficient[1]
+  b1 <- m3_params$Coefficient[2]
+  se <- m3_params$SE[2] # also confirm we use this
 
   #bootstrap ci ribbon
   iterations = 1000
@@ -1040,17 +1027,18 @@ plot_fig_3 <- function() {
 
   #plot
   p <- ggplot(errorDat, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z)) +
-    geom_jitter(aes(color=factor(words_with_hes_rate_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
+    geom_jitter(aes(color=factor(scaaredSoc_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
     scale_color_manual(values=rwe_palette)
 
   for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
-    p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette_custom[3], alpha=0.1)
+    p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette[3], alpha=0.1)
   }
 
   p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette[14], linewidth=1) +
     guides(color=FALSE, shape=FALSE) +
-    geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z), size=3) +
-    ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
+  # geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z), size=3) +
+  #  ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
+  #  xlim(NA, 3.1) +
     theme_bw() +
     theme(plot.title = element_text(size=18, hjust=0.05, face='bold'),
           text = element_text(size=16),
@@ -1064,7 +1052,8 @@ plot_fig_3 <- function() {
          y="Rate of Misproductions\n(per word, z-scored)")
   return(p)
 }
-ggsave(file.path(outpath, "fig3.jpg"), plot=plot_fig_3(), width=8, height=5, units="in")
+fig3 <- plot_fig_3() + coord_cartesian(xlim = c(-1.5, 1.67), ylim = c(-1.3, 2.12), expand = FALSE)
+ggsave(file.path(figures_path, "fig3.jpg"), plot=fig3, width=8, height=5, units="in")
 
 
 
