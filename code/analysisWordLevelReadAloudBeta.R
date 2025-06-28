@@ -1398,15 +1398,15 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
 # Jess' version
 plot_fig_4 <- function() { # FIXME
   # determine degrees of purple needed for this variable
-  # rwe_palette_custom <- brewer.pal(4, "Purples")
-  # number_of_values <-
-  #   pull(errorDat, log10frequency_with_absents_as_median_z) %>%
-  #   unique %>%
-  #   length
-  #
-  # rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
-  # rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
-  #
+  rwe_palette_custom <- brewer.pal(4, "Purples")
+  number_of_values <-
+    pull(errorDat, scaaredSoc_z) %>%
+    unique %>%
+    length
+
+  rwe_palette_custom <- colorRampPalette(rwe_palette_custom)(number_of_values+3)
+  rwe_palette_custom <- rwe_palette_custom[4:(number_of_values+3)]
+
 
   # fixme don't use coefsmodel
 
@@ -1415,8 +1415,12 @@ plot_fig_4 <- function() { # FIXME
   # b0 <- coefsmodel4z[1]
   # b1 <- coefsmodel4z[2] # todo make sure we would actually want b0, and not, like, b3?
   # se <- coefsmodel4z[4]
-  # m_params <- parameters::model_parameters(wordfreq_model_with_absents_as_median_4_z_scored_logistic, exponentiate = TRUE)
-  # interaction_ci_low_high <- select(m_params[4,], CI_low, CI_high)
+  m4_params <- parameters::model_parameters(wordfreq_model_with_absents_as_median_4_z_scored_logistic, exponentiate = TRUE)
+  interaction_ci_low_high <- select(m4_params[4,], CI_low, CI_high)
+  b0 <- m4_params$Coefficient[1]
+  b1_freq <- m4_params$Coefficient[2]
+  b2_scaared <- m4_params$Coefficient[3]
+  b3_interaction <- m4_params$Coefficient[4]
 
   # #bootstrap ci ribbon
   # iterations = 1000
@@ -1440,12 +1444,24 @@ plot_fig_4 <- function() { # FIXME
   #                   "\np ", tinyps(coefsmodel11z[10]), sep="")),
   #   log10frequency_with_absents_as_median_z = c(-1.1),
   #   misprod_outcome = c(0.75)) #location for plot with limited y-axis
+  errorDatFig4 %>%
+    # filter(ratio != 1 & ratio != 0) %>%
+    ggplot(aes(x=log10frequency_with_absents_as_median_z, y=ratio)) +
+    geom_jitter(aes(color=factor(scaaredSoc_z)),
+                alpha=0.5,
+                width=0.05,
+                height = 0.05,
+                show.legend=FALSE) +
+    scale_color_manual(values = rwe_palette_custom)
 
+  fig4_points <- errorDatFig4 %>% ggplot(aes(x=log10frequency_with_absents_as_median_z, y=ratio)) +
+    geom_jitter(aes(color=factor(scaaredSoc_z)), alpha=0.5, width=0.06, show.legend=FALSE, height = 0.06) +
+    scale_color_manual(values = rwe_palette_custom)
   #plot
   # check this.............
-  p <- ggplot(errorDat, aes(x=log10frequency_with_absents_as_median_z, y=misprod_outcome)) +
-    geom_jitter(aes(color=factor(log10frequency_with_absents_as_median_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
-    scale_color_manual(values="Purples") #???? fixme
+  # p <- ggplot(errorDat, aes(x=log10frequency_with_absents_as_median_z, y=misprod_outcome)) +
+  #   geom_jitter(aes(color=factor(scaaredSoc_z)), alpha=0.5, width=0.05, show.legend=FALSE) +
+  #   scale_color_manual(values=rwe_palette_custom) #???? fixme
 
 #   for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
 #     p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette_custom[3], alpha=0.1)
@@ -1984,7 +2000,111 @@ write_table_html_to_disk(
 )
 
 
-errorDatFig4 <- errorDat %>% select(id,scaaredSoc_z, misprod_outcome, log10frequency_with_absents_as_median_z) %>% group_by(log10frequency_with_absents_as_median_z, id) %>% add_count(log10frequency_with_absents_as_median_z, id) %>% mutate(log10frequency_with_absents_as_median_z, id) %>% mutate(num_total = n(), num_wrong = sum(misprod_outcome))
-errorDatFig4 %>% mutate(ratio = num_wrong/num_total) %>% select(id, scaaredSoc_z, log10frequency_with_absents_as_median_z, ratio) %>% unique()
+errorDatFig4_precursor <- errorDat %>% select(id,scaaredSoc_z, misprod_outcome, log10frequency_with_absents_as_median_z) %>% group_by(log10frequency_with_absents_as_median_z, id) %>% add_count(log10frequency_with_absents_as_median_z, id) %>% mutate(log10frequency_with_absents_as_median_z, id) %>% mutate(num_total = n(), num_wrong = sum(misprod_outcome))
+
+errorDatFig4 <- errorDatFig4_precursor %>% mutate(ratio = num_wrong/num_total) %>% select(id, scaaredSoc_z, log10frequency_with_absents_as_median_z, ratio) %>% unique()
+
+
+errorDatFig4Alt <-
+  errorDat %>%
+  group_by(log10frequency_with_absents_as_median_z, id) %>%
+  add_count(log10frequency_with_absents_as_median_z, id) %>%
+  mutate(log10frequency_with_absents_as_median_z, id) %>%
+  mutate(num_total = n(), num_wrong = sum(misprod_outcome)) %>%
+  mutate(ratio = num_wrong/num_total)
 
 # save.image(paste0(out_path, "RWE-item-level-with-zscoring-logistic-and-pre-post-and-control-analyses-may-13-25.RData"))
+
+
+# test
+
+fig_4_og <- interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+                          pred = log10frequency_with_absents_as_median_z,
+                          modx = scaaredSoc_z,
+                          interval = TRUE,
+                          colors = "Purples",
+                          x.label = expression(
+                            atop("Word Frequency",
+                                 "(z-scored logarithm; lower = more rare)")),
+                          y.label =  expression(
+                            atop("Probability of Misproduction",
+                                 "(word-level)")),
+                          legend.main = "SCAARED-Social Score\n(z-scored)",
+                          main.title = "Item-Level Word Frequency × Social Anxiety Symptom Severity × Item-Level Misproductions") +
+  theme(plot.title = element_text(hjust = -0.05, size = 18),
+        text = element_text(size = 16),
+        legend.position = "inside",
+        legend.position.inside = c(0.792, 0.7065))
+
+
+fig_4_og -    geom_jitter(data = errorDat %>% mutate(modx_group = fig_4_og$plot_env$d$modx_group) %>% group_by(log10frequency_with_absents_as_median_z, id) %>% add_count(log10frequency_with_absents_as_median_z, id) %>% mutate(num_total = n(), num_wrong = sum(misprod_outcome)) %>% mutate(ratio = num_wrong/num_total, ratio_by_ten = ratio/10), aes(x=log10frequency_with_absents_as_median_z, y=ratio_by_ten, color=as.numeric(scaaredSoc_z)),
+                          alpha=0.5,
+                          width=0.005,
+                          height = 0.006,
+                          show.legend=FALSE)
+
+`-.gg` <- function(plot, layer) {
+  if (missing(layer)) {
+    stop("Cannot use `-.gg()` with a single argument. Did you accidentally put - on a new line?")
+  }
+  if (!is.ggplot(plot)) {
+    stop('Need a plot on the left side')
+  }
+  plot$layers = c(layer, plot$layers)
+  plot
+}
+
+data_with_scaared_updated <- todo
+
+fig_4_og$data %>%  ggplot(aes(x=log10frequency_with_absents_as_median_z, y=misprod_outcome)) +
+  geom_jitter(aes(color=factor(scaaredSoc_z)), alpha=0.5, width=0.06, show.legend=FALSE, height = 0.06) +
+  scale_color_manual(values = colorRampPalette(brewer.pal(4, "Purples"))(3+3)[4:7]) + (fig_4_og$layers[1] + scale_color_manual(values = "Purples"))
+
+
+# hideous one:
+fig_4_og -    geom_jitter(data = errorDat %>% mutate(modx_group = fig_4_og$plot_env$d$modx_group) %>% group_by(log10frequency_with_absents_as_median_z, id) %>% add_count(log10frequency_with_absents_as_median_z, id) %>% mutate(num_total = n(), num_wrong = sum(misprod_outcome)) %>% mutate(ratio = num_wrong/num_total, ratio_by_ten = ratio/10), aes(x=log10frequency_with_absents_as_median_z, y=ratio_by_ten, color=as.numeric(scaaredSoc_z)),
+                          alpha=0.5,
+                          width=0.005,
+                          height = 0.006,
+                          show.legend=FALSE)
+
+
+# bingo:
+fig4test2 <- interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+                           pred = log10frequency_with_absents_as_median_z,
+                           modx = scaaredSoc_z,
+                           interval = TRUE,
+                           colors = "Purples",
+                           x.label = expression(
+                             atop("Word Frequency",
+                                  "(z-scored logarithm; lower = more rare)")),
+                           y.label =  expression(
+                             atop("Probability of Misproduction",
+                                  "(word-level)")),
+                           legend.main = "SCAARED-Social Score\n(z-scored)",
+                           main.title = "Item-Level Word Frequency × Social Anxiety Symptom Severity × Item-Level Misproductions") +
+  theme(plot.title = element_text(hjust = -0.05, size = 18),
+        text = element_text(size = 16),
+        legend.position = "inside",
+        legend.position.inside = c(0.792, 0.7065))
+
+fig4test2 -    geom_jitter(data = fig_4_og$data, aes(x=log10frequency_with_absents_as_median_z, y=misprod_outcome, color=as.numeric(scaaredSoc_z)),
+                           alpha=0.5,
+                           height = 0.0005,
+                           show.legend=FALSE)
+
+
+mean_scaared = 0
+sd_scaared = 1
+
+errorDatFig4Alt %>%
+  mutate(modx_group =
+           factor(
+             case_when(
+               scaaredSoc_z >= mean_scaared + sd_scaared ~ '+ 1 SD',
+               scaaredSoc_z <= mean_scaared - sd_scaared ~ '- 1 SD',
+               .default = 'Mean'
+               )))
+
+
+

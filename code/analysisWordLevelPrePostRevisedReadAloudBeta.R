@@ -299,24 +299,29 @@ interact_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfre
 
 
 # flipped:
-interact_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
-              modx = "adjacent_hesitation_present_in_direction_looked",
-              pred = "direction_searched_for_potential_hesitation_predictor",
-              interval = TRUE,
-              colors = "Qual2",
-              #fixme x.label = "SCAARED-Social score\n(z-scored)",
-              modx.labels = c('Hesitation present', 'Hesitation absent'),
-              modx.values = factor(c(1, -1)),
-              legend.main = 'Hesitation presence/absence',
-              y.label = expression(
-                atop('Probability of misproduction',
-                     '(word-level)')),
-              # geom = 'bar',
-              geom = 'line', # line.thickness = 0,
-              pred.values = factor(c(-1,1)),
-              x.label = 'Position of possible hesitation', point.shape = TRUE,
-) + scale_x_discrete(labels=c("Before", "After"))
+plot_fig_5 <- function() {
+  interact_plot(model = hesitation_adjacent_misproduction_model_5_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
+                modx = "adjacent_hesitation_present_in_direction_looked",
+                pred = "direction_searched_for_potential_hesitation_predictor",
+                interval = TRUE,
+                colors = "Qual2",
+                #fixme x.label = "SCAARED-Social score\n(z-scored)",
+                modx.labels = c('Hesitation present', 'Hesitation absent'),
+                modx.values = factor(c(1, -1)),
+                legend.main = 'Hesitation Presence/Absence',
+                y.label = expression(
+                  atop('Probability of Misproduction',
+                       '(word-level)')),
+                # geom = 'bar',
+                geom = 'line', # line.thickness = 0,
+                pred.values = factor(c(-1,1)),
+                x.label = 'Position of Possible Hesitation', point.shape = TRUE,
+  ) + scale_x_discrete(labels=c("Before", "After"))
+}
 
+plot_fig_6 <- function() {
+  "todo"
+}
 
 
 # interact_plot(model = hesitation_adjacent_misproduction_model_4_logistic_wordfreq_with_absents_as_median_no_psg_bobyqa,
