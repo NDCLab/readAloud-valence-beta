@@ -1396,7 +1396,7 @@ interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
         legend.position.inside = c(0.792, 0.7065))
 
 # Jess' version
-plot_fig_4 <- function() { # FIXME
+plot_fig_4 <- function() { # FIXME still wrong
   # determine degrees of purple needed for this variable
   rwe_palette_custom <- brewer.pal(4, "Purples")
   number_of_values <-
