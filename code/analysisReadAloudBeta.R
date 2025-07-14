@@ -498,6 +498,7 @@ plot_lmer <- function(model, predictor, outcome, xlab = predictor, ...) {
 rwe_palette <- brewer.pal(4, "Purples")
 rwe_palette <- colorRampPalette(rwe_palette)(17)
 rwe_palette <- rwe_palette[4:17]
+center_purple <- brewer.pal(4, "Purples") %>% colorRampPalette %>% do.call(list(3)) %>% nth(2)
 
 # helpers
 
@@ -680,8 +681,13 @@ plot_fig_2 <- function() {
 
   #plot
   p <- ggplot(errorDat, aes(x=scaaredSoc_z, y=words_with_hes_rate_z)) +
-    geom_jitter(aes(color=factor(scaaredSoc)), alpha=0.5, width=0.05, show.legend=FALSE) +
-    scale_color_manual(values=rwe_palette)
+    geom_jitter(
+     aes(color= rwe_palette[10]),#factor(scaaredSoc)),
+      alpha=0.5,
+      width=0.05,
+      show.legend=FALSE
+    ) +
+    scale_color_manual(values=rwe_palette[10])
 
   for(i in 1:nrow(a)){ #add bootstrapped lines to show confidence interval
     p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette[3], alpha=0.1)

@@ -1467,7 +1467,7 @@ plot_fig_4 <- function() { # FIXME still wrong
 #     p <- p + geom_abline(intercept=as.numeric(a[i,2]), slope=as.numeric(a[i,3]), color=rwe_palette_custom[3], alpha=0.1)
 #   }
 
-  p <- p + geom_abline(intercept=b0, slope=b1, color=rwe_palette_custom[number_of_values], linewidth=1) +
+  p <- p + geom_abline(intercept=b0, slope=b1_freq, color=rwe_palette_custom[number_of_values], linewidth=1) +
     guides(color=FALSE, shape=FALSE) +
     geom_label(data=label_text, aes(x=words_with_hes_rate_z, y=words_with_misprod_rate_z, label=label), size=3) +
     ylim(-0.9, 0.9) + #remove this line for plot with all datapoints
@@ -1485,6 +1485,26 @@ plot_fig_4 <- function() { # FIXME still wrong
   return(p)
 }
 
+# ignore the above
+plot_fig_4 <- function() {
+  interact_plot(model = wordfreq_model_with_absents_as_median_4_z_scored_logistic,
+                pred = log10frequency_with_absents_as_median_z,
+                modx = scaaredSoc_z,
+                interval = TRUE,
+                colors = "Purples",
+                x.label = expression(
+                  atop("Word Frequency",
+                       "(z-scored logarithm; lower = more rare)")),
+                y.label =  expression(
+                  atop("Probability of Misproduction",
+                       "(word-level)")),
+                legend.main = "SCAARED-Social Score\n(z-scored)",
+                main.title = "Item-Level Word Frequency × Social Anxiety Symptom Severity × Item-Level Misproductions") +
+    theme(plot.title = element_text(hjust = -0.05, size = 18),
+          text = element_text(size = 16),
+          legend.position = "inside",
+          legend.position.inside = c(0.792, 0.7665), legend.box.background = element_rect(color = "white"))
+}
 ggsave(file.path(outpath, "fig4.jpg"), plot=plot_fig_4(), width=8, height=5, units="in")
 
 
@@ -1768,8 +1788,8 @@ wordfreq_table_with_absents_as_median_3_z_scored_logistic <-
             p.style = "numeric_stars",
             pred.labels = c("Intercept",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
-                            "Word frequency × SCAARED social (z-scored)"),
+                            "SCAARED-Social",
+                            "Word frequency × SCAARED-Social"),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
                           "stat", "p", "est", "response.level")); wordfreq_table_with_absents_as_median_3_z_scored_logistic
@@ -1792,8 +1812,8 @@ wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
             p.style = "numeric_stars",
             pred.labels = c("Intercept",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
-                            "Word frequency × SCAARED social (z-scored)"),
+                            "SCAARED-Social",
+                            "Word frequency × SCAARED-Social"),
             dv.labels = "",
             # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
@@ -1818,11 +1838,11 @@ misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa <-
             pred.labels = c("Intercept",
                             "Hesitation position (after misproduction)",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
+                            "SCAARED-Social",
                             "Hesitation position (after misproduction) × Word frequency",
-                            "Hesitation position (after misproduction) × SCAARED social (z-scored)",
-                            "Word frequency × SCAARED social (z-scored)",
-                            "Hesitation position (after misproduction) × Word frequency × SCAARED social (z-scored)"
+                            "Hesitation position (after misproduction) × SCAARED-Social",
+                            "Word frequency × SCAARED-Social",
+                            "Hesitation position (after misproduction) × Word frequency × SCAARED-Social"
             ),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
@@ -1853,9 +1873,9 @@ tab_model(sex_wordfreq_model_with_absents_as_median_3_z_scored_logistic,
           p.style = "numeric_stars",
           pred.labels = c("Intercept",
                           "Word frequency",
-                          "SCAARED social (z-scored)",
+                          "SCAARED-Social",
                           "Male sex",
-                          "Word frequency × SCAARED social (z-scored)"),
+                          "Word frequency × SCAARED-Social"),
           dv.labels = "",
         # dv.labels = "Word-level model predicting likelihood of hesitation, controlled for sex",
           col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
@@ -1874,9 +1894,9 @@ age_wordfreq_table_with_absents_as_median_3_z_scored_logistic <-
             p.style = "numeric_stars",
             pred.labels = c("Intercept",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
+                            "SCAARED-Social",
                             "Age",
-                            "Word frequency × SCAARED social (z-scored)"),
+                            "Word frequency × SCAARED-Social"),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
                           "stat", "p", "est", "response.level")); age_wordfreq_table_with_absents_as_median_3_z_scored_logistic
@@ -1899,9 +1919,9 @@ sex_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
             p.style = "numeric_stars",
             pred.labels = c("Intercept",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
+                            "SCAARED-Social",
                             "Male sex", # verify which one
-                            "Word frequency × SCAARED social (z-scored)"),
+                            "Word frequency × SCAARED-Social"),
             dv.labels = "",
           # dv.labels = "Word-level model predicting likelihood of misproduction, controlled for age",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
@@ -1925,9 +1945,9 @@ age_wordfreq_table_with_absents_as_median_4_z_scored_logistic <-
             p.style = "numeric_stars",
             pred.labels = c("Intercept",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
+                            "SCAARED-Social",
                             "Age",
-                            "Word frequency × SCAARED social (z-scored)"),
+                            "Word frequency × SCAARED-Social"),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
                           "stat", "p", "est", "response.level")); age_wordfreq_table_with_absents_as_median_4_z_scored_logistic
@@ -1952,12 +1972,12 @@ age_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
             pred.labels = c("Intercept",
                             "Hesitation position (after misproduction)",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
+                            "SCAARED-Social",
                             "Age",
                             "Hesitation position (after misproduction) × Word frequency",
-                            "Hesitation position (after misproduction) × SCAARED social (z-scored)",
-                            "Word frequency × SCAARED social (z-scored)",
-                            "Hesitation position (after misproduction) × Word frequency × SCAARED social (z-scored)"
+                            "Hesitation position (after misproduction) × SCAARED-Social",
+                            "Word frequency × SCAARED-Social",
+                            "Hesitation position (after misproduction) × Word frequency × SCAARED-Social"
             ),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
@@ -1983,12 +2003,12 @@ sex_misprod_with_rel_hes_table_8_logistic_wordfreq_with_absents_as_median_bobyqa
             pred.labels = c("Intercept",
                             "Hesitation position (after misproduction)",
                             "Word frequency",
-                            "SCAARED social (z-scored)",
+                            "SCAARED-Social",
                             "Male sex",
                             "Hesitation position (after misproduction) × Word frequency",
-                            "Hesitation position (after misproduction) × SCAARED social (z-scored)",
-                            "Word frequency × SCAARED social (z-scored)",
-                            "Hesitation position (after misproduction) × Word frequency × SCAARED social (z-scored)"
+                            "Hesitation position (after misproduction) × SCAARED-Social",
+                            "Word frequency × SCAARED-Social",
+                            "Hesitation position (after misproduction) × Word frequency × SCAARED-Social"
             ),
             dv.labels = "",
             col.order = c("est", "se", "df.error", "ci", "ci.inner", "ci.outer",
